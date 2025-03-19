@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investment Profile Selection</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 50px;
+        }
+        .btn-group {
+            margin: 10px;
+        }
+        .btn {
+            padding: 10px 20px;
+            margin: 5px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            background-color: #ddd;
+            border-radius: 5px;
+        }
+        .btn.selected {
+            background-color: #007BFF;
+            color: white;
+        }
+        button[type="button"] {
+            padding: 10px 20px;
+            font-size: 18px;
+            margin-top: 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h2>Investment Profile Selection</h2>
+    <form id="profileForm">
+        <label>Investment Duration:</label><br>
+        <div class="btn-group">
+            <button type="button" class="btn" onclick="selectOption(this, 'investmentDuration', 'long')">Long Term</button>
+            <button type="button" class="btn" onclick="selectOption(this, 'investmentDuration', 'short')">Short Term</button>
+        </div>
+        <input type="hidden" id="investmentDuration" value="long">
+        <br>
+        <label>Risk Preference:</label><br>
+        <div class="btn-group">
+            <button type="button" class="btn" onclick="selectOption(this, 'riskPreference', 'high')">High Risk</button>
+            <button type="button" class="btn" onclick="selectOption(this, 'riskPreference', 'low')">Low Risk</button>
+        </div>
+        <input type="hidden" id="riskPreference" value="high">
+        <br>
+        <button type="button" onclick="redirectUser()">Submit</button>
+    </form>
+
+    <script>
+        function selectOption(button, group, value) {
+            document.getElementById(group).value = value;
+            let buttons = button.parentElement.getElementsByClassName("btn");
+            for (let btn of buttons) {
+                btn.classList.remove("selected");
+            }
+            button.classList.add("selected");
+        }
+
+        function redirectUser() {
+            var longTerm = document.getElementById("investmentDuration").value;
+            var lowRisk = document.getElementById("riskPreference").value;
+            
+            if (lowRisk === "high" && longTerm === "long") {
+                window.location.href = "highLT.html";
+            } else if (lowRisk === "high" && longTerm === "short") {
+                window.location.href = "highST.html";
+            } else if (lowRisk === "low" && longTerm === "long") {
+                window.location.href = "lowLT.html";
+            } else {
+                window.location.href = "lowST.html";
+            }
+        }
+    </script>
+</body>
+</html>
