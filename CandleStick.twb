@@ -1,0 +1,680 @@
+<?xml version='1.0' encoding='utf-8' ?>
+
+<!-- build 20243.25.0114.1153                               -->
+<workbook original-version='18.1' source-build='2024.3.3 (20243.25.0114.1153)' source-platform='win' version='18.1' xmlns:user='http://www.tableausoftware.com/xml/user'>
+  <document-format-change-manifest>
+    <AnimationOnByDefault />
+    <MarkAnimation />
+    <ObjectModelEncapsulateLegacy />
+    <ObjectModelTableType />
+    <SchemaViewerObjectModel />
+    <SheetIdentifierTracking />
+    <WindowsPersistSimpleIdentifiers />
+  </document-format-change-manifest>
+  <preferences>
+    <preference name='ui.encoding.shelf.height' value='24' />
+    <preference name='ui.shelf.height' value='26' />
+  </preferences>
+  <datasources>
+    <datasource caption='etf_ohlc_data' inline='true' name='federated.0dt4efv1qcuvzd19qnb9i1sfyjem' version='18.1'>
+      <connection class='federated'>
+        <named-connections>
+          <named-connection caption='etf_ohlc_data' name='textscan.1uyay881u5cf4k1czq5za1tz37xs'>
+            <connection class='textscan' directory='C:/Users/sihua/Downloads' filename='etf_ohlc_data.csv' password='' server='' />
+          </named-connection>
+        </named-connections>
+        <relation connection='textscan.1uyay881u5cf4k1czq5za1tz37xs' name='etf_ohlc_data.csv' table='[etf_ohlc_data#csv]' type='table'>
+          <columns character-set='UTF-8' header='yes' locale='en_SG' separator=','>
+            <column datatype='date' name='Date' ordinal='0' />
+            <column datatype='real' name='open_ARKK' ordinal='1' />
+            <column datatype='real' name='open_IWF' ordinal='2' />
+            <column datatype='real' name='open_QQQ' ordinal='3' />
+            <column datatype='real' name='open_UPRO' ordinal='4' />
+            <column datatype='real' name='high_ARKK' ordinal='5' />
+            <column datatype='real' name='high_IWF' ordinal='6' />
+            <column datatype='real' name='high_QQQ' ordinal='7' />
+            <column datatype='real' name='high_UPRO' ordinal='8' />
+            <column datatype='real' name='low_ARKK' ordinal='9' />
+            <column datatype='real' name='low_IWF' ordinal='10' />
+            <column datatype='real' name='low_QQQ' ordinal='11' />
+            <column datatype='real' name='low_UPRO' ordinal='12' />
+            <column datatype='real' name='close_ARKK' ordinal='13' />
+            <column datatype='real' name='close_IWF' ordinal='14' />
+            <column datatype='real' name='close_QQQ' ordinal='15' />
+            <column datatype='real' name='close_UPRO' ordinal='16' />
+            <column datatype='real' name='open_combined' ordinal='17' />
+            <column datatype='real' name='high_combined' ordinal='18' />
+            <column datatype='real' name='low_combined' ordinal='19' />
+            <column datatype='real' name='close_combined' ordinal='20' />
+          </columns>
+        </relation>
+        <metadata-records>
+          <metadata-record class='capability'>
+            <remote-name />
+            <remote-type>0</remote-type>
+            <parent-name>[etf_ohlc_data.csv]</parent-name>
+            <remote-alias />
+            <aggregation>Count</aggregation>
+            <contains-null>true</contains-null>
+            <attributes>
+              <attribute datatype='string' name='character-set'>&quot;UTF-8&quot;</attribute>
+              <attribute datatype='string' name='collation'>&quot;en_GB&quot;</attribute>
+              <attribute datatype='string' name='field-delimiter'>&quot;,&quot;</attribute>
+              <attribute datatype='string' name='header-row'>&quot;true&quot;</attribute>
+              <attribute datatype='string' name='locale'>&quot;en_SG&quot;</attribute>
+              <attribute datatype='string' name='single-char'>&quot;&quot;</attribute>
+            </attributes>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>Date</remote-name>
+            <remote-type>133</remote-type>
+            <local-name>[Date]</local-name>
+            <parent-name>[etf_ohlc_data.csv]</parent-name>
+            <remote-alias>Date</remote-alias>
+            <ordinal>0</ordinal>
+            <local-type>date</local-type>
+            <aggregation>Year</aggregation>
+            <contains-null>true</contains-null>
+            <object-id>[etf_ohlc_data.csv_D118D86126F0455BA98DB5FC4BE6D5A5]</object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>open_ARKK</remote-name>
+            <remote-type>5</remote-type>
+            <local-name>[open_ARKK]</local-name>
+            <parent-name>[etf_ohlc_data.csv]</parent-name>
+            <remote-alias>open_ARKK</remote-alias>
+            <ordinal>1</ordinal>
+            <local-type>real</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <object-id>[etf_ohlc_data.csv_D118D86126F0455BA98DB5FC4BE6D5A5]</object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>open_IWF</remote-name>
+            <remote-type>5</remote-type>
+            <local-name>[open_IWF]</local-name>
+            <parent-name>[etf_ohlc_data.csv]</parent-name>
+            <remote-alias>open_IWF</remote-alias>
+            <ordinal>2</ordinal>
+            <local-type>real</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <object-id>[etf_ohlc_data.csv_D118D86126F0455BA98DB5FC4BE6D5A5]</object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>open_QQQ</remote-name>
+            <remote-type>5</remote-type>
+            <local-name>[open_QQQ]</local-name>
+            <parent-name>[etf_ohlc_data.csv]</parent-name>
+            <remote-alias>open_QQQ</remote-alias>
+            <ordinal>3</ordinal>
+            <local-type>real</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <object-id>[etf_ohlc_data.csv_D118D86126F0455BA98DB5FC4BE6D5A5]</object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>open_UPRO</remote-name>
+            <remote-type>5</remote-type>
+            <local-name>[open_UPRO]</local-name>
+            <parent-name>[etf_ohlc_data.csv]</parent-name>
+            <remote-alias>open_UPRO</remote-alias>
+            <ordinal>4</ordinal>
+            <local-type>real</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <object-id>[etf_ohlc_data.csv_D118D86126F0455BA98DB5FC4BE6D5A5]</object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>high_ARKK</remote-name>
+            <remote-type>5</remote-type>
+            <local-name>[high_ARKK]</local-name>
+            <parent-name>[etf_ohlc_data.csv]</parent-name>
+            <remote-alias>high_ARKK</remote-alias>
+            <ordinal>5</ordinal>
+            <local-type>real</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <object-id>[etf_ohlc_data.csv_D118D86126F0455BA98DB5FC4BE6D5A5]</object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>high_IWF</remote-name>
+            <remote-type>5</remote-type>
+            <local-name>[high_IWF]</local-name>
+            <parent-name>[etf_ohlc_data.csv]</parent-name>
+            <remote-alias>high_IWF</remote-alias>
+            <ordinal>6</ordinal>
+            <local-type>real</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <object-id>[etf_ohlc_data.csv_D118D86126F0455BA98DB5FC4BE6D5A5]</object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>high_QQQ</remote-name>
+            <remote-type>5</remote-type>
+            <local-name>[high_QQQ]</local-name>
+            <parent-name>[etf_ohlc_data.csv]</parent-name>
+            <remote-alias>high_QQQ</remote-alias>
+            <ordinal>7</ordinal>
+            <local-type>real</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <object-id>[etf_ohlc_data.csv_D118D86126F0455BA98DB5FC4BE6D5A5]</object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>high_UPRO</remote-name>
+            <remote-type>5</remote-type>
+            <local-name>[high_UPRO]</local-name>
+            <parent-name>[etf_ohlc_data.csv]</parent-name>
+            <remote-alias>high_UPRO</remote-alias>
+            <ordinal>8</ordinal>
+            <local-type>real</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <object-id>[etf_ohlc_data.csv_D118D86126F0455BA98DB5FC4BE6D5A5]</object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>low_ARKK</remote-name>
+            <remote-type>5</remote-type>
+            <local-name>[low_ARKK]</local-name>
+            <parent-name>[etf_ohlc_data.csv]</parent-name>
+            <remote-alias>low_ARKK</remote-alias>
+            <ordinal>9</ordinal>
+            <local-type>real</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <object-id>[etf_ohlc_data.csv_D118D86126F0455BA98DB5FC4BE6D5A5]</object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>low_IWF</remote-name>
+            <remote-type>5</remote-type>
+            <local-name>[low_IWF]</local-name>
+            <parent-name>[etf_ohlc_data.csv]</parent-name>
+            <remote-alias>low_IWF</remote-alias>
+            <ordinal>10</ordinal>
+            <local-type>real</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <object-id>[etf_ohlc_data.csv_D118D86126F0455BA98DB5FC4BE6D5A5]</object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>low_QQQ</remote-name>
+            <remote-type>5</remote-type>
+            <local-name>[low_QQQ]</local-name>
+            <parent-name>[etf_ohlc_data.csv]</parent-name>
+            <remote-alias>low_QQQ</remote-alias>
+            <ordinal>11</ordinal>
+            <local-type>real</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <object-id>[etf_ohlc_data.csv_D118D86126F0455BA98DB5FC4BE6D5A5]</object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>low_UPRO</remote-name>
+            <remote-type>5</remote-type>
+            <local-name>[low_UPRO]</local-name>
+            <parent-name>[etf_ohlc_data.csv]</parent-name>
+            <remote-alias>low_UPRO</remote-alias>
+            <ordinal>12</ordinal>
+            <local-type>real</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <object-id>[etf_ohlc_data.csv_D118D86126F0455BA98DB5FC4BE6D5A5]</object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>close_ARKK</remote-name>
+            <remote-type>5</remote-type>
+            <local-name>[close_ARKK]</local-name>
+            <parent-name>[etf_ohlc_data.csv]</parent-name>
+            <remote-alias>close_ARKK</remote-alias>
+            <ordinal>13</ordinal>
+            <local-type>real</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <object-id>[etf_ohlc_data.csv_D118D86126F0455BA98DB5FC4BE6D5A5]</object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>close_IWF</remote-name>
+            <remote-type>5</remote-type>
+            <local-name>[close_IWF]</local-name>
+            <parent-name>[etf_ohlc_data.csv]</parent-name>
+            <remote-alias>close_IWF</remote-alias>
+            <ordinal>14</ordinal>
+            <local-type>real</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <object-id>[etf_ohlc_data.csv_D118D86126F0455BA98DB5FC4BE6D5A5]</object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>close_QQQ</remote-name>
+            <remote-type>5</remote-type>
+            <local-name>[close_QQQ]</local-name>
+            <parent-name>[etf_ohlc_data.csv]</parent-name>
+            <remote-alias>close_QQQ</remote-alias>
+            <ordinal>15</ordinal>
+            <local-type>real</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <object-id>[etf_ohlc_data.csv_D118D86126F0455BA98DB5FC4BE6D5A5]</object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>close_UPRO</remote-name>
+            <remote-type>5</remote-type>
+            <local-name>[close_UPRO]</local-name>
+            <parent-name>[etf_ohlc_data.csv]</parent-name>
+            <remote-alias>close_UPRO</remote-alias>
+            <ordinal>16</ordinal>
+            <local-type>real</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <object-id>[etf_ohlc_data.csv_D118D86126F0455BA98DB5FC4BE6D5A5]</object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>open_combined</remote-name>
+            <remote-type>5</remote-type>
+            <local-name>[open_combined]</local-name>
+            <parent-name>[etf_ohlc_data.csv]</parent-name>
+            <remote-alias>open_combined</remote-alias>
+            <ordinal>17</ordinal>
+            <local-type>real</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <object-id>[etf_ohlc_data.csv_D118D86126F0455BA98DB5FC4BE6D5A5]</object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>high_combined</remote-name>
+            <remote-type>5</remote-type>
+            <local-name>[high_combined]</local-name>
+            <parent-name>[etf_ohlc_data.csv]</parent-name>
+            <remote-alias>high_combined</remote-alias>
+            <ordinal>18</ordinal>
+            <local-type>real</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <object-id>[etf_ohlc_data.csv_D118D86126F0455BA98DB5FC4BE6D5A5]</object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>low_combined</remote-name>
+            <remote-type>5</remote-type>
+            <local-name>[low_combined]</local-name>
+            <parent-name>[etf_ohlc_data.csv]</parent-name>
+            <remote-alias>low_combined</remote-alias>
+            <ordinal>19</ordinal>
+            <local-type>real</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <object-id>[etf_ohlc_data.csv_D118D86126F0455BA98DB5FC4BE6D5A5]</object-id>
+          </metadata-record>
+          <metadata-record class='column'>
+            <remote-name>close_combined</remote-name>
+            <remote-type>5</remote-type>
+            <local-name>[close_combined]</local-name>
+            <parent-name>[etf_ohlc_data.csv]</parent-name>
+            <remote-alias>close_combined</remote-alias>
+            <ordinal>20</ordinal>
+            <local-type>real</local-type>
+            <aggregation>Sum</aggregation>
+            <contains-null>true</contains-null>
+            <object-id>[etf_ohlc_data.csv_D118D86126F0455BA98DB5FC4BE6D5A5]</object-id>
+          </metadata-record>
+        </metadata-records>
+      </connection>
+      <aliases enabled='yes' />
+      <column caption='Close - Open' datatype='real' name='[Calculation_593349313427546112]' role='measure' type='quantitative'>
+        <calculation class='tableau' formula='SUM([close_combined] - [open_combined])' />
+      </column>
+      <column caption='Close-Open&gt;0' datatype='boolean' name='[Calculation_593349313428811777]' role='measure' type='nominal'>
+        <calculation class='tableau' formula='[Calculation_593349313427546112]&gt;0' />
+      </column>
+      <column caption='Low-High' datatype='real' name='[Calculation_593349313429794818]' role='measure' type='quantitative'>
+        <calculation class='tableau' formula='SUM([low_combined]) - SUM([high_combined])' />
+      </column>
+      <column caption='etf_ohlc_data.csv' datatype='table' name='[__tableau_internal_object_id__].[etf_ohlc_data.csv_D118D86126F0455BA98DB5FC4BE6D5A5]' role='measure' type='quantitative' />
+      <column caption='close ARKK' datatype='real' name='[close_ARKK]' role='measure' type='quantitative' />
+      <column caption='close IWF' datatype='real' name='[close_IWF]' role='measure' type='quantitative' />
+      <column caption='close QQQ' datatype='real' name='[close_QQQ]' role='measure' type='quantitative' />
+      <column caption='close UPRO' datatype='real' name='[close_UPRO]' role='measure' type='quantitative' />
+      <column caption='Close Combined' datatype='real' name='[close_combined]' role='measure' type='quantitative' />
+      <column caption='high ARKK' datatype='real' name='[high_ARKK]' role='measure' type='quantitative' />
+      <column caption='high IWF' datatype='real' name='[high_IWF]' role='measure' type='quantitative' />
+      <column caption='high QQQ' datatype='real' name='[high_QQQ]' role='measure' type='quantitative' />
+      <column caption='high UPRO' datatype='real' name='[high_UPRO]' role='measure' type='quantitative' />
+      <column caption='High Combined' datatype='real' name='[high_combined]' role='measure' type='quantitative' />
+      <column caption='low ARKK' datatype='real' name='[low_ARKK]' role='measure' type='quantitative' />
+      <column caption='low IWF' datatype='real' name='[low_IWF]' role='measure' type='quantitative' />
+      <column caption='low QQQ' datatype='real' name='[low_QQQ]' role='measure' type='quantitative' />
+      <column caption='low UPRO' datatype='real' name='[low_UPRO]' role='measure' type='quantitative' />
+      <column caption='Low Combined' datatype='real' name='[low_combined]' role='measure' type='quantitative' />
+      <column caption='open ARKK' datatype='real' name='[open_ARKK]' role='measure' type='quantitative' />
+      <column caption='open IWF' datatype='real' name='[open_IWF]' role='measure' type='quantitative' />
+      <column caption='open QQQ' datatype='real' name='[open_QQQ]' role='measure' type='quantitative' />
+      <column caption='open UPRO' datatype='real' name='[open_UPRO]' role='measure' type='quantitative' />
+      <column caption='Open Combined' datatype='real' name='[open_combined]' role='measure' type='quantitative' />
+      <column-instance column='[Calculation_593349313428811777]' derivation='User' name='[usr:Calculation_593349313428811777:nk]' pivot='key' type='nominal' />
+      <layout dim-ordering='alphabetic' measure-ordering='alphabetic' show-structure='true' />
+      <style>
+        <style-rule element='mark'>
+          <encoding attr='color' field='[usr:Calculation_593349313428811777:nk]' type='palette'>
+            <map to='#00aa00'>
+              <bucket>true</bucket>
+            </map>
+            <map to='#c80d10'>
+              <bucket>false</bucket>
+            </map>
+          </encoding>
+        </style-rule>
+      </style>
+      <semantic-values>
+        <semantic-value key='[Country].[Name]' value='&quot;Singapore&quot;' />
+      </semantic-values>
+      <object-graph>
+        <objects>
+          <object caption='etf_ohlc_data.csv' id='etf_ohlc_data.csv_D118D86126F0455BA98DB5FC4BE6D5A5'>
+            <properties context=''>
+              <relation connection='textscan.1uyay881u5cf4k1czq5za1tz37xs' name='etf_ohlc_data.csv' table='[etf_ohlc_data#csv]' type='table'>
+                <columns character-set='UTF-8' header='yes' locale='en_SG' separator=','>
+                  <column datatype='date' name='Date' ordinal='0' />
+                  <column datatype='real' name='open_ARKK' ordinal='1' />
+                  <column datatype='real' name='open_IWF' ordinal='2' />
+                  <column datatype='real' name='open_QQQ' ordinal='3' />
+                  <column datatype='real' name='open_UPRO' ordinal='4' />
+                  <column datatype='real' name='high_ARKK' ordinal='5' />
+                  <column datatype='real' name='high_IWF' ordinal='6' />
+                  <column datatype='real' name='high_QQQ' ordinal='7' />
+                  <column datatype='real' name='high_UPRO' ordinal='8' />
+                  <column datatype='real' name='low_ARKK' ordinal='9' />
+                  <column datatype='real' name='low_IWF' ordinal='10' />
+                  <column datatype='real' name='low_QQQ' ordinal='11' />
+                  <column datatype='real' name='low_UPRO' ordinal='12' />
+                  <column datatype='real' name='close_ARKK' ordinal='13' />
+                  <column datatype='real' name='close_IWF' ordinal='14' />
+                  <column datatype='real' name='close_QQQ' ordinal='15' />
+                  <column datatype='real' name='close_UPRO' ordinal='16' />
+                  <column datatype='real' name='open_combined' ordinal='17' />
+                  <column datatype='real' name='high_combined' ordinal='18' />
+                  <column datatype='real' name='low_combined' ordinal='19' />
+                  <column datatype='real' name='close_combined' ordinal='20' />
+                </columns>
+              </relation>
+            </properties>
+          </object>
+        </objects>
+      </object-graph>
+    </datasource>
+  </datasources>
+  <worksheets>
+    <worksheet name='Sheet 1'>
+      <table>
+        <view>
+          <datasources>
+            <datasource caption='etf_ohlc_data' name='federated.0dt4efv1qcuvzd19qnb9i1sfyjem' />
+          </datasources>
+          <datasource-dependencies datasource='federated.0dt4efv1qcuvzd19qnb9i1sfyjem'>
+            <column caption='Close - Open' datatype='real' name='[Calculation_593349313427546112]' role='measure' type='quantitative'>
+              <calculation class='tableau' formula='SUM([close_combined] - [open_combined])' />
+            </column>
+            <column caption='Close-Open&gt;0' datatype='boolean' name='[Calculation_593349313428811777]' role='measure' type='nominal'>
+              <calculation class='tableau' formula='[Calculation_593349313427546112]&gt;0' />
+            </column>
+            <column caption='Low-High' datatype='real' name='[Calculation_593349313429794818]' role='measure' type='quantitative'>
+              <calculation class='tableau' formula='SUM([low_combined]) - SUM([high_combined])' />
+            </column>
+            <column datatype='date' name='[Date]' role='dimension' type='ordinal' />
+            <column caption='Close Combined' datatype='real' name='[close_combined]' role='measure' type='quantitative' />
+            <column-instance column='[Date]' derivation='Day' name='[dy:Date:ok]' pivot='key' type='ordinal' />
+            <column caption='High Combined' datatype='real' name='[high_combined]' role='measure' type='quantitative' />
+            <column caption='Low Combined' datatype='real' name='[low_combined]' role='measure' type='quantitative' />
+            <column caption='Open Combined' datatype='real' name='[open_combined]' role='measure' type='quantitative' />
+            <column-instance column='[close_combined]' derivation='Sum' name='[sum:close_combined:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[high_combined]' derivation='Sum' name='[sum:high_combined:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[low_combined]' derivation='Sum' name='[sum:low_combined:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[open_combined]' derivation='Sum' name='[sum:open_combined:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[Calculation_593349313427546112]' derivation='User' name='[usr:Calculation_593349313427546112:qk]' pivot='key' type='quantitative' />
+            <column-instance column='[Calculation_593349313428811777]' derivation='User' name='[usr:Calculation_593349313428811777:nk]' pivot='key' type='nominal' />
+            <column-instance column='[Calculation_593349313429794818]' derivation='User' name='[usr:Calculation_593349313429794818:qk]' pivot='key' type='quantitative' />
+          </datasource-dependencies>
+          <aggregation value='true' />
+        </view>
+        <style>
+          <style-rule element='axis'>
+            <encoding attr='space' class='0' field='[federated.0dt4efv1qcuvzd19qnb9i1sfyjem].[sum:high_combined:qk]' field-type='quantitative' fold='true' scope='rows' synchronized='true' type='space' />
+            <format attr='render-fold-reversed' value='true' />
+            <encoding attr='space' class='0' domain-expand='false' field='[federated.0dt4efv1qcuvzd19qnb9i1sfyjem].[sum:open_combined:qk]' field-type='quantitative' scope='rows' type='space' />
+            <format attr='display' class='0' field='[federated.0dt4efv1qcuvzd19qnb9i1sfyjem].[sum:high_combined:qk]' scope='rows' value='false' />
+            <format attr='title' class='0' field='[federated.0dt4efv1qcuvzd19qnb9i1sfyjem].[sum:open_combined:qk]' scope='rows' value='Price' />
+          </style-rule>
+          <style-rule element='cell'>
+            <format attr='width' field='[federated.0dt4efv1qcuvzd19qnb9i1sfyjem].[dy:Date:ok]' value='29' />
+          </style-rule>
+        </style>
+        <panes>
+          <pane selection-relaxation-option='selection-relaxation-allow'>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='GanttBar' />
+            <style>
+              <style-rule element='pane'>
+                <format attr='minwidth' value='-1' />
+                <format attr='maxwidth' value='-1' />
+              </style-rule>
+            </style>
+          </pane>
+          <pane id='1' selection-relaxation-option='selection-relaxation-allow' y-axis-name='[federated.0dt4efv1qcuvzd19qnb9i1sfyjem].[sum:open_combined:qk]'>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='GanttBar' />
+            <encodings>
+              <color column='[federated.0dt4efv1qcuvzd19qnb9i1sfyjem].[usr:Calculation_593349313428811777:nk]' />
+              <size column='[federated.0dt4efv1qcuvzd19qnb9i1sfyjem].[usr:Calculation_593349313427546112:qk]' />
+              <lod column='[federated.0dt4efv1qcuvzd19qnb9i1sfyjem].[sum:close_combined:qk]' />
+            </encodings>
+          </pane>
+          <pane id='2' selection-relaxation-option='selection-relaxation-allow' y-axis-name='[federated.0dt4efv1qcuvzd19qnb9i1sfyjem].[sum:high_combined:qk]'>
+            <view>
+              <breakdown value='auto' />
+            </view>
+            <mark class='GanttBar' />
+            <mark-sizing mark-sizing-setting='marks-scaling-off' />
+            <encodings>
+              <size column='[federated.0dt4efv1qcuvzd19qnb9i1sfyjem].[usr:Calculation_593349313429794818:qk]' />
+              <lod column='[federated.0dt4efv1qcuvzd19qnb9i1sfyjem].[sum:low_combined:qk]' />
+            </encodings>
+            <style>
+              <style-rule element='mark'>
+                <format attr='size' value='0.0099999997764825821' />
+              </style-rule>
+            </style>
+          </pane>
+        </panes>
+        <rows>([federated.0dt4efv1qcuvzd19qnb9i1sfyjem].[sum:open_combined:qk] + [federated.0dt4efv1qcuvzd19qnb9i1sfyjem].[sum:high_combined:qk])</rows>
+        <cols>[federated.0dt4efv1qcuvzd19qnb9i1sfyjem].[dy:Date:ok]</cols>
+      </table>
+      <simple-id uuid='{D04C27DF-FCF4-495F-92F0-9C4BD02AF68B}' />
+    </worksheet>
+  </worksheets>
+  <windows saved-dpi-scale-factor='1.5' source-height='44'>
+    <window class='worksheet' maximized='true' name='Sheet 1'>
+      <cards>
+        <edge name='left'>
+          <strip size='160'>
+            <card type='pages' />
+            <card type='filters' />
+            <card type='marks' />
+          </strip>
+        </edge>
+        <edge name='top'>
+          <strip size='2147483647'>
+            <card type='columns' />
+          </strip>
+          <strip size='2147483647'>
+            <card type='rows' />
+          </strip>
+          <strip size='30'>
+            <card type='title' />
+          </strip>
+        </edge>
+        <edge name='right'>
+          <strip size='160'>
+            <card pane-specification-id='1' param='[federated.0dt4efv1qcuvzd19qnb9i1sfyjem].[usr:Calculation_593349313428811777:nk]' type='color' />
+          </strip>
+        </edge>
+      </cards>
+      <viewpoint>
+        <highlight>
+          <color-one-way>
+            <field>[federated.0dt4efv1qcuvzd19qnb9i1sfyjem].[usr:Calculation_593349313428811777:nk]</field>
+            <field>[federated.0dt4efv1qcuvzd19qnb9i1sfyjem].[yr:Date:ok]</field>
+          </color-one-way>
+        </highlight>
+      </viewpoint>
+      <simple-id uuid='{1D87B4A8-B279-4BD1-B7D0-A9CFFAF919E8}' />
+    </window>
+  </windows>
+  <thumbnails>
+    <thumbnail height='192' name='Sheet 1' width='192'>
+      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
+    </thumbnail>
+  </thumbnails>
+</workbook>
