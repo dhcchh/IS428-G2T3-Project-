@@ -1,0 +1,51 @@
+Name,Ticker,Weight,Sector
+Marsh & McLennan Cos Inc,MMC,1.342,Financials
+Berkshire Hathaway Inc,BRK/B,1.319,Financials
+Coca-Cola Co/The,KO,1.315,Consumer Staples
+Republic Services Inc,RSG,1.238,Industrials
+Linde PLC,LIN,1.174,Materials
+Atmos Energy Corp,ATO,1.173,Utilities
+Colgate-Palmolive Co,CL,1.15,Consumer Staples
+Consolidated Edison Inc,ED,1.15,Utilities
+Evergy Inc,EVRG,1.142,Utilities
+Procter & Gamble Co/The,PG,1.141,Consumer Staples
+Xcel Energy Inc,XEL,1.135,Utilities
+WEC Energy Group Inc,WEC,1.133,Utilities
+McDonald's Corp,MCD,1.128,Consumer Discretionary
+Walmart Inc,WMT,1.125,Consumer Staples
+Waste Management Inc,WM,1.116,Industrials
+Merck & Co Inc,MRK,1.113,Health Care
+PACCAR Inc,PCAR,1.113,Industrials
+Johnson & Johnson,JNJ,1.11,Health Care
+Equity Residential,EQR,1.103,Real Estate
+Clorox Co/The,CLX,1.097,Consumer Staples
+Hormel Foods Corp,HRL,1.096,Consumer Staples
+Fastenal Co,FAST,1.093,Industrials
+Alliant Energy Corp,LNT,1.09,Utilities
+Mid-America Apartment Communities Inc,MAA,1.085,Real Estate
+Hershey Co/The,HSY,1.085,Consumer Staples
+T Rowe Price Group Inc,TROW,1.082,Financials
+Essex Property Trust Inc,ESS,1.074,Real Estate
+Brown & Brown Inc,BRO,1.068,Financials
+Church & Dwight Co Inc,CHD,1.068,Consumer Staples
+Hess Corp,HES,1.067,Energy
+General Mills Inc,GIS,1.062,Consumer Staples
+AvalonBay Communities Inc,AVB,1.051,Real Estate
+PepsiCo Inc,PEP,1.044,Consumer Staples
+Ecolab Inc,ECL,1.042,Materials
+Southern Co/The,SO,1.04,Utilities
+International Business Machines Corp,IBM,1.034,Information Technology
+Northern Trust Corp,NTRS,1.032,Financials
+Keurig Dr Pepper Inc,KDP,1.03,Consumer Staples
+Sempra,SRE,1.029,Utilities
+Kimberly-Clark Corp,KMB,1.025,Consumer Staples
+Cognizant Technology Solutions Corp Class A,CTSH,1.021,Information Technology
+Duke Energy Corp,DUK,1.019,Utilities
+Verisk Analytics Inc,VRSK,1.011,Industrials
+Expeditors International of Washington Inc,EXPD,1.006,Industrials
+Motorola Solutions Inc,MSI,1.002,Information Technology
+Progressive Corp/The,PGR,0.998,Financials
+Loews Corp,L,0.989,Financials
+State Street Corp,STT,0.984,Financials
+IPG Photonics Corp,IPGP,0.982,Information Technology
+Sysco Corp,SYY,0.981,Consumer Staples

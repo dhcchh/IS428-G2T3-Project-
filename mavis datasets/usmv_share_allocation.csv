@@ -1,0 +1,51 @@
+Name,Ticker,Weight,Sector
+Microsoft Corp,MSFT,1.85,Information Technology
+Visa Inc Class A,V,1.78,Information Technology
+Johnson & Johnson,JNJ,1.75,Health Care
+PepsiCo Inc,PEP,1.72,Consumer Staples
+Waste Management Inc,WM,1.65,Industrials
+McDonald's Corp,MCD,1.55,Consumer Discretionary
+Verizon Communications Inc,VZ,1.52,Communication Services
+Accenture PLC Class A,ACN,1.48,Information Technology
+Procter & Gamble Co,PG,1.45,Consumer Staples
+Coca-Cola Co,KO,1.42,Consumer Staples
+Merck & Co Inc,MRK,1.39,Health Care
+Pfizer Inc,PFE,1.37,Health Care
+Roche Holding AG,RHHBY,1.35,Health Care
+Walmart Inc,WMT,1.32,Consumer Staples
+UnitedHealth Group Inc,UNH,1.29,Health Care
+Home Depot Inc,HD,1.27,Consumer Discretionary
+Adobe Inc,ADBE,1.24,Information Technology
+T-Mobile US Inc,TMUS,1.21,Communication Services
+Costco Wholesale Corp,COST,1.19,Consumer Staples
+Eli Lilly & Co,LLY,1.16,Health Care
+Amgen Inc,AMGN,1.14,Health Care
+Colgate-Palmolive Co,CL,1.12,Consumer Staples
+American Electric Power Co Inc,AEP,1.10,Utilities
+Automatic Data Processing Inc,ADP,1.07,Information Technology
+Apple Inc,AAPL,1.05,Information Technology
+Regeneron Pharmaceuticals Inc,REGN,1.03,Health Care
+McKesson Corp,MCK,1.01,Health Care
+Southern Co,SO,0.99,Utilities
+Duke Energy Corp,DUK,0.97,Utilities
+Newmont Corp,NEM,0.95,Materials
+Lockheed Martin Corp,LMT,0.93,Industrials
+Bristol-Myers Squibb Co,BMY,0.91,Health Care
+Public Storage,PSA,0.89,Real Estate
+Consolidated Edison Inc,ED,0.87,Utilities
+Xcel Energy Inc,XEL,0.85,Utilities
+Boston Properties Inc,BXP,0.83,Real Estate
+Kroger Co,KR,0.81,Consumer Staples
+Cerner Corp,CERN,0.79,Health Care
+Kimberly-Clark Corp,KMB,0.77,Consumer Staples
+Allstate Corp,ALL,0.75,Financials
+Travelers Cos Inc,TRV,0.73,Financials
+Eversource Energy,ES,0.71,Utilities
+Northern Trust Corp,NTRS,0.69,Financials
+Cincinnati Financial Corp,CINF,0.67,Financials
+Expeditors International of Washington Inc,EXPD,0.65,Industrials
+Chubb Ltd,CB,0.63,Financials
+Progressive Corp,PGR,0.61,Financials
+Essex Property Trust Inc,ESS,0.59,Real Estate
+Brown & Brown Inc,BRO,0.57,Financials
+Paychex Inc,PAYX,0.55,Information Technology

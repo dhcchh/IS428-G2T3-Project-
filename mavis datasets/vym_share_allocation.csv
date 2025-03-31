@@ -1,0 +1,22 @@
+Name,Ticker,Weight,Sector
+Broadcom Inc.,AVGO,4.93,Information Technology
+JPMorgan Chase & Co.,JPM,4.04,Financials
+Exxon Mobil Corp.,XOM,2.72,Energy
+Walmart Inc.,WMT,2.33,Consumer Staples
+Procter & Gamble Co.,PG,2.23,Consumer Staples
+Johnson & Johnson,JNJ,2.16,Health Care
+Home Depot Inc.,HD,2.14,Consumer Discretionary
+AbbVie Inc.,ABBV,2.01,Health Care
+Bank of America Corp.,BAC,1.67,Financials
+Coca-Cola Co.,KO,1.50,Consumer Staples
+Vanguard Market Liquidity Fund,--,0.03,Cash & Equivalents
+AT&T Inc.,T,--,Communication Services
+Bank of America Corp,BAC,--,Financials
+Pfizer Inc,PFE,--,Health Care
+Broadcom Inc,AVGO,--,Information Technology
+Exxon Mobil Corp,XOM,--,Energy
+Walmart Inc,WMT,--,Consumer Staples
+Verizon Communications Inc,VZ,--,Communication Services
+Cisco Systems Inc,CSCO,--,Information Technology
+Ford Motor Co,F,--,Consumer Discretionary
+Coca-Cola Co/The,KO,--,Consumer Staples
