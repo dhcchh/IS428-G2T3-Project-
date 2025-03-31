@@ -1,49 +1,49 @@
 Name,Ticker,Weight,Sector
-U.S. Treasury Note 2.750% 2032-08-15,--,0.84,Government Treasury
-U.S. Treasury Note 3.500% 2033-02-15,--,0.79,Government Treasury
-U.S. Treasury Note 1.875% 2032-02-15,--,0.76,Government Treasury
-U.S. Treasury Bond 2.875% 2052-05-15,--,0.72,Government Treasury
-U.S. Treasury Note 1.375% 2031-11-15,--,0.68,Government Treasury
-Federal National Mortgage Association 3.0%,--,0.63,Mortgage-Backed Securities
-Federal National Mortgage Association 2.5%,--,0.61,Mortgage-Backed Securities
-U.S. Treasury Note 2.375% 2032-03-31,--,0.59,Government Treasury
-Federal Home Loan Mortgage Corporation 2.5%,--,0.58,Mortgage-Backed Securities
-Federal National Mortgage Association 4.0%,--,0.56,Mortgage-Backed Securities
-U.S. Treasury Note 1.625% 2031-05-15,--,0.54,Government Treasury
-U.S. Treasury Bond 3.250% 2042-05-15,--,0.52,Government Treasury
-U.S. Treasury Note 2.250% 2031-08-15,--,0.50,Government Treasury
-U.S. Treasury Note 1.125% 2031-02-15,--,0.48,Government Treasury
-U.S. Treasury Note 1.250% 2030-08-15,--,0.46,Government Treasury
-U.S. Treasury Note 0.875% 2030-11-15,--,0.44,Government Treasury
-U.S. Treasury Note 1.500% 2030-02-15,--,0.42,Government Treasury
-U.S. Treasury Note 1.750% 2029-11-15,--,0.40,Government Treasury
-U.S. Treasury Bond 4.000% 2052-11-15,--,0.38,Government Treasury
-U.S. Treasury Note 3.875% 2033-08-15,--,0.36,Government Treasury
-U.S. Treasury Note 4.000% 2033-05-15,--,0.34,Government Treasury
-U.S. Treasury Note 3.625% 2032-11-15,--,0.32,Government Treasury
-U.S. Treasury Bond 4.125% 2042-11-15,--,0.30,Government Treasury
-U.S. Treasury Bond 3.625% 2043-08-15,--,0.28,Government Treasury
-U.S. Treasury Bond 3.750% 2043-11-15,--,0.26,Government Treasury
-Federal National Mortgage Association 3.5%,--,0.25,Mortgage-Backed Securities
-Federal National Mortgage Association 4.5%,--,0.24,Mortgage-Backed Securities
-Federal Home Loan Mortgage Corporation 3.0%,--,0.23,Mortgage-Backed Securities
-Federal National Mortgage Association 5.0%,--,0.22,Mortgage-Backed Securities
-Federal Home Loan Mortgage Corporation 3.5%,--,0.21,Mortgage-Backed Securities
-Federal Home Loan Mortgage Corporation 4.0%,--,0.20,Mortgage-Backed Securities
-Federal National Mortgage Association 2.0%,--,0.19,Mortgage-Backed Securities
-Government National Mortgage Association 3.0%,--,0.18,Mortgage-Backed Securities
-Government National Mortgage Association 3.5%,--,0.17,Mortgage-Backed Securities
-Federal Home Loan Mortgage Corporation 4.5%,--,0.16,Mortgage-Backed Securities
-Federal Home Loan Mortgage Corporation 2.0%,--,0.15,Mortgage-Backed Securities
-Government National Mortgage Association 4.0%,--,0.14,Mortgage-Backed Securities
-Government National Mortgage Association 4.5%,--,0.13,Mortgage-Backed Securities
-JPMorgan Chase & Co. 3.375% 2032-05-01,--,0.12,Corporate Bonds
-Bank of America Corp 4.125% 2031-01-22,--,0.11,Corporate Bonds
-Apple Inc 2.650% 2030-02-11,--,0.10,Corporate Bonds
-Microsoft Corp 2.525% 2050-06-01,--,0.09,Corporate Bonds
-Verizon Communications Inc 3.400% 2041-03-22,--,0.08,Corporate Bonds
-Amazon.com Inc 2.700% 2060-06-03,--,0.07,Corporate Bonds
-Alphabet Inc 3.375% 2034-02-15,--,0.06,Corporate Bonds
-VISA Inc 4.150% 2035-12-14,--,0.05,Corporate Bonds
-Exxon Mobil Corp 2.995% 2039-03-19,--,0.04,Corporate Bonds
-BlackRock Cash Funds Treasury SL Agency,--,0.04,Cash & Equivalents
+U.S. Treasury Note 2.750% 2032-08-15,USTB,0.84,Financials
+U.S. Treasury Note 3.500% 2033-02-15,USTB,0.79,Financials
+U.S. Treasury Note 1.875% 2032-02-15,USTB,0.76,Financials
+U.S. Treasury Bond 2.875% 2052-05-15,USTB,0.72,Financials
+U.S. Treasury Note 1.375% 2031-11-15,USTB,0.68,Financials
+Federal National Mortgage Association 3.0%,FNMA,0.63,Financials
+Federal National Mortgage Association 2.5%,FNMA,0.61,Financials
+U.S. Treasury Note 2.375% 2032-03-31,USTB,0.59,Financials
+Federal Home Loan Mortgage Corporation 2.5%,FHLMC,0.58,Financials
+Federal National Mortgage Association 4.0%,FNMA,0.56,Financials
+U.S. Treasury Note 1.625% 2031-05-15,USTB,0.54,Financials
+U.S. Treasury Bond 3.250% 2042-05-15,USTB,0.52,Financials
+U.S. Treasury Note 2.250% 2031-08-15,USTB,0.50,Financials
+U.S. Treasury Note 1.125% 2031-02-15,USTB,0.48,Financials
+U.S. Treasury Note 1.250% 2030-08-15,USTB,0.46,Financials
+U.S. Treasury Note 0.875% 2030-11-15,USTB,0.44,Financials
+U.S. Treasury Note 1.500% 2030-02-15,USTB,0.42,Financials
+U.S. Treasury Note 1.750% 2029-11-15,USTB,0.40,Financials
+U.S. Treasury Bond 4.000% 2052-11-15,USTB,0.38,Financials
+U.S. Treasury Note 3.875% 2033-08-15,USTB,0.36,Financials
+U.S. Treasury Note 4.000% 2033-05-15,USTB,0.34,Financials
+U.S. Treasury Note 3.625% 2032-11-15,USTB,0.32,Financials
+U.S. Treasury Bond 4.125% 2042-11-15,USTB,0.30,Financials
+U.S. Treasury Bond 3.625% 2043-08-15,USTB,0.28,Financials
+U.S. Treasury Bond 3.750% 2043-11-15,USTB,0.26,Financials
+Federal National Mortgage Association 3.5%,FNMA,0.25,Financials
+Federal National Mortgage Association 4.5%,FNMA,0.24,Financials
+Federal Home Loan Mortgage Corporation 3.0%,FHLMC,0.23,Financials
+Federal National Mortgage Association 5.0%,FNMA,0.22,Financials
+Federal Home Loan Mortgage Corporation 3.5%,FHLMC,0.21,Financials
+Federal Home Loan Mortgage Corporation 4.0%,FHLMC,0.20,Financials
+Federal National Mortgage Association 2.0%,FNMA,0.19,Financials
+Government National Mortgage Association 3.0%,GNMA,0.18,Financials
+Government National Mortgage Association 3.5%,GNMA,0.17,Financials
+Federal Home Loan Mortgage Corporation 4.5%,FHLMC,0.16,Financials
+Federal Home Loan Mortgage Corporation 2.0%,FHLMC,0.15,Financials
+Government National Mortgage Association 4.0%,GNMA,0.14,Financials
+Government National Mortgage Association 4.5%,GNMA,0.13,Financials
+JPMorgan Chase & Co. 3.375% 2032-05-01,JPM,0.12,Financials
+Bank of America Corp 4.125% 2031-01-22,BAC,0.11,Financials
+Apple Inc 2.650% 2030-02-11,AAPL,0.10,Information Technology
+Microsoft Corp 2.525% 2050-06-01,MSFT,0.09,Information Technology
+Verizon Communications Inc 3.400% 2041-03-22,VZ,0.08,Communication Services
+Amazon.com Inc 2.700% 2060-06-03,AMZN,0.07,Consumer Discretionary
+Alphabet Inc 3.375% 2034-02-15,GOOGL,0.06,Communication Services
+VISA Inc 4.150% 2035-12-14,V,0.05,Information Technology
+Exxon Mobil Corp 2.995% 2039-03-19,XOM,0.04,Energy
+BlackRock Cash Funds Treasury SL Agency,BLK,0.04,Financials
