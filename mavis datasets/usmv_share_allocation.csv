@@ -1,51 +1,51 @@
 Name,Ticker,Weight,Industry
-Microsoft Corp,MSFT,3.41,Information Technology
-Visa Inc Class A,V,3.28,Information Technology
-Johnson & Johnson,JNJ,3.23,Health Care
-PepsiCo Inc,PEP,3.17,Consumer Staples
-McDonalds Corp,MCD,3.16,Consumer Discretionary
-COCA COLA,KO,3.14,Consumer Staples
-Procter & Gamble,PG,3.08,Consumer Staples
-Verizon Communications Inc,VZ,3.05,Communication Services
-Merck & Co Inc,MRK,3.03,Health Care
-Apple Inc,AAPL,2.99,Information Technology
-Accenture PLC Class A,ACN,2.99,Information Technology
-AT&T Inc,T,2.95,Communication Services
-Pfizer Inc,PFE,2.92,Health Care
-Amgen Inc,AMGN,2.90,Health Care
-Waste Management Inc,WM,2.81,Industrials
-Automatic Data Processing Inc,ADP,2.81,Information Technology
-Gilead Sciences Inc,GILD,2.81,Health Care
-Consolidated Edison Inc,ED,2.79,Utilities
-Eli Lilly and Co,LLY,2.77,Health Care
-PNC Financial Services Group Inc,PNC,2.75,Financials
-International Business Machines Corp,IBM,2.75,Information Technology
-Abbott Laboratories,ABT,2.73,Health Care
-QUALCOMM Inc,QCOM,2.71,Information Technology
-Regeneron Pharmaceuticals Inc,REGN,2.71,Health Care
-U.S. Bancorp,USB,2.69,Financials
-Baxter International Inc,BAX,2.69,Health Care
-Colgate-Palmolive Co,CL,2.69,Consumer Staples
-Bristol-Myers Squibb Co,BMY,2.68,Health Care
-Paychex Inc,PAYX,2.66,Industrials
-Exelon Corp,EXC,2.66,Utilities
-Aon PLC Class A,AON,2.64,Financials
-Church & Dwight Co Inc,CHD,2.62,Consumer Staples
-Allstate Corp,ALL,2.62,Financials
-Realty Income Corp,O,2.60,Real Estate
-Motorola Solutions Inc,MSI,2.58,Information Technology
-Public Storage,PSA,2.58,Real Estate
-Ecolab Inc,ECL,2.57,Materials
-ADP,ADP,2.57,Industrials
-WEC Energy Group Inc,WEC,2.57,Utilities
-Xcel Energy Inc,XEL,2.57,Utilities
-Marsh & McLennan Companies Inc,MMC,2.55,Financials
-Kimberly-Clark Corp,KMB,2.55,Consumer Staples
-Danaher Corp,DHR,2.53,Health Care
-Duke Energy Corp,DUK,2.51,Utilities
-Travelers Companies Inc,TRV,2.51,Financials
-CME Group Inc Class A,CME,2.49,Financials
-Southern Co,SO,2.47,Utilities
-American Water Works Co Inc,AWK,2.47,Utilities
-Evergy Inc,EVRG,2.45,Utilities
-Equity Residential,EQR,2.40,Real Estate
+Microsoft Corp,MSFT,2.47,Information Technology
+Visa Inc Class A,V,2.38,Information Technology
+Johnson & Johnson,JNJ,2.34,Health Care
+PepsiCo Inc,PEP,2.30,Consumer Staples
+McDonalds Corp,MCD,2.29,Consumer Discretionary
+COCA COLA,KO,2.28,Consumer Staples
+Procter & Gamble,PG,2.23,Consumer Staples
+Verizon Communications Inc,VZ,2.21,Communication Services
+Merck & Co Inc,MRK,2.20,Health Care
+Apple Inc,AAPL,2.17,Information Technology
+Accenture PLC Class A,ACN,2.17,Information Technology
+AT&T Inc,T,2.14,Communication Services
+Pfizer Inc,PFE,2.12,Health Care
+Amgen Inc,AMGN,2.10,Health Care
+Waste Management Inc,WM,2.04,Industrials
+Automatic Data Processing Inc,ADP,2.04,Information Technology
+Gilead Sciences Inc,GILD,2.04,Health Care
+Consolidated Edison Inc,ED,2.02,Utilities
+Eli Lilly and Co,LLY,2.01,Health Care
+PNC Financial Services Group Inc,PNC,1.99,Financials
+International Business Machines Corp,IBM,1.99,Information Technology
+Abbott Laboratories,ABT,1.98,Health Care
+QUALCOMM Inc,QCOM,1.97,Information Technology
+Regeneron Pharmaceuticals Inc,REGN,1.97,Health Care
+U.S. Bancorp,USB,1.95,Financials
+Baxter International Inc,BAX,1.95,Health Care
+Colgate-Palmolive Co,CL,1.95,Consumer Staples
+Bristol-Myers Squibb Co,BMY,1.94,Health Care
+Paychex Inc,PAYX,1.93,Industrials
+Exelon Corp,EXC,1.93,Utilities
+Aon PLC Class A,AON,1.91,Financials
+Church & Dwight Co Inc,CHD,1.90,Consumer Staples
+Allstate Corp,ALL,1.90,Financials
+Realty Income Corp,O,1.89,Real Estate
+Motorola Solutions Inc,MSI,1.87,Information Technology
+Public Storage,PSA,1.87,Real Estate
+Ecolab Inc,ECL,1.86,Materials
+ADP,ADP,1.86,Industrials
+WEC Energy Group Inc,WEC,1.86,Utilities
+Xcel Energy Inc,XEL,1.86,Utilities
+Marsh & McLennan Companies Inc,MMC,1.85,Financials
+Kimberly-Clark Corp,KMB,1.85,Consumer Staples
+Danaher Corp,DHR,1.83,Health Care
+Duke Energy Corp,DUK,1.82,Utilities
+Travelers Companies Inc,TRV,1.82,Financials
+CME Group Inc Class A,CME,1.81,Financials
+Southern Co,SO,1.79,Utilities
+American Water Works Co Inc,AWK,1.79,Utilities
+Evergy Inc,EVRG,1.78,Utilities
+Equity Residential,EQR,1.74,Real Estate
