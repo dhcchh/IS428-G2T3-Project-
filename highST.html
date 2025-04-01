@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Low Risk Long-Term Investment Dashboard</title>
+    <script src="https://d3js.org/d3.v7.min.js" charset="utf-8"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f8f9fa;
+            color: #333;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            margin-bottom: 10px;
+            color: #2c3e50;
+        }
+        .header h5 {
+            margin-top: 0;
+            color: #7f8c8d;
+        }
+        .dashboard {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+        }
+        .controls {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .controls h3 {
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .control-group {
+            margin-bottom: 20px;
+        }
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .slider-container {
+            margin-bottom: 15px;
+        }
+        .slider-container .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .metric-card {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .metric-card h3 {
+            margin: 10px 0;
+            font-size: 1.8rem;
+        }
+        .metric-card p {
+            margin: 0;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        .charts {
+            display: grid;
+            grid-template-rows: auto;
+            gap: 20px;
+        }
+        .chart-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .chart-container h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        .tooltip {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        input[type="range"] {
+            width: 100%;
+        }
+        .allocation-display {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .tab-container {
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        .tabs {
+            display: flex;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+        }
+        .tab.active {
+            border-bottom-color: #3498db;
+            font-weight: 500;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .warning {
+            color: #e74c3c;
+            margin-top: 5px;
+            font-size: 0.9rem;
+        }
+        .axis line, .axis path {
+            stroke: #ddd;
+        }
+        .axis text {
+            fill: #666;
+            font-size: 0.8rem;
+        }
+        .notes {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        .notes h5 {
+            margin-top: 0;
+        }
+        .notes ul {
+            padding-left: 20px;
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-right: 20px;
+            margin-bottom: 5px;
+        }
+        .legend-color {
+            width: 15px;
+            height: 15px;
+            margin-right: 5px;
+            border-radius: 2px;
+        }
+        .api-error {
+            background-color: #fee;
+            color: #e74c3c;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        /* CSS for the time period buttons */
+        .time-period-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+        }
+
+        .time-btn {
+            flex: 1;
+            padding: 8px 0;
+            margin: 0 4px;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .time-btn:first-child {
+            margin-left: 0;
+        }
+
+        .time-btn:last-child {
+            margin-right: 0;
+        }
+
+        .time-btn:hover {
+            background-color: #e9ecef;
+        }
+
+        .time-btn.active {
+            background-color: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+        /* Additional CSS for Portfolio vs SPY comparison */
+        .portfolio-line {
+            stroke-width: 3px;
+            stroke-linejoin: round;
+            stroke-linecap: round;
+        }
+
+        .spy-line {
+            stroke-width: 2px;
+            stroke-dasharray: 5, 5;
+            stroke-linejoin: round;
+            stroke-linecap: round;
+        }
+
+        .outperformance-positive {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .outperformance-negative {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .grid line {
+            stroke: #e0e0e0;
+            stroke-opacity: 0.7;
+            shape-rendering: crispEdges;
+        }
+
+        .grid path {
+            stroke-width: 0;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+        }
+        .loading:after {
+            content: '...';
+            animation: dots 1.5s steps(5, end) infinite;
+        }
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+    </style>
+</head>
+<body>
+    <div class="charts">
+        <div id="candlestick" class="tab-content active">
+            <div class="chart-container">
+                <div id="portfolio-candlestick-chart">
+                    <div class="loading">Loading data</div>
+                </div>
+                <div class="legend" id="candlestick-legend"></div>
+            </div>
+        </div>
+        
+        <div id="company" class="tab-content">
+            <div class="chart-container">
+                <h3>Company Weightage Analysis</h3>
+                <div id="company-weightage-chart">
+                    <div class="loading">Loading data</div>
+                </div>
+                <div class="legend" id="company-legend"></div>
+            </div>
+        </div>
+        
+        <div id="industry" class="tab-content">
+            <div class="chart-container">
+                <h3>Industry Weightage Analysis</h3>
+                <div id="industry-weightage-chart">
+                    <div class="loading">Loading data</div>
+                </div>
+                <div class="legend" id="industry-legend"></div>
+            </div>
+        </div>
+        
+        <div id="volume" class="tab-content">
+            <div class="chart-container">
+                <h3>Volume Analysis</h3>
+                <div id="volume-chart">
+                    <div class="loading">Loading data</div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="correlation" class="tab-content">
+            <div class="chart-container">
+                <h3>Correlation Analysis</h3>
+                <div id="correlation-chart">
+                    <div class="loading">Loading data</div>
+                </div>
+                <div class="legend" id="correlation-legend"></div>
+            </div>
+        </div>
+        
+        <div id="drawdown" class="tab-content">
+            <div class="chart-container">
+                <h3>Portfolio Drawdown Analysis</h3>
+                <div id="drawdown-chart">
+                    <div class="loading">Loading data</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add a tooltip div -->
+    <div id="tooltip" class="tooltip"></div>
+
+    <script>
+        // API URLs
+        const API_BASE_URL = 'http://localhost:5001';
+        const API_DATE_RANGE = `${API_BASE_URL}/api/date-range`;
+        const API_PORTFOLIO_VALUE = `${API_BASE_URL}/api/portfolio-value`;
+        const API_TOTAL_RETURN = `${API_BASE_URL}/api/total-return`;
+        const API_MAX_DRAWDOWN = `${API_BASE_URL}/api/max-drawdown`;
+        const API_RISK_LEVEL = `${API_BASE_URL}/api/risk-level`;
+        const API_PORTFOLIO_GROWTH = `${API_BASE_URL}/api/portfolio-growth`;
+        const API_DRAWDOWN_ANALYSIS = `${API_BASE_URL}/api/drawdown-analysis`;
+        const API_ETF_COMPARISON = `${API_BASE_URL}/api/etf-comparison`;
+        const API_YEARLY_RETURNS = `${API_BASE_URL}/api/yearly-returns`;
+        const API_CALCULATE_ALL = `${API_BASE_URL}/api/calculate-all`;
+        
+
+        // Global variables
+        let minDate, maxDate;
+        let selectedStartDate, selectedEndDate;
+        let portfolioData = null;
+        let drawdownData = null;
+        let etfPerformance = null;
+        let yearlyReturns = null;
+        
+        // Main application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize tooltips
+            const tooltip = d3.select('#tooltip');
+            
+            // Initialize date range
+            fetchDateRange();
+            
+            // Initialize allocation sliders
+            initializeAllocationSliders();
+            
+            // Set up tabs
+            initializeTabs();
+            
+            // Set up time period buttons
+            initializeTimePeriodButtons();
+            
+            // Set up calculate button
+            document.getElementById('calculate-button').addEventListener('click', function() {
+                calculateAndFetchResults();
+            });
+            
+            // Initial calculation will be triggered after date range is fetched
+        });
+
+        // Function to update the risk card background color
+        function updateRiskCardColor() {
+            const riskCard = document.getElementById('risk-card');
+            const volatilityText = document.getElementById('volatility').innerText;
+            
+            if (volatilityText.includes('Very Low') || volatilityText.includes('Low')) {
+                riskCard.style.backgroundColor = 'rgba(40, 167, 69, 0.15)'; // light green
+            } else if (volatilityText.includes('High') || volatilityText.includes('Very High')) {
+                riskCard.style.backgroundColor = 'rgba(220, 53, 69, 0.15)'; // light red
+            } else {
+                riskCard.style.backgroundColor = 'rgba(255, 193, 7, 0.15)'; // light yellow for Moderate
+            }
+        }
+
+        // Call the function initially
+        updateRiskCardColor();
+
+        // Set up a MutationObserver to watch for changes to the volatility text
+        const observer = new MutationObserver(updateRiskCardColor);
+        observer.observe(document.getElementById('volatility'), { 
+            childList: true, 
+            characterData: true,
+            subtree: true
+        });
+        
+        // Function to fetch date range from API
+        function fetchDateRange() {
+            fetch(API_DATE_RANGE)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    minDate = new Date(data.min_date);
+                    maxDate = new Date(data.max_date);
+                    
+                    // Set default selected dates to max range
+                    selectedStartDate = minDate;
+                    selectedEndDate = maxDate;
+                    
+                    // Display date range text initially
+                    updateDateRangeDisplay();
+                    
+                    // Display ETF returns if needed
+                    const etfReturns = data.etf_returns;
+                    for (const etf in etfReturns) {
+                        const returnEl = document.getElementById(`${etf.toLowerCase()}-return`);
+                        if (returnEl) {
+                            returnEl.textContent = `${etfReturns[etf].toFixed(2)}%`;
+                        }
+                    }
+                    
+                    // Now that we have the date range, trigger the initial calculation
+                    calculateAndFetchResults();
+                })
+                .catch(error => {
+                    showApiError(`Failed to fetch date range: ${error.message}`);
+                });
+        }
+
+        // Function to initialize time period buttons
+        function initializeTimePeriodButtons() {
+            const buttons = document.querySelectorAll('.time-btn');
+            
+            buttons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    buttons.forEach(btn => btn.classList.remove('active'));
+                    
+                    // Add active class to clicked button
+                    this.classList.add('active');
+                    
+                    // Get the selected period
+                    const period = this.getAttribute('data-period');
+                    
+                    // Calculate start and end dates based on the period
+                    if (period === 'MAX') {
+                        selectedStartDate = minDate;
+                        selectedEndDate = maxDate;
+                    } else {
+                        selectedEndDate = new Date(maxDate); // Use a copy of maxDate
+                        selectedStartDate = calculateStartDate(period);
+                    }
+                    
+                    // Update the date range display
+                    updateDateRangeDisplay();
+                    
+                    // If allocations are valid, trigger calculation
+                    if (checkAllocation()) {
+                        calculateAndFetchResults();
+                    }
+                });
+            });
+        }
+
+        // Function to calculate start date based on period
+        function calculateStartDate(period) {
+        const endDate = new Date(selectedEndDate);
+        const startDate = new Date(endDate);
+        
+        switch (period) {
+            case '1M':
+                startDate.setMonth(endDate.getMonth() - 1);
+                break;
+            case '6M':
+                startDate.setMonth(endDate.getMonth() - 6);
+                break;
+            case '1Y':
+                startDate.setFullYear(endDate.getFullYear() - 1);
+                break;
+            case '3Y':
+                startDate.setFullYear(endDate.getFullYear() - 3);
+                break;
+            case '5Y':
+                startDate.setFullYear(endDate.getFullYear() - 5);
+                break;
+            default:
+                startDate = new Date(minDate);
+        }
+        
+        // Ensure the start date is not earlier than the minimum available date
+        if (startDate < minDate) {
+            startDate = new Date(minDate);
+        }
+        
+        return startDate;
+        }
+
+        // Function to update the date range display
+        function updateDateRangeDisplay() {
+        const dateDisplay = document.getElementById('date-range-display');
+        dateDisplay.textContent = `From ${formatDate(selectedStartDate)} to ${formatDate(selectedEndDate)}`;
+        }
+
+        // Function to initialize allocation sliders
+        function initializeAllocationSliders() {
+            const spySlider = document.getElementById('spy-allocation');
+            const bndSlider = document.getElementById('bnd-allocation');
+            const vtipSlider = document.getElementById('vtip-allocation');
+            const vxusSlider = document.getElementById('vxus-allocation');
+            
+            const spyValue = document.getElementById('spy-value');
+            const bndValue = document.getElementById('bnd-value');
+            const vtipValue = document.getElementById('vtip-value');
+            const vxusValue = document.getElementById('vxus-value');
+            
+            spySlider.addEventListener('input', function() {
+                spyValue.textContent = `${spySlider.value}%`;
+                checkAllocation();
+            });
+            
+            bndSlider.addEventListener('input', function() {
+                bndValue.textContent = `${bndSlider.value}%`;
+                checkAllocation();
+            });
+            
+            vtipSlider.addEventListener('input', function() {
+                vtipValue.textContent = `${vtipSlider.value}%`;
+                checkAllocation();
+            });
+            
+            vxusSlider.addEventListener('input', function() {
+                vxusValue.textContent = `${vxusSlider.value}%`;
+                checkAllocation();
+            });
+        }
+        
+        // Function to check if allocations sum to 100%
+        function checkAllocation() {
+            const spyValue = parseInt(document.getElementById('spy-allocation').value);
+            const bndValue = parseInt(document.getElementById('bnd-allocation').value);
+            const vtipValue = parseInt(document.getElementById('vtip-allocation').value);
+            const vxusValue = parseInt(document.getElementById('vxus-allocation').value);
+            
+            const total = spyValue + bndValue + vtipValue + vxusValue;
+            const warningEl = document.getElementById('allocation-warning');
+            
+            if (total !== 100) {
+                warningEl.textContent = `Total allocation: ${total}% (should be 100%)`;
+                return false;
+            } else {
+                warningEl.textContent = '';
+                return true;
+            }
+        }
+        
+        // Function to initialize tabs
+        function initializeTabs() {
+            const tabs = document.querySelectorAll('.tab');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    
+                    // Remove active class from all tabs and tab content
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    // Add active class to clicked tab and corresponding content
+                    this.classList.add('active');
+                    document.getElementById(tabId).classList.add('active');
+                    
+                    // Re-render charts when tab becomes visible to fix layout issues
+                    setTimeout(() => {
+                        if (tabId === 'candlestick' && portfolioData) {
+                            // Use the new comparison chart instead of the old growth chart
+                            createCandleStickChart(portfolioData, portfolioData);
+                        } else if (tabId === 'company' && portfolioData) {
+                            createCompanyWeightageChart(portfolioData);
+                        } else if (tabId === 'industry' && portfolioData) {
+                            createIndustryWeightageChart(portfolioData);
+                        }  else if (tabId === 'volume' && portfolioData) {
+                            createVolumeChart(portfolioData);
+                        } else if (tabId === 'correlation' && portfolioData) {
+                            createCorrelationAnalysisChart(portfolioData);
+                        } else if (tabId === 'drawdown' && portfolioData) {
+                            createDrawdownChart(portfolioData);
+                        }
+                    }, 50);
+                });
+            });
+        }
+
+        // Helper function to get current allocations
+        function getCurrentAllocations() {
+            return {
+                'SPY': parseInt(document.getElementById('spy-allocation').value),
+                'BND': parseInt(document.getElementById('bnd-allocation').value),
+                'VTIP': parseInt(document.getElementById('vtip-allocation').value),
+                'VXUS': parseInt(document.getElementById('vxus-allocation').value)
+            };
+        }
+        
+        // Function to calculate and fetch results from API
+        function calculateAndFetchResults() {
+            // Check if allocations are valid
+            if (!checkAllocation()) {
+                alert('Total allocation must be 100%. Please adjust your allocations.');
+                return;
+            }
+            
+            // Get input values
+            const initialInvestment = parseFloat(document.getElementById('initial-investment').value);
+            const spyAllocation = parseInt(document.getElementById('spy-allocation').value);
+            const bndAllocation = parseInt(document.getElementById('bnd-allocation').value);
+            const vtipAllocation = parseInt(document.getElementById('vtip-allocation').value);
+            const vxusAllocation = parseInt(document.getElementById('vxus-allocation').value);
+            
+            // Use the selected date range
+            const startDate = formatDateForAPI(selectedStartDate);
+            const endDate = formatDateForAPI(selectedEndDate);
+            
+            // Prepare API request payload
+            const payload = {
+                initial_investment: initialInvestment,
+                allocations: {
+                    'SPY': spyAllocation,
+                    'BND': bndAllocation,
+                    'VTIP': vtipAllocation,
+                    'VXUS': vxusAllocation
+                },
+                start_date: startDate,
+                end_date: endDate
+            };
+            
+            // Show loading state
+            document.querySelectorAll('.loading').forEach(el => {
+                el.style.display = 'block';
+            });
+            
+            // Clear any previous error messages
+            hideApiError();
+            
+            // Fetch all data at once
+            fetchAllData(payload);
+        }
+
+        // Helper function to format dates for API (YYYY-MM-DD)
+        function formatDateForAPI(date) {
+            if (!date) return null;
+            
+            const d = new Date(date);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            
+            return `${year}-${month}-${day}`;
+        }
+        
+        // Function to fetch all data from the API
+        function fetchAllData(payload) {
+            // Use the calculate-all endpoint
+            fetch(API_CALCULATE_ALL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        try {
+                            const err = JSON.parse(text);
+                            throw new Error(err.error || `HTTP error! Status: ${response.status}`);
+                        } catch(e) {
+                            throw new Error(`HTTP error! Status: ${response.status}, Body: ${text.substring(0, 100)}...`);
+                        }
+                    });
+                }
+                return response.text().then(text => {
+                    // Replace NaN with null in the response to handle JSON parsing issues
+                    const cleanedText = text.replace(/NaN/g, 'null');
+                    return JSON.parse(cleanedText);
+                });
+            })
+            .then(data => {
+                // Store the data
+                const metrics = data.metrics;
+                portfolioData = data.portfolio_data;
+                etfPerformance = data.etf_performance;
+                yearlyReturns = data.yearly_returns;
+                
+                console.log("Data received:", {
+                    portfolioDataPoints: portfolioData?.length || 0,
+                    etfPerformanceEntries: Object.keys(etfPerformance || {}).length,
+                    yearlyReturnsPoints: yearlyReturns?.length || 0
+                });
+                
+                // Update metrics display
+                updateMetricsDisplay(metrics, payload.initial_investment);
+                
+                // We'll use SPY data for comparison - extract it from portfolio data
+                // (Since we need the same date range as our portfolio data)
+                
+                // Create charts - using the new comparison chart instead of growth chart
+                createCandleStickChart(); // to use highST etfs csv files
+                createCompanyWeightageChart() // to use highST etfs csv files and company microservice
+                createIndustryWeightageChart() // to use highST etfs csv files and industry microservice
+                createVolumeChart(); // to use highST etfs csv files and create volume microservice
+                createCorrelationAnalysisChart(); // to use highST etfs csv files, can just d3js correlation function
+                createDrawdownChart(); // to use highST etfs csv files and getPortfolio microservice
+                
+                // Hide loading indicators
+                document.querySelectorAll('.loading').forEach(el => {
+                    el.style.display = 'none';
+                });
+            })
+            .catch(error => {
+                showApiError(`Failed to fetch portfolio data: ${error.message}`);
+                
+                // Hide loading indicators
+                document.querySelectorAll('.loading').forEach(el => {
+                    el.style.display = 'none';
+                });
+            });
+        }
+
+        // Helper function to show API error
+        function showApiError(message) {
+            const errorEl = document.getElementById('api-error');
+            const messageEl = document.getElementById('error-message');
+            messageEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+
+        // Helper function to hide API error
+        function hideApiError() {
+            const errorEl = document.getElementById('api-error');
+            errorEl.style.display = 'none';
+        }
+
+        // Helper function to format date
+        function formatDate(date) {
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+        
+        // Function to update metrics display
+        function updateMetricsDisplay(metrics, initialInvestment) {
+            document.getElementById('final-value').textContent = formatCurrency(metrics.final_value);
+            document.getElementById('initial-value').textContent = `Initial: ${formatCurrency(initialInvestment)}`;
+            document.getElementById('total-return').textContent = formatPercentage(metrics.total_return);
+            document.getElementById('annualized-return').textContent = `Annualized: ${formatPercentage(metrics.annualized_return)} per year`;
+            document.getElementById('max-drawdown').textContent = formatPercentage(metrics.max_drawdown);
+            document.getElementById('volatility').textContent = `${metrics.risk_level} (${formatPercentage(metrics.volatility)})`;
+        }
+
+        // Helper function to format currency
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(value);
+        }
+
+        // Helper function to format percentage
+        function formatPercentage(value) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'percent',
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 1
+            }).format(value);
+        }
+
+
+        // Function to create 
+        function createCandleStickChart() {
+
+        }
+
+        // Function to create 
+        function createCompanyWeightageChart() {
+
+        }
+
+        // Function to create 
+        function createIndustryWeightageChart() {
+
+        }
+
+        // Function to create 
+        function createVolumeChart() {
+
+        }
+        // Function to create correlation analysis chart
+        function createCorrelationAnalysisChart() {
+
+        }
+
+        // Function to create drawdown chart
+        function createDrawdownChart() {
+
+        }
+
+        // Helper function to show API error
+        function showApiError(message) {
+            const errorEl = document.getElementById('api-error');
+            const messageEl = document.getElementById('error-message');
+            messageEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+        
+        // Helper function to hide API error
+        function hideApiError() {
+            const errorEl = document.getElementById('api-error');
+            errorEl.style.display = 'none';
+        }
+        
+        // Helper function to format currency
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(value);
+        }
+        
+        // Helper function to format percentage
+        function formatPercentage(value) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'percent',
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 1
+            }).format(value);
+        }
+        
+        // Helper function to format date
+        function formatDate(date) {
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+    </script>
+</body>
+</html>
