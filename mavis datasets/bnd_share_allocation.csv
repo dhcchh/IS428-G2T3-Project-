@@ -1,22 +1,22 @@
-Name,Ticker,Weight,Sector
-Federal National Mortgage Assn.,--,1.63,Mortgage-Backed Securities
-Federal Home Loan Mortgage Corp.,--,1.30,Mortgage-Backed Securities
-Federal National Mortgage Assn.,--,1.29,Mortgage-Backed Securities
-Federal National Mortgage Assn.,--,0.96,Mortgage-Backed Securities
-Federal Home Loan Mortgage Corp.,--,0.87,Mortgage-Backed Securities
-Federal Home Loan Mortgage Corp.,--,0.81,Mortgage-Backed Securities
-Federal National Mortgage Assn.,--,0.68,Mortgage-Backed Securities
-Federal Home Loan Mortgage Corp.,--,0.66,Mortgage-Backed Securities
-Federal National Mortgage Assn.,--,0.63,Mortgage-Backed Securities
-Government National Mortgage Assn.,--,0.63,Mortgage-Backed Securities
-Vanguard Market Liquidity Fund,--,0.84,Cash & Equivalents
-United States Treasury Note/Bond,--,--,Government Treasury
-United States Treasury Note/Bond,--,--,Government Treasury
-Fannie Mae or Freddie Mac,--,--,Mortgage-Backed Securities
-United States Treasury Note/Bond,--,--,Government Treasury
-United States Treasury Note/Bond,--,--,Government Treasury
-United States Treasury Note/Bond,--,--,Government Treasury
-Fannie Mae or Freddie Mac,--,--,Mortgage-Backed Securities
-United States Treasury Note/Bond,--,--,Government Treasury
-United States Treasury Note/Bond,--,--,Government Treasury
-Federal Farm Credit Banks Funding Corp,--,--,Government Agency
+Name,Ticker,Weight,Industry
+Federal National Mortgage Assn.,--,15.83,Financials
+Federal Home Loan Mortgage Corp.,--,12.62,Financials
+Federal National Mortgage Assn.,--,12.52,Financials
+Federal National Mortgage Assn.,--,9.32,Financials
+Federal National Mortgage Assn.,--,9.22,Financials
+U.S. Treasury Note/Bond,--,6.50,Financials
+U.S. Treasury Note/Bond,--,6.50,Financials
+U.S. Treasury Note/Bond,--,6.31,Financials
+U.S. Treasury Note/Bond,--,6.12,Financials
+Government National Mortgage Assn.,--,6.12,Financials
+U.S. Treasury Note/Bond,--,6.02,Financials
+U.S. Treasury Note/Bond,--,6.02,Financials
+U.S. Treasury Note/Bond,--,6.02,Financials
+U.S. Treasury Note/Bond,--,5.92,Financials
+U.S. Treasury Note/Bond,--,5.92,Financials
+U.S. Treasury Note/Bond,--,5.83,Financials
+U.S. Treasury Note/Bond,--,5.83,Financials
+U.S. Treasury Note/Bond,--,5.73,Financials
+U.S. Treasury Note/Bond,--,5.73,Financials
+U.S. Treasury Note/Bond,--,5.44,Financials
+Cash and Cash Equivalents,--,6.12,Financials

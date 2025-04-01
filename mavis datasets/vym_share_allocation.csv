@@ -1,22 +1,22 @@
-Name,Ticker,Weight,Sector
-Broadcom Inc.,AVGO,4.93,Information Technology
-JPMorgan Chase & Co.,JPM,4.04,Financials
-Exxon Mobil Corp.,XOM,2.72,Energy
-Walmart Inc.,WMT,2.33,Consumer Staples
-Procter & Gamble Co.,PG,2.23,Consumer Staples
-Johnson & Johnson,JNJ,2.16,Health Care
-Home Depot Inc.,HD,2.14,Consumer Discretionary
-AbbVie Inc.,ABBV,2.01,Health Care
-Bank of America Corp.,BAC,1.67,Financials
-Coca-Cola Co.,KO,1.50,Consumer Staples
-Vanguard Market Liquidity Fund,--,0.03,Cash & Equivalents
-AT&T Inc.,T,--,Communication Services
-Bank of America Corp,BAC,--,Financials
-Pfizer Inc,PFE,--,Health Care
-Broadcom Inc,AVGO,--,Information Technology
-Exxon Mobil Corp,XOM,--,Energy
-Walmart Inc,WMT,--,Consumer Staples
-Verizon Communications Inc,VZ,--,Communication Services
-Cisco Systems Inc,CSCO,--,Information Technology
-Ford Motor Co,F,--,Consumer Discretionary
-Coca-Cola Co/The,KO,--,Consumer Staples
+Name,Ticker,Weight,Industry
+Broadcom Inc.,AVGO,19.14,Information Technology
+JPMorgan Chase & Co.,JPM,15.68,Financials
+Exxon Mobil Corp.,XOM,10.56,Energy
+Walmart Inc.,WMT,9.05,Consumer Staples
+Procter & Gamble Co.,PG,8.42,Consumer Staples
+Home Depot Inc.,HD,7.53,Consumer Discretionary
+Coca-Cola Co.,KO,7.26,Consumer Staples
+Pfizer Inc.,PFE,7.22,Health Care
+Bank of America Corp.,BAC,7.07,Financials
+Verizon Communications Inc.,VZ,6.68,Communication Services
+Intel Corp.,INTC,6.13,Information Technology
+AbbVie Inc.,ABBV,5.90,Health Care
+Cisco Systems Inc.,CSCO,5.40,Information Technology
+PepsiCo Inc.,PEP,5.24,Consumer Staples
+Comcast Corp. Class A,CMCSA,5.12,Communication Services
+Chevron Corp.,CVX,5.01,Energy
+Merck & Co. Inc.,MRK,4.70,Health Care
+Wells Fargo & Co.,WFC,4.39,Financials
+McDonald's Corp.,MCD,4.39,Consumer Discretionary
+Morgan Stanley,MS,4.27,Financials
+Cash and Cash Equivalents,--,2.25,Financials

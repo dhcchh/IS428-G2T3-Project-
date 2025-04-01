@@ -358,7 +358,7 @@
                         weight: typeof row.Weight === 'string' ? 
                             parseFloat(row.Weight.replace('%', '')) : 
                             +row.Weight,
-                        sector: row.Sector || 'Unknown'
+                        sector: row.Industry || 'Unknown'
                     }));
                     
                     // Calculate sector allocations
