@@ -1,0 +1,1814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beating Inflation: Investment Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .dashboard {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .header h1 {
+            color: #1a5276;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            color: #566573;
+            font-size: 16px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .chart-container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .chart-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        
+        .chart-description {
+            font-size: 14px;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+        }
+        
+        .chart {
+            width: 100%;
+            height: 400px;
+        }
+        
+        .tooltip {
+            position: absolute;
+            padding: 10px;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            border-radius: 4px;
+            pointer-events: none;
+            font-size: 12px;
+            z-index: 100;
+        }
+        
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 10px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-right: 15px;
+            margin-bottom: 5px;
+        }
+        
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            margin-right: 5px;
+            border-radius: 2px;
+        }
+        
+        .axis-label {
+            font-size: 12px;
+            fill: #7f8c8d;
+        }
+        
+        .row {
+            display: flex;
+            flex-wrap: wrap;
+            margin: 0 -15px;
+        }
+        
+        .col-6 {
+            flex: 0 0 50%;
+            max-width: 50%;
+            padding: 0 15px;
+            box-sizing: border-box;
+        }
+        
+        @media (max-width: 768px) {
+            .col-6 {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        th, td {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid #e1e1e1;
+        }
+        
+        th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+        
+        tbody tr:hover {
+            background-color: #f1f8ff;
+        }
+        
+        .positive {
+            color: #27ae60;
+        }
+        
+        .negative {
+            color: #e74c3c;
+        }
+        
+        .button-group {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        
+        .time-button {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            color: #333;
+            padding: 8px 12px;
+            margin: 0 5px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .time-button.active {
+            background-color: #1a5276;
+            color: white;
+            border-color: #1a5276;
+        }
+        
+        .time-button:hover:not(.active) {
+            background-color: #e9ecef;
+        }
+        
+        .correlation-table td {
+            text-align: center;
+        }
+        
+        .correlation-cell {
+            padding: 8px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard">
+        <div class="header">
+            <h1>Beating Inflation: Why Investing Outperforms Traditional Savings</h1>
+            <p>An interactive data visualization showing how strategic investing can provide a more effective hedge against inflation compared to traditional savings methods.</p>
+        </div>
+        
+        <div class="chart-container">
+            <div class="chart-title">Real vs Nominal Returns</div>
+            <div class="chart-description">This chart compares the nominal (before inflation) and real (inflation-adjusted) returns of our low-risk, long-term portfolio.</div>
+            <div class="button-group" id="real-nominal-time-buttons">
+                <button class="time-button" data-period="1y">1Y</button>
+                <button class="time-button" data-period="3y">3Y</button>
+                <button class="time-button active" data-period="5y">5Y</button>
+                <button class="time-button" data-period="max">Max</button>
+            </div>
+            <div id="real-nominal-chart" class="chart"></div>
+        </div>
+        
+        <div class="chart-container">
+            <div class="chart-title">Bank Savings vs Investment Portfolio</div>
+            <div class="chart-description">This chart compares the growth of $10,000 invested in a traditional savings account versus our low-risk ETF portfolio.</div>
+            <div class="button-group" id="bank-vs-portfolio-time-buttons">
+                <button class="time-button" data-period="1y">1Y</button>
+                <button class="time-button" data-period="3y">3Y</button>
+                <button class="time-button active" data-period="5y">5Y</button>
+                <button class="time-button" data-period="max">Max</button>
+            </div>
+            <div id="bank-vs-portfolio-chart" class="chart"></div>
+        </div>
+        
+        <div class="row">
+            <div class="col-6">
+                <div class="chart-container">
+                    <div class="chart-title">Portfolio Performance Over Time</div>
+                    <div class="chart-description">Long-term performance of each ETF in our portfolio.</div>
+                    <div id="portfolio-performance-chart" class="chart"></div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="chart-container">
+                    <div class="chart-title">ETF Sector Allocation</div>
+                    <div class="chart-description">Breakdown of sectors represented in our low-risk portfolio.</div>
+                    <div id="sector-allocation-chart" class="chart"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-6">
+                <div class="chart-container">
+                    <div class="chart-title">Top Holdings by ETF</div>
+                    <div class="chart-description">The largest company positions in each ETF.</div>
+                    <div id="top-holdings-chart" class="chart"></div>
+                </div>
+            </div>
+            <div class="col-6">
+                <div class="chart-container">
+                    <div class="chart-title">Risk vs. Return Analysis</div>
+                    <div class="chart-description">Volatility and returns of each ETF in our portfolio.</div>
+                    <div id="risk-return-chart" class="chart"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <div class="chart-title">Correlation Matrix</div>
+            <div class="chart-description">How the ETFs in our portfolio move in relation to each other. Lower correlation means better diversification.</div>
+            <div id="correlation-matrix" class="chart"></div>
+        </div>
+        
+        <div class="chart-container">
+            <div class="chart-title">Expected Returns</div>
+            <div class="chart-description">Projected future value of a $10,000 investment in our portfolio vs. bank savings over time.</div>
+            <div id="expected-returns-chart" class="chart"></div>
+        </div>
+    </div>
+
+    <script>
+        // Main data structures to hold our processed data
+        let etfData = {};
+        let portfolioData = [];
+        let bankAndRealData = [];
+        let performanceMetrics = {};
+        let correlationMatrix = {};
+        let sectorAllocations = {};
+        let topHoldings = {};
+
+        // Colors for our ETFs
+        const etfColors = {
+            'AGG': '#4e79a7',
+            'BND': '#59a14f',
+            'SPLV': '#edc949',
+            'USMV': '#af7aa1',
+            'VYM': '#ff9da7',
+            'portfolio': '#76b7b2',
+            'bank': '#f28e2c',
+            'nominal': '#4e79a7',
+            'real': '#e15759'
+        };
+
+        // Format functions
+        const formatPercent = d3.format('.1%');
+        const formatCurrency = d3.format('$,.2f');
+        const formatDate = d3.timeFormat('%b %d, %Y');
+        const parseDate = d3.timeParse('%Y-%m-%d');
+
+        // Function to filter data by time period
+        function filterDataByPeriod(data, period) {
+            const endDate = new Date(data[data.length - 1].date);
+            let startDate;
+            
+            switch(period) {
+                case '1y':
+                    startDate = new Date(endDate);
+                    startDate.setFullYear(endDate.getFullYear() - 1);
+                    break;
+                case '3y':
+                    startDate = new Date(endDate);
+                    startDate.setFullYear(endDate.getFullYear() - 3);
+                    break;
+                case '5y':
+                    startDate = new Date(endDate);
+                    startDate.setFullYear(endDate.getFullYear() - 5);
+                    break;
+                case 'max':
+                default:
+                    return data;
+            }
+            
+            return data.filter(d => new Date(d.date) >= startDate);
+        }
+
+        // Load and process all data
+        async function loadData() {
+            try {
+                // Load ETF price data
+                const etfFiles = ['agg.csv', 'bnd.csv', 'splv.csv', 'usmv.csv', 'vym.csv'];
+                const allocationFiles = ['agg_share_allocation.csv', 'bnd_share_allocation.csv', 'splv_share_allocation.csv', 'usmv_share_allocation.csv', 'vym_share_allocation.csv'];
+                
+                // Process ETF price data
+                for (const file of etfFiles) {
+                    const ticker = file.split('.')[0].toUpperCase();
+                    const response = await fetch('mavis datasets/' + file);
+                    const csvText = await response.text();
+                    
+                    const rows = d3.csvParse(csvText);
+                    etfData[ticker] = rows.map(row => ({
+                        date: row.Date,
+                        open: +row.Open,
+                        high: +row.High,
+                        low: +row.Low,
+                        close: +row.Close,
+                        adjClose: +row['Adj Close'],
+                        volume: +row.Volume,
+                        dividends: +row.Dividends
+                    })).filter(d => d.adjClose > 0);
+                }
+                
+                // Process allocation data
+                for (const file of allocationFiles) {
+                    const ticker = file.split('_')[0].toUpperCase();
+                    const response = await fetch('mavis datasets/' + file);
+                    const csvText = await response.text();
+                    
+                    const rows = d3.csvParse(csvText);
+                    const allocData = rows.map(row => ({
+                        name: row.Name,
+                        ticker: row.Ticker,
+                        weight: typeof row.Weight === 'string' ? 
+                            parseFloat(row.Weight.replace('%', '')) : 
+                            +row.Weight,
+                        sector: row.Industry || 'Unknown'
+                    }));
+                    
+                    // Calculate sector allocations
+                    const sectors = {};
+                    allocData.forEach(d => {
+                        if (!sectors[d.sector]) sectors[d.sector] = 0;
+                        sectors[d.sector] += d.weight;
+                    });
+                    
+                    sectorAllocations[ticker] = Object.entries(sectors)
+                        .map(([sector, weight]) => ({ sector, weight }))
+                        .filter(d => d.weight > 0)
+                        .sort((a, b) => b.weight - a.weight);
+                    
+                    // Get top holdings
+                    topHoldings[ticker] = allocData
+                        .sort((a, b) => b.weight - a.weight)
+                        .slice(0, 10);
+                }
+                
+                // Find common date range for all ETFs
+                const startDates = Object.values(etfData).map(data => new Date(data[0].date));
+                const endDates = Object.values(etfData).map(data => new Date(data[data.length - 1].date));
+                
+                const latestStart = new Date(Math.max(...startDates));
+                const earliestEnd = new Date(Math.min(...endDates));
+                
+                // Create aligned dataset across all ETFs
+                const dateMap = {};
+                
+                for (const ticker in etfData) {
+                    etfData[ticker].forEach(d => {
+                        const dateObj = new Date(d.date);
+                        if (dateObj >= latestStart && dateObj <= earliestEnd) {
+                            if (!dateMap[d.date]) {
+                                dateMap[d.date] = { date: d.date, dateObj };
+                            }
+                            dateMap[d.date][ticker] = d.adjClose;
+                        }
+                    });
+                }
+                
+                // Convert date map to array and sort by date
+                const alignedData = Object.values(dateMap)
+                    .filter(d => Object.keys(d).length === Object.keys(etfData).length + 2) // Only keep dates with all ETFs
+                    .sort((a, b) => a.dateObj - b.dateObj);
+                
+                // Calculate portfolio performance (equal weighted)
+                portfolioData = alignedData.map(d => {
+                    const tickers = Object.keys(etfData);
+                    const etfPrices = tickers.map(ticker => d[ticker]);
+                    const portfolioValue = etfPrices.reduce((sum, price) => sum + price, 0) / tickers.length;
+                    
+                    return {
+                        date: d.date,
+                        dateObj: d.dateObj,
+                        portfolio: portfolioValue,
+                        ...tickers.reduce((acc, ticker) => ({ ...acc, [ticker]: d[ticker] }), {})
+                    };
+                });
+                
+                // Normalize to index = 100 at start
+                const initialValues = {};
+                Object.keys(etfData).forEach(ticker => {
+                    initialValues[ticker] = portfolioData[0][ticker];
+                });
+                initialValues.portfolio = portfolioData[0].portfolio;
+                
+                portfolioData.forEach(d => {
+                    Object.keys(initialValues).forEach(key => {
+                        d[`${key}Index`] = (d[key] / initialValues[key]) * 100;
+                    });
+                });
+                
+                // Simulate bank savings (0.5% annual interest) and inflation-adjusted returns (2% inflation)
+                const bankAnnualRate = 0.005;
+                const inflationAnnualRate = 0.02;
+                
+                // Calculate daily rates
+                const bankDailyRate = Math.pow(1 + bankAnnualRate, 1/252) - 1;
+                const inflationDailyRate = Math.pow(1 + inflationAnnualRate, 1/252) - 1;
+                
+                let bankValue = 100;
+                
+                bankAndRealData = portfolioData.map((d, i) => {
+                    const entry = {
+                        date: d.date,
+                        dateObj: d.dateObj,
+                        portfolioNominal: d.portfolioIndex
+                    };
+                    
+                    // Update bank value (compound interest)
+                    if (i > 0) {
+                        const prevDate = new Date(portfolioData[i-1].date);
+                        const currentDate = new Date(d.date);
+                        const daysDiff = (currentDate - prevDate) / (1000 * 60 * 60 * 24);
+                        bankValue *= Math.pow(1 + bankDailyRate, daysDiff);
+                        
+                        // Calculate real (inflation-adjusted) values
+                        const daysSinceStart = (currentDate - new Date(portfolioData[0].date)) / (1000 * 60 * 60 * 24);
+                        const inflationFactor = Math.pow(1 + inflationDailyRate, daysSinceStart);
+                        entry.portfolioReal = d.portfolioIndex / inflationFactor;
+                    } else {
+                        entry.portfolioReal = d.portfolioIndex;
+                    }
+                    
+                    entry.bankIndex = bankValue;
+                    
+                    return entry;
+                });
+                
+                // Calculate performance metrics for each ETF
+                for (const ticker in etfData) {
+                    const prices = portfolioData.map(d => d[ticker]);
+                    const dailyReturns = [];
+                    
+                    for (let i = 1; i < prices.length; i++) {
+                        dailyReturns.push(prices[i] / prices[i-1] - 1);
+                    }
+                    
+                    const mean = dailyReturns.reduce((sum, val) => sum + val, 0) / dailyReturns.length;
+                    const variance = dailyReturns.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / dailyReturns.length;
+                    const volatility = Math.sqrt(variance) * Math.sqrt(252); // Annualized volatility
+                    
+                    // Calculate annualized return
+                    const firstPrice = prices[0];
+                    const lastPrice = prices[prices.length - 1];
+                    const years = portfolioData.length / 252; // Assuming ~252 trading days per year
+                    const annualizedReturn = Math.pow(lastPrice / firstPrice, 1 / years) - 1;
+                    
+                    performanceMetrics[ticker] = {
+                        annualizedReturn,
+                        volatility,
+                        sharpeRatio: (annualizedReturn - 0.01) / volatility // Assuming 1% risk-free rate
+                    };
+                }
+                
+                // Add portfolio metrics
+                const portfolioPrices = portfolioData.map(d => d.portfolio);
+                const portfolioDailyReturns = [];
+                
+                for (let i = 1; i < portfolioPrices.length; i++) {
+                    portfolioDailyReturns.push(portfolioPrices[i] / portfolioPrices[i-1] - 1);
+                }
+                
+                const portfolioMean = portfolioDailyReturns.reduce((sum, val) => sum + val, 0) / portfolioDailyReturns.length;
+                const portfolioVariance = portfolioDailyReturns.reduce((sum, val) => sum + Math.pow(val - portfolioMean, 2), 0) / portfolioDailyReturns.length;
+                const portfolioVolatility = Math.sqrt(portfolioVariance) * Math.sqrt(252);
+                
+                const portfolioFirstPrice = portfolioPrices[0];
+                const portfolioLastPrice = portfolioPrices[portfolioPrices.length - 1];
+                const portfolioYears = portfolioData.length / 252;
+                const portfolioAnnualizedReturn = Math.pow(portfolioLastPrice / portfolioFirstPrice, 1 / portfolioYears) - 1;
+                
+                performanceMetrics.portfolio = {
+                    annualizedReturn: portfolioAnnualizedReturn,
+                    volatility: portfolioVolatility,
+                    sharpeRatio: (portfolioAnnualizedReturn - 0.01) / portfolioVolatility
+                };
+                
+                // Calculate correlation matrix
+                correlationMatrix = {};
+                const tickers = [...Object.keys(etfData), 'portfolio'];
+                
+                for (const ticker1 of tickers) {
+                    correlationMatrix[ticker1] = {};
+                    
+                    for (const ticker2 of tickers) {
+                        // Extract returns for both tickers
+                        const returns1 = [];
+                        const returns2 = [];
+                        
+                        for (let i = 1; i < portfolioData.length; i++) {
+                            returns1.push(portfolioData[i][ticker1] / portfolioData[i-1][ticker1] - 1);
+                            returns2.push(portfolioData[i][ticker2] / portfolioData[i-1][ticker2] - 1);
+                        }
+                        
+                        correlationMatrix[ticker1][ticker2] = calculateCorrelation(returns1, returns2);
+                    }
+                }
+                
+                // Initialize charts
+                createRealNominalChart();
+                createBankVsPortfolioChart();
+                createPortfolioPerformanceChart();
+                createSectorAllocationChart();
+                createTopHoldingsChart();
+                createRiskReturnChart();
+                createCorrelationMatrix();
+                createExpectedReturnsChart();
+                
+            } catch (error) {
+                console.error('Error loading data:', error);
+            }
+        }
+        
+        // Helper function to calculate correlation
+        function calculateCorrelation(x, y) {
+            const n = x.length;
+            
+            // Calculate means
+            const meanX = x.reduce((sum, val) => sum + val, 0) / n;
+            const meanY = y.reduce((sum, val) => sum + val, 0) / n;
+            
+            // Calculate covariance and variances
+            let covariance = 0;
+            let varianceX = 0;
+            let varianceY = 0;
+            
+            for (let i = 0; i < n; i++) {
+                const xDiff = x[i] - meanX;
+                const yDiff = y[i] - meanY;
+                covariance += xDiff * yDiff;
+                varianceX += xDiff * xDiff;
+                varianceY += yDiff * yDiff;
+            }
+            
+            covariance /= n;
+            varianceX /= n;
+            varianceY /= n;
+            
+            // Calculate correlation
+            if (varianceX === 0 || varianceY === 0) return 0;
+            return covariance / (Math.sqrt(varianceX) * Math.sqrt(varianceY));
+        }
+        
+        // Chart 1: Real vs Nominal Returns
+        function createRealNominalChart() {
+            const chart = d3.select('#real-nominal-chart');
+            const width = chart.node().getBoundingClientRect().width;
+            const height = 400;
+            const margin = { top: 30, right: 80, bottom: 50, left: 60 };
+            
+            // Create SVG
+            chart.selectAll('*').remove();
+            const svg = chart.append('svg')
+                .attr('width', width)
+                .attr('height', height);
+            
+            // Add time period buttons event listeners
+            d3.selectAll('#real-nominal-time-buttons .time-button').on('click', function() {
+                d3.selectAll('#real-nominal-time-buttons .time-button').classed('active', false);
+                d3.select(this).classed('active', true);
+                updateRealNominalChart(d3.select(this).attr('data-period'));
+            });
+            
+            function updateRealNominalChart(period) {
+                // Filter data by time period
+                const filteredData = filterDataByPeriod(bankAndRealData, period);
+                
+                // Create scales
+                const x = d3.scaleTime()
+                    .domain(d3.extent(filteredData, d => new Date(d.date)))
+                    .range([margin.left, width - margin.right]);
+                
+                const y = d3.scaleLinear()
+                    .domain([
+                        d3.min([
+                            d3.min(filteredData, d => d.portfolioReal),
+                            d3.min(filteredData, d => d.portfolioNominal)
+                        ]) * 0.9,
+                        d3.max([
+                            d3.max(filteredData, d => d.portfolioReal),
+                            d3.max(filteredData, d => d.portfolioNominal)
+                        ]) * 1.1
+                    ])
+                    .range([height - margin.bottom, margin.top]);
+                
+                // Create axes
+                const xAxis = d3.axisBottom(x);
+                const yAxis = d3.axisLeft(y).tickFormat(d => `${d}%`);
+                
+                // Clear previous elements
+                svg.selectAll('.line, .axis').remove();
+                
+                // Add X axis
+                svg.append('g')
+                    .attr('class', 'axis x-axis')
+                    .attr('transform', `translate(0,${height - margin.bottom})`)
+                    .call(xAxis);
+                
+                // Add Y axis
+                svg.append('g')
+                    .attr('class', 'axis y-axis')
+                    .attr('transform', `translate(${margin.left},0)`)
+                    .call(yAxis);
+                
+                // Create line generator
+                const line = d3.line()
+                    .x(d => x(new Date(d.date)))
+                    .y(d => y(d.portfolioNominal));
+                
+                // Add nominal line
+                svg.append('path')
+                    .datum(filteredData)
+                    .attr('class', 'line')
+                    .attr('fill', 'none')
+                    .attr('stroke', etfColors.nominal)
+                    .attr('stroke-width', 2)
+                    .attr('d', line);
+                
+                // Create real line generator
+                const realLine = d3.line()
+                    .x(d => x(new Date(d.date)))
+                    .y(d => y(d.portfolioReal));
+                
+                // Add real line
+                svg.append('path')
+                    .datum(filteredData)
+                    .attr('class', 'line')
+                    .attr('fill', 'none')
+                    .attr('stroke', etfColors.real)
+                    .attr('stroke-width', 2)
+                    .attr('d', realLine);
+                
+                // Add line labels
+                svg.append('text')
+                    .attr('class', 'line-label')
+                    .attr('x', width - margin.right + 10)
+                    .attr('y', y(filteredData[filteredData.length - 1].portfolioNominal))
+                    .attr('dy', '0.35em')
+                    .style('font-size', '12px')
+                    .style('fill', etfColors.nominal)
+                    .text('Nominal');
+                
+                svg.append('text')
+                    .attr('class', 'line-label')
+                    .attr('x', width - margin.right + 10)
+                    .attr('y', y(filteredData[filteredData.length - 1].portfolioReal))
+                    .attr('dy', '0.35em')
+                    .style('font-size', '12px')
+                    .style('fill', etfColors.real)
+                    .text('Real (Inflation-Adjusted)');
+                
+                // Add axis labels
+                svg.append('text')
+                    .attr('class', 'axis-label')
+                    .attr('text-anchor', 'middle')
+                    .attr('x', width / 2)
+                    .attr('y', height - 10)
+                    .text('Date');
+                
+                svg.append('text')
+                    .attr('class', 'axis-label')
+                    .attr('text-anchor', 'middle')
+                    .attr('transform', `translate(${margin.left / 3},${height / 2}) rotate(-90)`)
+                    .text('Index Value (%)');
+                
+                // Add tooltip
+                const tooltip = d3.select('body').append('div')
+                    .attr('class', 'tooltip')
+                    .style('opacity', 0);
+                
+                const bisect = d3.bisector(d => new Date(d.date)).left;
+                
+                // Add overlay for tooltip
+                svg.append('rect')
+                    .attr('width', width - margin.left - margin.right)
+                    .attr('height', height - margin.top - margin.bottom)
+                    .attr('x', margin.left)
+                    .attr('y', margin.top)
+                    .attr('fill', 'none')
+                    .attr('pointer-events', 'all')
+                    .on('mousemove', function(event) {
+                        const x0 = x.invert(d3.pointer(event)[0]);
+                        const i = bisect(filteredData, x0, 1);
+                        const d0 = filteredData[i - 1];
+                        const d1 = filteredData[i] || d0;
+                        const d = x0 - new Date(d0.date) > new Date(d1.date) - x0 ? d1 : d0;
+                        
+                        tooltip.style('opacity', 0.9)
+                            .html(`
+                                <strong>Date:</strong> ${formatDate(new Date(d.date))}<br>
+                                <strong>Nominal:</strong> ${d.portfolioNominal.toFixed(2)}%<br>
+                                <strong>Real:</strong> ${d.portfolioReal.toFixed(2)}%<br>
+                                <strong>Inflation Impact:</strong> ${(d.portfolioNominal - d.portfolioReal).toFixed(2)}%
+                            `)
+                            .style('left', `${event.pageX + 10}px`)
+                            .style('top', `${event.pageY - 28}px`);
+                    })
+                    .on('mouseout', function() {
+                        tooltip.style('opacity', 0);
+                    });
+            }
+            
+            // Initialize with 5Y by default
+            updateRealNominalChart('5y');
+        }
+        
+        // Chart 2: Bank vs Portfolio
+        function createBankVsPortfolioChart() {
+            const chart = d3.select('#bank-vs-portfolio-chart');
+            const width = chart.node().getBoundingClientRect().width;
+            const height = 400;
+            const margin = { top: 30, right: 80, bottom: 50, left: 60 };
+            
+            // Create SVG
+            chart.selectAll('*').remove();
+            const svg = chart.append('svg')
+                .attr('width', width)
+                .attr('height', height);
+            
+            // Add time period buttons event listeners
+            d3.selectAll('#bank-vs-portfolio-time-buttons .time-button').on('click', function() {
+                d3.selectAll('#bank-vs-portfolio-time-buttons .time-button').classed('active', false);
+                d3.select(this).classed('active', true);
+                updateBankVsPortfolioChart(d3.select(this).attr('data-period'));
+            });
+            
+            function updateBankVsPortfolioChart(period) {
+                // Filter data by time period
+                const filteredData = filterDataByPeriod(bankAndRealData, period);
+                
+                // Calculate values for $10,000 initial investment
+                const scaledData = filteredData.map(d => ({
+                    ...d,
+                    portfolioValue: 10000 * (d.portfolioNominal / 100),
+                    bankValue: 10000 * (d.bankIndex / 100)
+                }));
+                
+                // Create scales
+                const x = d3.scaleTime()
+                    .domain(d3.extent(scaledData, d => new Date(d.date)))
+                    .range([margin.left, width - margin.right]);
+                
+                const y = d3.scaleLinear()
+                    .domain([
+                        d3.min([
+                            d3.min(scaledData, d => d.bankValue),
+                            d3.min(scaledData, d => d.portfolioValue)
+                        ]) * 0.9,
+                        d3.max([
+                            d3.max(scaledData, d => d.bankValue),
+                            d3.max(scaledData, d => d.portfolioValue)
+                        ]) * 1.1
+                    ])
+                    .range([height - margin.bottom, margin.top]);
+                
+                // Create axes
+                const xAxis = d3.axisBottom(x);
+                const yAxis = d3.axisLeft(y).tickFormat(d => formatCurrency(d));
+                
+                // Clear previous elements
+                svg.selectAll('.line, .axis').remove();
+                
+                // Add X axis
+                svg.append('g')
+                    .attr('class', 'axis x-axis')
+                    .attr('transform', `translate(0,${height - margin.bottom})`)
+                    .call(xAxis);
+                
+                // Add Y axis
+                svg.append('g')
+                    .attr('class', 'axis y-axis')
+                    .attr('transform', `translate(${margin.left},0)`)
+                    .call(yAxis);
+                
+                // Create portfolio line generator
+                const portfolioLine = d3.line()
+                    .x(d => x(new Date(d.date)))
+                    .y(d => y(d.portfolioValue));
+                
+                // Add portfolio line
+                svg.append('path')
+                    .datum(scaledData)
+                    .attr('class', 'line')
+                    .attr('fill', 'none')
+                    .attr('stroke', etfColors.portfolio)
+                    .attr('stroke-width', 2)
+                    .attr('d', portfolioLine);
+                
+                // Create bank line generator
+                const bankLine = d3.line()
+                    .x(d => x(new Date(d.date)))
+                    .y(d => y(d.bankValue));
+                
+                // Add bank line
+                svg.append('path')
+                    .datum(scaledData)
+                    .attr('class', 'line')
+                    .attr('fill', 'none')
+                    .attr('stroke', etfColors.bank)
+                    .attr('stroke-width', 2)
+                    .attr('d', bankLine);
+                
+                // Add line labels
+                svg.append('text')
+                    .attr('class', 'line-label')
+                    .attr('x', width - margin.right + 10)
+                    .attr('y', y(scaledData[scaledData.length - 1].portfolioValue))
+                    .attr('dy', '0.35em')
+                    .style('font-size', '12px')
+                    .style('fill', etfColors.portfolio)
+                    .text('ETF Portfolio');
+                
+                svg.append('text')
+                    .attr('class', 'line-label')
+                    .attr('x', width - margin.right + 10)
+                    .attr('y', y(scaledData[scaledData.length - 1].bankValue))
+                    .attr('dy', '0.35em')
+                    .style('font-size', '12px')
+                    .style('fill', etfColors.bank)
+                    .text('Bank Savings');
+                
+                // Add axis labels
+                svg.append('text')
+                    .attr('class', 'axis-label')
+                    .attr('text-anchor', 'middle')
+                    .attr('x', width / 2)
+                    .attr('y', height - 10)
+                    .text('Date');
+                
+                svg.append('text')
+                    .attr('class', 'axis-label')
+                    .attr('text-anchor', 'middle')
+                    .attr('transform', `translate(${margin.left / 3},${height / 2}) rotate(-90)`)
+                    .text('Value ($)');
+                
+                // Add tooltip
+                const tooltip = d3.select('body').append('div')
+                    .attr('class', 'tooltip')
+                    .style('opacity', 0);
+                
+                const bisect = d3.bisector(d => new Date(d.date)).left;
+                
+                // Add overlay for tooltip
+                svg.append('rect')
+                    .attr('width', width - margin.left - margin.right)
+                    .attr('height', height - margin.top - margin.bottom)
+                    .attr('x', margin.left)
+                    .attr('y', margin.top)
+                    .attr('fill', 'none')
+                    .attr('pointer-events', 'all')
+                    .on('mousemove', function(event) {
+                        const x0 = x.invert(d3.pointer(event)[0]);
+                        const i = bisect(scaledData, x0, 1);
+                        const d0 = scaledData[i - 1];
+                        const d1 = scaledData[i] || d0;
+                        const d = x0 - new Date(d0.date) > new Date(d1.date) - x0 ? d1 : d0;
+                        
+                        tooltip.style('opacity', 0.9)
+                            .html(`
+                                <strong>Date:</strong> ${formatDate(new Date(d.date))}<br>
+                                <strong>Portfolio:</strong> ${formatCurrency(d.portfolioValue)}<br>
+                                <strong>Bank Account:</strong> ${formatCurrency(d.bankValue)}<br>
+                                <strong>Difference:</strong> ${formatCurrency(d.portfolioValue - d.bankValue)}
+                            `)
+                            .style('left', `${event.pageX + 10}px`)
+                            .style('top', `${event.pageY - 28}px`);
+                    })
+                    .on('mouseout', function() {
+                        tooltip.style('opacity', 0);
+                    });
+            }
+            
+            // Initialize with 5Y by default
+            updateBankVsPortfolioChart('5y');
+        }
+        
+        // Chart 3: Portfolio Performance Over Time
+        function createPortfolioPerformanceChart() {
+            const chart = d3.select('#portfolio-performance-chart');
+            const width = chart.node().getBoundingClientRect().width;
+            const height = 400;
+            const margin = { top: 30, right: 120, bottom: 50, left: 60 };
+            
+            // Create SVG
+            chart.selectAll('*').remove();
+            const svg = chart.append('svg')
+                .attr('width', width)
+                .attr('height', height);
+            
+            // Use all data for this chart
+            const data = portfolioData;
+            
+            // Create scales
+            const x = d3.scaleTime()
+                .domain(d3.extent(data, d => new Date(d.date)))
+                .range([margin.left, width - margin.right]);
+            
+            const y = d3.scaleLinear()
+                .domain([
+                    d3.min(Object.keys(etfData).map(ticker => 
+                        d3.min(data, d => d[`${ticker}Index`])
+                    )) * 0.9,
+                    d3.max(Object.keys(etfData).map(ticker => 
+                        d3.max(data, d => d[`${ticker}Index`])
+                    )) * 1.1
+                ])
+                .range([height - margin.bottom, margin.top]);
+            
+            // Create axes
+            const xAxis = d3.axisBottom(x);
+            const yAxis = d3.axisLeft(y).tickFormat(d => `${d}%`);
+            
+            // Add X axis
+            svg.append('g')
+                .attr('class', 'axis x-axis')
+                .attr('transform', `translate(0,${height - margin.bottom})`)
+                .call(xAxis);
+            
+            // Add Y axis
+            svg.append('g')
+                .attr('class', 'axis y-axis')
+                .attr('transform', `translate(${margin.left},0)`)
+                .call(yAxis);
+            
+            // Create line generator
+            const line = d3.line()
+                .x(d => x(new Date(d.date)))
+                .y(d => y(d.portfolioIndex));
+            
+            // Add portfolio line
+            svg.append('path')
+                .datum(data)
+                .attr('class', 'line')
+                .attr('fill', 'none')
+                .attr('stroke', etfColors.portfolio)
+                .attr('stroke-width', 3)
+                .attr('d', line);
+            
+            // Add ETF lines
+            Object.keys(etfData).forEach(ticker => {
+                const etfLine = d3.line()
+                    .x(d => x(new Date(d.date)))
+                    .y(d => y(d[`${ticker}Index`]));
+                
+                svg.append('path')
+                    .datum(data)
+                    .attr('class', 'line')
+                    .attr('fill', 'none')
+                    .attr('stroke', etfColors[ticker])
+                    .attr('stroke-width', 1.5)
+                    .attr('stroke-dasharray', '3,3')
+                    .attr('d', etfLine);
+            });
+            
+            // Add line labels
+            svg.append('text')
+                .attr('class', 'line-label')
+                .attr('x', width - margin.right + 10)
+                .attr('y', y(data[data.length - 1].portfolioIndex))
+                .attr('dy', '0.35em')
+                .style('font-size', '12px')
+                .style('fill', etfColors.portfolio)
+                .text('Portfolio');
+            
+            // Add ETF line labels
+            Object.keys(etfData).forEach((ticker, i) => {
+                svg.append('text')
+                    .attr('class', 'line-label')
+                    .attr('x', width - margin.right + 10)
+                    .attr('y', y(data[data.length - 1][`${ticker}Index`]))
+                    .attr('dy', '0.35em')
+                    .style('font-size', '12px')
+                    .style('fill', etfColors[ticker])
+                    .text(ticker);
+            });
+            
+            // Add axis labels
+            svg.append('text')
+                .attr('class', 'axis-label')
+                .attr('text-anchor', 'middle')
+                .attr('x', width / 2)
+                .attr('y', height - 10)
+                .text('Date');
+            
+            svg.append('text')
+                .attr('class', 'axis-label')
+                .attr('text-anchor', 'middle')
+                .attr('transform', `translate(${margin.left / 3},${height / 2}) rotate(-90)`)
+                .text('Index Value (%)');
+            
+            // Add tooltip
+            const tooltip = d3.select('body').append('div')
+                .attr('class', 'tooltip')
+                .style('opacity', 0);
+            
+            const bisect = d3.bisector(d => new Date(d.date)).left;
+            
+            // Add overlay for tooltip
+            svg.append('rect')
+                .attr('width', width - margin.left - margin.right)
+                .attr('height', height - margin.top - margin.bottom)
+                .attr('x', margin.left)
+                .attr('y', margin.top)
+                .attr('fill', 'none')
+                .attr('pointer-events', 'all')
+                .on('mousemove', function(event) {
+                    const x0 = x.invert(d3.pointer(event)[0]);
+                    const i = bisect(data, x0, 1);
+                    if (i >= data.length) return;
+                    
+                    const d0 = data[Math.max(0, i - 1)];
+                    const d1 = data[i] || d0;
+                    const d = x0 - new Date(d0.date) > new Date(d1.date) - x0 ? d1 : d0;
+                    
+                    let tooltipContent = `<strong>Date:</strong> ${formatDate(new Date(d.date))}<br>
+                                        <strong>Portfolio:</strong> ${d.portfolioIndex.toFixed(2)}%<br>`;
+                    
+                    Object.keys(etfData).forEach(ticker => {
+                        tooltipContent += `<strong>${ticker}:</strong> ${d[`${ticker}Index`].toFixed(2)}%<br>`;
+                    });
+                    
+                    tooltip.style('opacity', 0.9)
+                        .html(tooltipContent)
+                        .style('left', `${event.pageX + 10}px`)
+                        .style('top', `${event.pageY - 28}px`);
+                })
+                .on('mouseout', function() {
+                    tooltip.style('opacity', 0);
+                });
+        }
+        
+        // Chart 4: Sector Allocation
+        function createSectorAllocationChart() {
+            const chart = d3.select('#sector-allocation-chart');
+            const width = chart.node().getBoundingClientRect().width;
+            const height = 400;
+            const margin = { top: 40, right: 20, bottom: 40, left: 40 };
+            
+            // Create SVG
+            chart.selectAll('*').remove();
+            const svg = chart.append('svg')
+                .attr('width', width)
+                .attr('height', height);
+            
+            // Combine sector data from all ETFs
+            const combinedSectors = {};
+            let totalWeight = 0;
+            
+            Object.keys(sectorAllocations).forEach(ticker => {
+                sectorAllocations[ticker].forEach(item => {
+                    if (!combinedSectors[item.sector]) {
+                        combinedSectors[item.sector] = 0;
+                    }
+                    // Divide by number of ETFs to maintain equal weighting
+                    combinedSectors[item.sector] += item.weight / Object.keys(sectorAllocations).length;
+                    totalWeight += item.weight / Object.keys(sectorAllocations).length;
+                });
+            });
+            
+            // Convert to array and sort by weight
+            const data = Object.entries(combinedSectors)
+                .map(([sector, weight]) => ({ sector, weight }))
+                .filter(d => d.weight > 0)
+                .sort((a, b) => b.weight - a.weight);
+            
+            // Normalize weights to sum to 100%
+            data.forEach(d => {
+                d.normalizedWeight = (d.weight / totalWeight) * 100;
+            });
+            
+            // Create color scale
+            const colorScale = d3.scaleOrdinal()
+                .domain(data.map(d => d.sector))
+                .range(d3.schemeTableau10);
+            
+            // Set up pie chart
+            const radius = Math.min(width, height) / 2 - 40;
+            
+            const arc = d3.arc()
+                .innerRadius(radius * 0.4)
+                .outerRadius(radius);
+            
+            const pie = d3.pie()
+                .value(d => d.normalizedWeight)
+                .sort(null);
+            
+            const pieData = pie(data);
+            
+            // Create pie chart
+            const g = svg.append('g')
+                .attr('transform', `translate(${width / 2}, ${height / 2})`);
+            
+            g.selectAll('path')
+                .data(pieData)
+                .enter()
+                .append('path')
+                .attr('d', arc)
+                .attr('fill', d => colorScale(d.data.sector))
+                .attr('stroke', 'white')
+                .style('stroke-width', '2px')
+                .style('opacity', 0.8)
+                .on('mouseover', function(event, d) {
+                    d3.select(this).style('opacity', 1);
+                    
+                    const tooltip = d3.select('body').append('div')
+                        .attr('class', 'tooltip')
+                        .style('opacity', 0.9)
+                        .html(`
+                            <strong>${d.data.sector}</strong><br>
+                            <strong>Weight:</strong> ${d.data.normalizedWeight.toFixed(1)}%
+                        `)
+                        .style('left', `${event.pageX + 10}px`)
+                        .style('top', `${event.pageY - 28}px`);
+                })
+                .on('mouseout', function() {
+                    d3.select(this).style('opacity', 0.8);
+                    d3.selectAll('.tooltip').remove();
+                });
+            
+            // Add a legend
+            const legend = svg.append('g')
+                .attr('class', 'legend')
+                .attr('transform', `translate(${width / 2}, ${height - 10})`);
+            
+            const legendRectSize = 12;
+            const legendSpacing = 4;
+            const legendItems = legend.selectAll('.legend-item')
+                .data(data)
+                .enter()
+                .append('g')
+                .attr('class', 'legend-item')
+                .attr('transform', (d, i) => {
+                    return `translate(-${width / 4}, ${i * (legendRectSize + legendSpacing) - (data.length * (legendRectSize + legendSpacing)) / 2})`;
+                });
+            
+            legendItems.append('rect')
+                .attr('width', legendRectSize)
+                .attr('height', legendRectSize)
+                .style('fill', d => colorScale(d.sector));
+            
+            legendItems.append('text')
+                .attr('x', legendRectSize + legendSpacing)
+                .attr('y', legendRectSize - 2)
+                .style('font-size', '10px')
+                .text(d => `${d.sector} (${d.normalizedWeight.toFixed(1)}%)`);
+        }
+        
+        // Chart 5: Top Holdings
+        function createTopHoldingsChart() {
+            const chart = d3.select('#top-holdings-chart');
+            const width = chart.node().getBoundingClientRect().width;
+            const height = 400;
+            const margin = { top: 40, right: 20, bottom: 60, left: 120 };
+            
+            // Create SVG
+            chart.selectAll('*').remove();
+            const svg = chart.append('svg')
+                .attr('width', width)
+                .attr('height', height);
+            
+            // Select the first ETF for initial display
+            const initialTicker = Object.keys(topHoldings)[0];
+            
+            // Create buttons for ETF selection
+            const buttonContainer = chart.append('div')
+                .attr('class', 'button-group')
+                .style('margin-bottom', '10px');
+            
+            Object.keys(topHoldings).forEach(ticker => {
+                buttonContainer.append('button')
+                    .attr('class', `time-button ${ticker === initialTicker ? 'active' : ''}`)
+                    .attr('data-ticker', ticker)
+                    .text(ticker)
+                    .on('click', function() {
+                        buttonContainer.selectAll('.time-button').classed('active', false);
+                        d3.select(this).classed('active', true);
+                        updateTopHoldings(d3.select(this).attr('data-ticker'));
+                    });
+            });
+            
+            function updateTopHoldings(ticker) {
+                // Get top 10 holdings for the selected ETF
+                const data = topHoldings[ticker].slice(0, 10).reverse(); // Reverse for bottom-to-top display
+                
+                // Clear previous content
+                svg.selectAll('*').remove();
+                
+                // Create scales
+                const x = d3.scaleLinear()
+                    .domain([0, d3.max(data, d => d.weight) * 1.1])
+                    .range([margin.left, width - margin.right]);
+                
+                const y = d3.scaleBand()
+                    .domain(data.map(d => d.name))
+                    .range([margin.top, height - margin.bottom])
+                    .padding(0.3);
+                
+                // Create axes
+                const xAxis = d3.axisBottom(x).tickFormat(d => `${d}%`);
+                const yAxis = d3.axisLeft(y);
+                
+                // Add X axis
+                svg.append('g')
+                    .attr('class', 'axis x-axis')
+                    .attr('transform', `translate(0,${height - margin.bottom})`)
+                    .call(xAxis);
+                
+                // Add Y axis
+                svg.append('g')
+                    .attr('class', 'axis y-axis')
+                    .attr('transform', `translate(${margin.left},0)`)
+                    .call(yAxis);
+                
+                // Add bars
+                svg.selectAll('.bar')
+                    .data(data)
+                    .enter()
+                    .append('rect')
+                    .attr('class', 'bar')
+                    .attr('x', margin.left)
+                    .attr('y', d => y(d.name))
+                    .attr('width', d => x(d.weight) - margin.left)
+                    .attr('height', y.bandwidth())
+                    .attr('fill', etfColors[ticker])
+                    .attr('opacity', 0.8)
+                    .on('mouseover', function(event, d) {
+                        d3.select(this).attr('opacity', 1);
+                        
+                        const tooltip = d3.select('body').append('div')
+                            .attr('class', 'tooltip')
+                            .style('opacity', 0.9)
+                            .html(`
+                                <strong>${d.name}</strong><br>
+                                <strong>Weight:</strong> ${d.weight.toFixed(2)}%<br>
+                                <strong>Ticker:</strong> ${d.ticker || 'N/A'}
+                            `)
+                            .style('left', `${event.pageX + 10}px`)
+                            .style('top', `${event.pageY - 28}px`);
+                    })
+                    .on('mouseout', function() {
+                        d3.select(this).attr('opacity', 0.8);
+                        d3.selectAll('.tooltip').remove();
+                    });
+                
+                // Add value labels
+                svg.selectAll('.value-label')
+                    .data(data)
+                    .enter()
+                    .append('text')
+                    .attr('class', 'value-label')
+                    .attr('x', d => x(d.weight) + 5)
+                    .attr('y', d => y(d.name) + y.bandwidth() / 2)
+                    .attr('dy', '0.35em')
+                    .style('font-size', '10px')
+                    .text(d => `${d.weight.toFixed(2)}%`);
+                
+                // Add title
+                svg.append('text')
+                    .attr('class', 'chart-title')
+                    .attr('x', width / 2)
+                    .attr('y', 15)
+                    .attr('text-anchor', 'middle')
+                    .style('font-size', '14px')
+                    .style('font-weight', 'bold')
+                    .text(`Top 10 Holdings - ${ticker}`);
+                
+                // Add axis labels
+                svg.append('text')
+                    .attr('class', 'axis-label')
+                    .attr('text-anchor', 'middle')
+                    .attr('x', width / 2)
+                    .attr('y', height - 10)
+                    .text('Weight (%)');
+            }
+            
+            // Initialize with the first ETF
+            updateTopHoldings(initialTicker);
+        }
+        
+        // Chart 6: Risk vs Return
+        function createRiskReturnChart() {
+            const chart = d3.select('#risk-return-chart');
+            const width = chart.node().getBoundingClientRect().width;
+            const height = 400;
+            const margin = { top: 40, right: 20, bottom: 50, left: 60 };
+            
+            // Create SVG
+            chart.selectAll('*').remove();
+            const svg = chart.append('svg')
+                .attr('width', width)
+                .attr('height', height);
+            
+            // Transform performance metrics into array
+            const data = Object.entries(performanceMetrics).map(([ticker, metrics]) => ({
+                ticker,
+                volatility: metrics.volatility * 100, // Convert to percentage
+                return: metrics.annualizedReturn * 100, // Convert to percentage
+                sharpeRatio: metrics.sharpeRatio
+            }));
+            
+            // Create scales
+            const x = d3.scaleLinear()
+                .domain([0, d3.max(data, d => d.volatility) * 1.1])
+                .range([margin.left, width - margin.right]);
+            
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(data, d => d.return) * 1.1])
+                .range([height - margin.bottom, margin.top]);
+            
+            // Create axes
+            const xAxis = d3.axisBottom(x).tickFormat(d => `${d.toFixed(1)}%`);
+            const yAxis = d3.axisLeft(y).tickFormat(d => `${d.toFixed(1)}%`);
+            
+            // Add X axis
+            svg.append('g')
+                .attr('class', 'axis x-axis')
+                .attr('transform', `translate(0,${height - margin.bottom})`)
+                .call(xAxis);
+            
+            // Add Y axis
+            svg.append('g')
+                .attr('class', 'axis y-axis')
+                .attr('transform', `translate(${margin.left},0)`)
+                .call(yAxis);
+            
+            // Add axis labels
+            svg.append('text')
+                .attr('class', 'axis-label')
+                .attr('text-anchor', 'middle')
+                .attr('x', width / 2)
+                .attr('y', height - 10)
+                .text('Volatility (%)');
+            
+            svg.append('text')
+                .attr('class', 'axis-label')
+                .attr('text-anchor', 'middle')
+                .attr('transform', `translate(${margin.left / 3},${height / 2}) rotate(-90)`)
+                .text('Annualized Return (%)');
+            
+            // Add scatter points
+            svg.selectAll('.point')
+                .data(data)
+                .enter()
+                .append('circle')
+                .attr('class', 'point')
+                .attr('cx', d => x(d.volatility))
+                .attr('cy', d => y(d.return))
+                .attr('r', 8)
+                .attr('fill', d => etfColors[d.ticker])
+                .attr('opacity', 0.8)
+                .on('mouseover', function(event, d) {
+                    d3.select(this)
+                        .attr('r', 10)
+                        .attr('opacity', 1);
+                    
+                    const tooltip = d3.select('body').append('div')
+                        .attr('class', 'tooltip')
+                        .style('opacity', 0.9)
+                        .html(`
+                            <strong>${d.ticker}</strong><br>
+                            <strong>Return:</strong> ${d.return.toFixed(2)}%<br>
+                            <strong>Volatility:</strong> ${d.volatility.toFixed(2)}%<br>
+                            <strong>Sharpe Ratio:</strong> ${d.sharpeRatio.toFixed(2)}
+                        `)
+                        .style('left', `${event.pageX + 10}px`)
+                        .style('top', `${event.pageY - 28}px`);
+                })
+                .on('mouseout', function() {
+                    d3.select(this)
+                        .attr('r', 8)
+                        .attr('opacity', 0.8);
+                    d3.selectAll('.tooltip').remove();
+                });
+            
+            // Add labels for each point
+            svg.selectAll('.point-label')
+                .data(data)
+                .enter()
+                .append('text')
+                .attr('class', 'point-label')
+                .attr('x', d => x(d.volatility) + 10)
+                .attr('y', d => y(d.return))
+                .style('font-size', '12px')
+                .text(d => d.ticker);
+            
+            // Add a reference line for risk-free rate (1%)
+            svg.append('line')
+                .attr('x1', margin.left)
+                .attr('x2', width - margin.right)
+                .attr('y1', y(1))
+                .attr('y2', y(1))
+                .attr('stroke', '#999')
+                .attr('stroke-dasharray', '3,3');
+            
+            svg.append('text')
+                .attr('x', margin.left + 5)
+                .attr('y', y(1) - 5)
+                .style('font-size', '10px')
+                .style('fill', '#999')
+                .text('Risk-free rate (1%)');
+        }
+        
+        // Chart 7: Correlation Matrix
+        function createCorrelationMatrix() {
+            const chart = d3.select('#correlation-matrix');
+            const width = chart.node().getBoundingClientRect().width;
+            const height = 400;
+            const margin = { top: 50, right: 50, bottom: 50, left: 50 };
+            
+            // Create SVG
+            chart.selectAll('*').remove();
+            const svg = chart.append('svg')
+                .attr('width', width)
+                .attr('height', height);
+            
+            // Get ETF tickers (with portfolio)
+            const tickers = Object.keys(correlationMatrix);
+            
+            // Create color scale for correlation values
+            const colorScale = d3.scaleLinear()
+                .domain([-1, 0, 1])
+                .range(['#e74c3c', '#ecf0f1', '#27ae60']);
+            
+            // Calculate cell size
+            const cellSize = Math.min(
+                (width - margin.left - margin.right) / tickers.length,
+                (height - margin.top - margin.bottom) / tickers.length
+            );
+            
+            // Create matrix cells
+            const matrix = svg.append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+            
+            // Add row labels
+            matrix.selectAll('.row-label')
+                .data(tickers)
+                .enter()
+                .append('text')
+                .attr('class', 'row-label')
+                .attr('x', -5)
+                .attr('y', (d, i) => i * cellSize + cellSize / 2)
+                .attr('text-anchor', 'end')
+                .attr('alignment-baseline', 'middle')
+                .style('font-size', '12px')
+                .text(d => d);
+            
+            // Add column labels
+            matrix.selectAll('.col-label')
+                .data(tickers)
+                .enter()
+                .append('text')
+                .attr('class', 'col-label')
+                .attr('x', (d, i) => i * cellSize + cellSize / 2)
+                .attr('y', -5)
+                .attr('text-anchor', 'middle')
+                .style('font-size', '12px')
+                .text(d => d);
+            
+            // Create cells
+            tickers.forEach((ticker1, i) => {
+                tickers.forEach((ticker2, j) => {
+                    const correlation = correlationMatrix[ticker1][ticker2];
+                    
+                    matrix.append('rect')
+                        .attr('x', j * cellSize)
+                        .attr('y', i * cellSize)
+                        .attr('width', cellSize)
+                        .attr('height', cellSize)
+                        .attr('fill', colorScale(correlation))
+                        .attr('stroke', 'white')
+                        .on('mouseover', function(event) {
+                            const tooltip = d3.select('body').append('div')
+                                .attr('class', 'tooltip')
+                                .style('opacity', 0.9)
+                                .html(`
+                                    <strong>${ticker1} - ${ticker2}</strong><br>
+                                    <strong>Correlation:</strong> ${correlation.toFixed(2)}
+                                `)
+                                .style('left', `${event.pageX + 10}px`)
+                                .style('top', `${event.pageY - 28}px`);
+                        })
+                        .on('mouseout', function() {
+                            d3.selectAll('.tooltip').remove();
+                        });
+                    
+                    // Add correlation value inside cells
+                    matrix.append('text')
+                        .attr('x', j * cellSize + cellSize / 2)
+                        .attr('y', i * cellSize + cellSize / 2)
+                        .attr('text-anchor', 'middle')
+                        .attr('alignment-baseline', 'middle')
+                        .style('font-size', '10px')
+                        .style('fill', Math.abs(correlation) > 0.5 ? 'white' : 'black')
+                        .text(correlation.toFixed(2));
+                });
+            });
+            
+            // Add title
+            svg.append('text')
+                .attr('class', 'chart-title')
+                .attr('x', width / 2)
+                .attr('y', 15)
+                .attr('text-anchor', 'middle')
+                .style('font-size', '14px')
+                .style('font-weight', 'bold')
+                .text('Correlation Matrix');
+            
+            // Add legend
+            const legendWidth = 200;
+            const legendHeight = 20;
+            
+            const legendX = (width - legendWidth) / 2;
+            const legendY = height - 30;
+            
+            const legendScale = d3.scaleLinear()
+                .domain([-1, 0, 1])
+                .range([0, legendWidth / 2, legendWidth]);
+            
+            const legendAxis = d3.axisBottom(legendScale)
+                .tickValues([-1, -0.5, 0, 0.5, 1])
+                .tickFormat(d3.format('.1f'));
+            
+            const legend = svg.append('g')
+                .attr('transform', `translate(${legendX},${legendY})`);
+            
+            // Create gradient
+            const gradient = legend.append('defs')
+                .append('linearGradient')
+                .attr('id', 'correlation-gradient')
+                .attr('x1', '0%')
+                .attr('x2', '100%')
+                .attr('y1', '0%')
+                .attr('y2', '0%');
+            
+            gradient.append('stop')
+                .attr('offset', '0%')
+                .attr('stop-color', colorScale(-1));
+            
+            gradient.append('stop')
+                .attr('offset', '50%')
+                .attr('stop-color', colorScale(0));
+            
+            gradient.append('stop')
+                .attr('offset', '100%')
+                .attr('stop-color', colorScale(1));
+            
+            // Add gradient rect
+            legend.append('rect')
+                .attr('width', legendWidth)
+                .attr('height', legendHeight)
+                .style('fill', 'url(#correlation-gradient)');
+            
+            // Add legend axis
+            legend.append('g')
+                .attr('transform', `translate(0,${legendHeight})`)
+                .call(legendAxis);
+            
+            // Add legend title
+            legend.append('text')
+                .attr('x', legendWidth / 2)
+                .attr('y', -5)
+                .attr('text-anchor', 'middle')
+                .style('font-size', '12px')
+                .text('Correlation Value');
+        }
+        
+        // Chart 8: Expected Returns
+        function createExpectedReturnsChart() {
+            const chart = d3.select('#expected-returns-chart');
+            const width = chart.node().getBoundingClientRect().width;
+            const height = 400;
+            const margin = { top: 40, right: 150, bottom: 50, left: 80 };
+
+            // Create SVG
+            chart.selectAll('*').remove();
+            const svg = chart.append('svg')
+                .attr('width', width)
+                .attr('height', height);
+
+            // Use portfolio annualized return and bank return rates
+            const portfolioAnnualReturn = performanceMetrics.portfolio.annualizedReturn;
+            const bankAnnualReturn = 0.005; // 0.5% annual bank interest rate
+            const initialInvestment = 10000;
+
+            // Generate data for future projections (next 30 years)
+            const projectionData = [];
+
+            for (let year = 0; year <= 30; year++) {
+                const portfolioValue = initialInvestment * Math.pow(1 + portfolioAnnualReturn, year);
+                const bankValue = initialInvestment * Math.pow(1 + bankAnnualReturn, year);
+
+                projectionData.push({
+                    year,
+                    portfolioValue,
+                    bankValue
+                });
+            }
+
+            // Create scales
+            const x = d3.scaleLinear()
+                .domain([0, 30])
+                .range([margin.left, width - margin.right]);
+
+            const y = d3.scaleLinear()
+                .domain([0, d3.max(projectionData, d => d.portfolioValue) * 1.1])
+                .range([height - margin.bottom, margin.top]);
+
+            // Create axes
+            const xAxis = d3.axisBottom(x).tickFormat(d => `Year ${d}`);
+            const yAxis = d3.axisLeft(y).tickFormat(formatCurrency);
+
+            // Add X axis
+            svg.append('g')
+                .attr('class', 'axis x-axis')
+                .attr('transform', `translate(0,${height - margin.bottom})`)
+                .call(xAxis);
+
+            // Add Y axis
+            svg.append('g')
+                .attr('class', 'axis y-axis')
+                .attr('transform', `translate(${margin.left},0)`)
+                .call(yAxis);
+
+            // Create portfolio line generator
+            const portfolioLine = d3.line()
+                .x(d => x(d.year))
+                .y(d => y(d.portfolioValue));
+
+            // Add portfolio line
+            svg.append('path')
+                .datum(projectionData)
+                .attr('class', 'line')
+                .attr('fill', 'none')
+                .attr('stroke', etfColors.portfolio)
+                .attr('stroke-width', 2)
+                .attr('d', portfolioLine);
+
+            // Create bank line generator
+            const bankLine = d3.line()
+                .x(d => x(d.year))
+                .y(d => y(d.bankValue));
+
+            // Add bank line
+            svg.append('path')
+                .datum(projectionData)
+                .attr('class', 'line')
+                .attr('fill', 'none')
+                .attr('stroke', etfColors.bank)
+                .attr('stroke-width', 2)
+                .attr('d', bankLine);
+
+            // Add important data points
+            [10, 20, 30].forEach(year => {
+                const yearData = projectionData.find(d => d.year === year);
+
+                // Portfolio markers
+                svg.append('circle')
+                    .attr('cx', x(year))
+                    .attr('cy', y(yearData.portfolioValue))
+                    .attr('r', 5)
+                    .attr('fill', etfColors.portfolio);
+
+                svg.append('text')
+                    .attr('x', x(year) + 5)
+                    .attr('y', y(yearData.portfolioValue) - 10)
+                    .style('font-size', '12px')
+                    .text(formatCurrency(yearData.portfolioValue));
+
+                // Bank markers
+                svg.append('circle')
+                    .attr('cx', x(year))
+                    .attr('cy', y(yearData.bankValue))
+                    .attr('r', 5)
+                    .attr('fill', etfColors.bank);
+
+                svg.append('text')
+                    .attr('x', x(year) + 5)
+                    .attr('y', y(yearData.bankValue) + 20)
+                    .style('font-size', '12px')
+                    .text(formatCurrency(yearData.bankValue));
+            });
+
+            // Add line labels
+            svg.append('text')
+                .attr('class', 'line-label')
+                .attr('x', width - margin.right + 10)
+                .attr('y', y(projectionData[projectionData.length - 1].portfolioValue))
+                .attr('dy', '0.35em')
+                .style('font-size', '12px')
+                .style('fill', etfColors.portfolio)
+                .text(`ETF Portfolio (${(portfolioAnnualReturn * 100).toFixed(1)}% annually)`);
+
+            svg.append('text')
+                .attr('class', 'line-label')
+                .attr('x', width - margin.right + 10)
+                .attr('y', y(projectionData[projectionData.length - 1].bankValue))
+                .attr('dy', '0.35em')
+                .style('font-size', '12px')
+                .style('fill', etfColors.bank)
+                .text(`Bank Savings (${(bankAnnualReturn * 100).toFixed(1)}% annually)`);
+
+            // Add axis labels
+            svg.append('text')
+                .attr('class', 'axis-label')
+                .attr('text-anchor', 'middle')
+                .attr('x', width / 2)
+                .attr('y', height - 10)
+                .text('Years');
+
+            svg.append('text')
+                .attr('class', 'axis-label')
+                .attr('text-anchor', 'middle')
+                .attr('transform', `translate(${margin.left / 3},${height / 2}) rotate(-90)`)
+                .text('Value ($)');
+
+            // Add initial investment marker
+            svg.append('circle')
+                .attr('cx', x(0))
+                .attr('cy', y(initialInvestment))
+                .attr('r', 5)
+                .attr('fill', '#333');
+
+            svg.append('text')
+                .attr('x', x(0) + 10)
+                .attr('y', y(initialInvestment))
+                .style('font-size', '12px')
+                .text(`Initial: ${formatCurrency(initialInvestment)}`);
+
+            // Add tooltip
+            const tooltip = d3.select('body').append('div')
+                .attr('class', 'tooltip')
+                .style('opacity', 0);
+
+            // Add overlay for tooltip
+            svg.append('rect')
+                .attr('width', width - margin.left - margin.right)
+                .attr('height', height - margin.top - margin.bottom)
+                .attr('x', margin.left)
+                .attr('y', margin.top)
+                .attr('fill', 'none')
+                .attr('pointer-events', 'all')
+                .on('mousemove', function(event) {
+                    const xPos = d3.pointer(event)[0];
+                    const year = Math.round(x.invert(xPos));
+
+                    if (year < 0 || year > 30) return;
+
+                    const d = projectionData.find(d => d.year === year);
+                    if (!d) return;
+
+                    tooltip.style('opacity', 0.9)
+                        .html(`
+                            <strong>Year ${d.year}</strong><br>
+                            <strong>Portfolio:</strong> ${formatCurrency(d.portfolioValue)}<br>
+                            <strong>Bank Account:</strong> ${formatCurrency(d.bankValue)}<br>
+                            <strong>Difference:</strong> ${formatCurrency(d.portfolioValue - d.bankValue)}
+                        `)
+                        .style('left', `${event.pageX + 10}px`)
+                        .style('top', `${event.pageY - 28}px`);
+                })
+                .on('mouseout', function() {
+                    tooltip.style('opacity', 0);
+                });
+        }
+
+        // Load data and initialize charts
+        loadData();
+    </script>
+</body>
+</html>
