@@ -3,711 +3,2304 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ETF Portfolio Visualization</title>
+    <title>High Risk Long-Term Investment Dashboard</title>
     <script src="https://d3js.org/d3.v7.min.js" charset="utf-8"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 20px;
+            background-color: #f8f9fa;
             color: #333;
         }
         .container {
-            max-width: 1200px;
+            max-width: 1400px;
             margin: 0 auto;
         }
-        h1 {
+        .header {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            margin-bottom: 10px;
             color: #2c3e50;
         }
-        .controls-container {
-            background-color: #f8f9fa;
-            border-radius: 8px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        .header h5 {
+            margin-top: 0;
+            color: #7f8c8d;
+        }
+        .dashboard {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
         }
         .controls {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            justify-content: center;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-        .etf-control {
-            display: flex;
-            flex-direction: column;
-            min-width: 220px;
-            background: white;
-            padding: 15px;
-            border-radius: 6px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        .controls h3 {
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
         }
-        .etf-control label {
-            font-weight: bold;
+        .control-group {
+            margin-bottom: 20px;
+        }
+        .control-group label {
+            display: block;
             margin-bottom: 8px;
-            color: #444;
+            font-weight: 500;
         }
-        .etf-name {
-            font-size: 0.9em;
-            color: #666;
-            margin-bottom: 10px;
+        .slider-container {
+            margin-bottom: 15px;
         }
-        .etf-control input {
+        .slider-container .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .metric-card {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .metric-card h3 {
+            margin: 10px 0;
+            font-size: 1.8rem;
+        }
+        .metric-card p {
+            margin: 0;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        .charts {
+            display: grid;
+            grid-template-rows: auto;
+            gap: 20px;
+        }
+        .chart-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .chart-container h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
+        .tooltip {
+            position: absolute;
+            background-color: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        input[type="number"] {
+            width: 100%;
             padding: 8px;
             border: 1px solid #ddd;
             border-radius: 4px;
+        }
+        input[type="range"] {
             width: 100%;
-            box-sizing: border-box;
-            font-size: 16px;
         }
-        .validation-message {
-            color: #dc3545;
-            text-align: center;
-            margin: 10px 0;
-            min-height: 20px;
-            font-weight: bold;
-        }
-        .buttons {
+        .allocation-display {
             display: flex;
-            justify-content: center;
-            gap: 10px;
-            margin-top: 10px;
+            justify-content: space-between;
+            margin-top: 5px;
         }
         button {
-            padding: 10px 20px;
-            background-color: #4a6fa5;
+            width: 100%;
+            padding: 10px;
+            background-color: #3498db;
             color: white;
             border: none;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 16px;
-            transition: background-color 0.2s;
+            font-weight: 500;
+            margin-top: 20px;
         }
         button:hover {
-            background-color: #3a5a80;
+            background-color: #2980b9;
         }
-        button:disabled {
-            background-color: #cccccc;
-            cursor: not-allowed;
+        .tab-container {
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
         }
-        #resetBtn {
-            background-color: #6c757d;
-        }
-        #resetBtn:hover {
-            background-color: #5a6268;
-        }
-        .timeframe-controls {
+        .tabs {
             display: flex;
-            justify-content: center;
-            gap: 5px;
-            margin: 15px 0;
+            list-style: none;
+            padding: 0;
+            margin: 0;
         }
-        .timeframe-btn {
-            padding: 6px 12px;
-            background-color: #f8f9fa;
-            color: #495057;
-            border: 1px solid #ced4da;
-            border-radius: 4px;
+        .tab {
+            padding: 10px 20px;
             cursor: pointer;
-            font-size: 14px;
-            transition: all 0.2s;
+            border-bottom: 3px solid transparent;
         }
-        .timeframe-btn:hover {
-            background-color: #e9ecef;
+        .tab.active {
+            border-bottom-color: #3498db;
+            font-weight: 500;
         }
-        .timeframe-btn.active {
-            background-color: #4a6fa5;
-            color: white;
-            border-color: #4a6fa5;
+        .tab-content {
+            display: none;
         }
-        .chart-container {
-            background-color: #fff;
-            border-radius: 8px;
+        .tab-content.active {
+            display: block;
+        }
+        .warning {
+            color: #e74c3c;
+            margin-top: 5px;
+            font-size: 0.9rem;
+        }
+        .axis line, .axis path {
+            stroke: #ddd;
+        }
+        .axis text {
+            fill: #666;
+            font-size: 0.8rem;
+        }
+        .notes {
+            background-color: white;
             padding: 20px;
+            border-radius: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-top: 20px;
         }
-        .tooltip {
-            position: absolute;
-            background: rgba(255, 255, 255, 0.9);
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            padding: 10px;
-            pointer-events: none;
-            font-size: 12px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            z-index: 10;
-            opacity: 0;
-            transition: opacity 0.2s;
+        .notes h5 {
+            margin-top: 0;
+        }
+        .notes ul {
+            padding-left: 20px;
         }
         .legend {
             display: flex;
             justify-content: center;
             flex-wrap: wrap;
-            gap: 20px;
-            margin: 15px 0;
+            margin-top: 10px;
         }
         .legend-item {
             display: flex;
             align-items: center;
-            font-size: 14px;
+            margin-right: 20px;
+            margin-bottom: 5px;
         }
         .legend-color {
             width: 15px;
             height: 15px;
             margin-right: 5px;
-            border-radius: 3px;
+            border-radius: 2px;
+        }
+        .api-error {
+            background-color: #fee;
+            color: #e74c3c;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+        /* CSS for the time period buttons */
+        .time-period-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin: 15px 0;
+        }
+
+        .time-btn {
+            flex: 1;
+            padding: 8px 0;
+            margin: 0 4px;
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .time-btn:first-child {
+            margin-left: 0;
+        }
+
+        .time-btn:last-child {
+            margin-right: 0;
+        }
+
+        .time-btn:hover {
+            background-color: #e9ecef;
+        }
+
+        .time-btn.active {
+            background-color: #3498db;
+            color: white;
+            border-color: #3498db;
+        }
+        /* Additional CSS for Portfolio vs SPY comparison */
+        .portfolio-line {
+            stroke-width: 3px;
+            stroke-linejoin: round;
+            stroke-linecap: round;
+        }
+
+        .spy-line {
+            stroke-width: 2px;
+            stroke-dasharray: 5, 5;
+            stroke-linejoin: round;
+            stroke-linecap: round;
+        }
+
+        .outperformance-positive {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .outperformance-negative {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .grid line {
+            stroke: #e0e0e0;
+            stroke-opacity: 0.7;
+            shape-rendering: crispEdges;
+        }
+
+        .grid path {
+            stroke-width: 0;
         }
         .loading {
             text-align: center;
-            padding: 40px;
-            font-size: 18px;
-            color: #6c757d;
+            padding: 20px;
+            color: #7f8c8d;
         }
-        @media (max-width: 768px) {
-            .controls {
-                flex-direction: column;
-                align-items: center;
-            }
-            .etf-control {
-                width: 100%;
-            }
+        .loading:after {
+            content: '...';
+            animation: dots 1.5s steps(5, end) infinite;
+        }
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Portfolio vs. S&P 500 Visualization</h1>
+        <div class="header">
+            <h1>High Risk Long-Term Investment Dashboard</h1>
+            <h5>Time in the Market Beats Timing the Market</h5>
+        </div>
         
-        <div class="controls-container">
+        <div id="api-error" class="api-error">
+            <strong>Error connecting to API:</strong> <span id="error-message"></span>
+        </div>
+        
+        <div class="dashboard">
             <div class="controls">
-                <div class="etf-control">
-                    <label for="spy-weight">SPY Weighting</label>
-                    <div class="etf-name">SPDR S&P 500 ETF Trust</div>
-                    <input type="number" id="spy-weight" min="0" max="1" step="0.01" value="0.25">
+                <h3>Investment Parameters</h3>
+                
+        <!-- HTML for time period buttons -->
+        <div class="control-group">
+            <label>Investment Period:</label>
+            <div class="time-period-buttons">
+                <button class="time-btn" data-period="1M">1M</button>
+                <button class="time-btn" data-period="6M">6M</button>
+                <button class="time-btn" data-period="1Y">1Y</button>
+                <button class="time-btn" data-period="3Y">3Y</button>
+                <button class="time-btn" data-period="5Y">5Y</button>
+                <button class="time-btn active" data-period="MAX">Max</button>
+            </div>
+            <div id="date-range-display" style="text-align: center; margin-top: 10px; display: none;">Loading date range...</div>
+        </div>
+                
+                <div class="control-group">
+                    <label>Initial Investment (USD):</label>
+                    <input type="number" id="initial-investment" min="1000" max="1000000" step="1000" value="10000">
+                    <small style="color: #7f8c8d;">Min: $1,000 - Max: $1,000,000</small>
                 </div>
                 
-                <div class="etf-control">
-                    <label for="gbtc-weight">GBTC Weighting</label>
-                    <div class="etf-name">Grayscale Bitcoin Trust</div>
-                    <input type="number" id="gbtc-weight" min="0" max="1" step="0.01" value="0.25">
+                <div class="control-group">
+                    <label>Portfolio Allocation:</label>
+                    
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>SPY - S&P 500</span>
+                            <span id="spy-value">25%</span>
+                        </div>
+                        <input type="range" id="spy-allocation" min="0" max="100" step="5" value="25">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>GBTC - Bitcoin Trust</span>
+                            <span id="gbtc-value">25%</span>
+                        </div>
+                        <input type="range" id="gbtc-allocation" min="0" max="100" step="5" value="25">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>BRK-B - Berkshire Hathaway</span>
+                            <span id="brkb-value">25%</span>
+                        </div>
+                        <input type="range" id="brkb-allocation" min="0" max="100" step="5" value="25">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>VUG - Growth ETF</span>
+                            <span id="vug-value">25%</span>
+                        </div>
+                        <input type="range" id="vug-allocation" min="0" max="100" step="5" value="25">
+                    </div>
+                    
+                    <div id="allocation-warning" class="warning"></div>
                 </div>
                 
-                <div class="etf-control">
-                    <label for="vug-weight">VUG Weighting</label>
-                    <div class="etf-name">Vanguard Growth ETF</div>
-                    <input type="number" id="vug-weight" min="0" max="1" step="0.01" value="0.25">
-                </div>
-                
-                <div class="etf-control">
-                    <label for="brkb-weight">BRK-B Weighting</label>
-                    <div class="etf-name">Berkshire Hathaway Inc. Class B</div>
-                    <input type="number" id="brkb-weight" min="0" max="1" step="0.01" value="0.25">
-                </div>
+                <button id="calculate-button">Calculate Returns</button>
             </div>
             
-            <div class="validation-message" id="validation-message"></div>
-            
-            <div class="buttons">
-                <button id="updateBtn" disabled>Update Portfolio</button>
-                <button id="resetBtn">Reset to Equal Weight</button>
+            <div class="content">
+                <div class="metrics">
+                    <div class="metric-card">
+                        <h4>Final Portfolio Value</h4>
+                        <h3 id="final-value">$0.00</h3>
+                        <p id="initial-value">Initial: $0.00</p>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <h4>Total Return</h4>
+                        <h3 id="total-return">0.0%</h3>
+                        <p id="annualized-return">Annualized: 0.0% per year</p>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <h4>Maximum Drawdown</h4>
+                        <h3 id="max-drawdown">0.0%</h3>
+                        <p>Largest decline from peak</p>
+                    </div>
+                    
+                    <div class="metric-card" id="risk-card">
+                        <h4>Risk Level</h4>
+                        <h3 id="volatility">Low (0.0%)</h3>
+                        <p>Portfolio volatility</p>
+                    </div>       
+                </div>
+                
+                <div class="tab-container">
+                    <ul class="tabs">
+                        <li class="tab active" data-tab="growth">Portfolio vs S&P500</li>
+                        <li class="tab" data-tab="drawdown">Drawdown Analysis</li>
+                        <li class="tab" data-tab="comparison">ETF Comparison</li>
+                        <li class="tab" data-tab="yearly">Yearly Returns</li>
+                        <!-- Mavis & Angela -->
+                        <li class="tab" data-tab="company">Company Weightage</li>
+                        <li class="tab" data-tab="industry">Industry Weightage</li>
+                    </ul>
+                </div>
+                
+                <div class="charts">
+                    <div id="growth" class="tab-content active">
+                        <div class="chart-container">
+                            <div id="portfolio-growth-chart">
+                                <div class="loading">Loading data</div>
+                            </div>
+                            <div class="legend" id="growth-legend"></div>
+                        </div>
+                    </div>
+                    
+                    <div id="drawdown" class="tab-content">
+                        <div class="chart-container">
+                            <h3>Portfolio Drawdown Analysis</h3>
+                            <div id="drawdown-chart">
+                                <div class="loading">Loading data</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="comparison" class="tab-content">
+                        <div class="chart-container">
+                            <h3>ETF Performance Comparison</h3>
+                            <div id="etf-comparison-chart">
+                                <div class="loading">Loading data</div>
+                            </div>
+                            <div class="legend" id="comparison-legend"></div>
+                        </div>
+                    </div>
+                    
+                    <div id="yearly" class="tab-content">
+                        <div class="chart-container">
+                            <h3>Yearly Portfolio Returns</h3>
+                            <div id="yearly-returns-chart">
+                                <div class="loading">Loading data</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Mavis -->
+                    <div id="company" class="tab-content"> 
+                        <div class="chart-container">
+                            <h3>Company Weightage</h3>
+                            <div id="company-weightage-chart">
+                                <div class="loading">Loading data</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Angela -->
+                    <div id="industry" class="tab-content">
+                        <div class="chart-container">
+                            <h3>Industry Weightage</h3>
+                            <div id="industry-weightage-chart">
+                                <div class="loading">Loading data</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
             </div>
         </div>
-        
-        <div class="legend" id="legend"></div>
-        
-        <div class="chart-container">
-            <div id="chart-area" class="loading">Loading portfolio data...</div>
-        </div>
-        
-        <div class="tooltip" id="tooltip"></div>
     </div>
-    
+
+    <!-- Add a tooltip div -->
+    <div id="tooltip" class="tooltip"></div>
+
     <script>
-        // Configuration
-        const apiUrl = 'http://localhost:5000/portfolio-data';
-        const margin = { top: 50, right: 80, bottom: 60, left: 60 };
-        const width = Math.min(1100, window.innerWidth - 100) - margin.left - margin.right;
-        const height = 500 - margin.top - margin.bottom;
+        // API URLs
+        const API_BASE_URL = 'http://localhost:5000';
+        const API_DATE_RANGE = `${API_BASE_URL}/api/date-range`;
+        const API_PORTFOLIO_VALUE = `${API_BASE_URL}/api/portfolio-value`;
+        const API_TOTAL_RETURN = `${API_BASE_URL}/api/total-return`;
+        const API_MAX_DRAWDOWN = `${API_BASE_URL}/api/max-drawdown`;
+        const API_RISK_LEVEL = `${API_BASE_URL}/api/risk-level`;
+        const API_PORTFOLIO_GROWTH = `${API_BASE_URL}/api/portfolio-growth`;
+        const API_DRAWDOWN_ANALYSIS = `${API_BASE_URL}/api/drawdown-analysis`;
+        const API_ETF_COMPARISON = `${API_BASE_URL}/api/etf-comparison`;
+        const API_YEARLY_RETURNS = `${API_BASE_URL}/api/yearly-returns`;
+        const API_CALCULATE_ALL = `${API_BASE_URL}/api/calculate-all`;
         
-        // Color scheme
-        const colorScheme = {
-            'SPY': '#1f77b4',
-            'GBTC': '#ff7f0e', 
-            'VUG': '#2ca02c',
-            'BRK-B': '#d62728',
-            'portfolio_value': '#2c3e50'
-        };
+
+        // Global variables
+        let minDate, maxDate;
+        let selectedStartDate, selectedEndDate;
+        let portfolioData = null;
+        let drawdownData = null;
+        let etfPerformance = null;
+        let yearlyReturns = null;
         
-        // Ticker name mapping
-        const tickerNames = {
-            'SPY': 'SPDR S&P 500 ETF',
-            'GBTC': 'Grayscale Bitcoin Trust',
-            'VUG': 'Vanguard Growth ETF',
-            'BRK-B': 'Berkshire Hathaway'
-        };
-        
-        // State variables
-        let svg, xScale, yScale, xAxis, yAxis, tooltip;
-        let portfolioLine, componentLines = {};
-        let portfolioData = [];
-        let componentData = {};
-        let updateInProgress = false;
-        
-        // Initialization
-        document.addEventListener('DOMContentLoaded', () => {
-            setupEventListeners();
-            validateWeights();
-            initChart();
-            updatePortfolioData();
-        });
-        
-        // Setup event listeners
-        function setupEventListeners() {
-            // Weight input listeners
-            document.getElementById('spy-weight').addEventListener('input', validateWeights);
-            document.getElementById('gbtc-weight').addEventListener('input', validateWeights);
-            document.getElementById('vug-weight').addEventListener('input', validateWeights);
-            document.getElementById('brkb-weight').addEventListener('input', validateWeights);
+        // Main application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize tooltips
+            const tooltip = d3.select('#tooltip');
             
-            // Update button
-            document.getElementById('updateBtn').addEventListener('click', () => {
-                if (!updateInProgress) {
-                    updatePortfolioData();
-                }
+            // Initialize date range
+            fetchDateRange();
+            
+            // Initialize allocation sliders
+            initializeAllocationSliders();
+            
+            // Set up tabs
+            initializeTabs();
+            
+            // Set up time period buttons
+            initializeTimePeriodButtons();
+            
+            // Set up calculate button
+            document.getElementById('calculate-button').addEventListener('click', function() {
+                calculateAndFetchResults();
             });
             
-            // Reset button
-            document.getElementById('resetBtn').addEventListener('click', resetToEqual);
+            // Initial calculation will be triggered after date range is fetched
+        });
+
+        /////
+
+
+        // Utility function to wait for elements to exist in the DOM
+function waitForElement(elementId, callback, checkFrequencyInMs, timeoutInMs) {
+    var startTimeInMs = Date.now();
+    var checkElementAndCallback = function() {
+        var element = document.getElementById(elementId);
+        if (element) {
+            console.log(elementId + " element found!");
+            callback(element);
+            return;
+        }
+        
+        if (timeoutInMs && Date.now() - startTimeInMs > timeoutInMs) {
+            console.log(elementId + " element not found within timeout period");
+            return;
+        }
+        
+        setTimeout(checkElementAndCallback, checkFrequencyInMs);
+    };
+    
+    checkElementAndCallback();
+}
+
+// Helper function to find the parent metric card of an element
+function findParentCard(elementId) {
+    const element = document.getElementById(elementId);
+    if (!element) {
+        console.log("Element with ID " + elementId + " not found");
+        return null;
+    }
+    
+    // Find parent metric card
+    const parentCard = element.closest('.metric-card');
+    if (parentCard) {
+        console.log("Found parent card for " + elementId);
+        return parentCard;
+    } else {
+        console.log("Could not find parent card for " + elementId);
+        return null;
+    }
+}
+
+// 1. RISK/VOLATILITY MONITORING
+function setupRiskMonitoring(volatilityElement) {
+    console.log("Setting up risk/volatility monitoring");
+    
+    // Find the risk card element
+    const riskCard = findParentCard('volatility');
+    
+    if (riskCard) {
+        setupRiskObserver(volatilityElement, riskCard);
+    } else {
+        console.error("Could not find parent card for volatility");
+    }
+}
+
+function setupRiskObserver(volatilityElement, cardElement) {
+    function updateRiskCardColor() {
+        const volatilityText = volatilityElement.innerText || volatilityElement.textContent;
+        console.log("Volatility text:", volatilityText);
+        
+        if (volatilityText.includes('Very Low') || volatilityText.includes('Low')) {
+            cardElement.style.backgroundColor = 'rgba(40, 167, 69, 0.15)'; // light green
+            console.log("Set risk card to green");
+        } else if (volatilityText.includes('High') || volatilityText.includes('Very High')) {
+            cardElement.style.backgroundColor = 'rgba(220, 53, 69, 0.15)'; // light red
+            console.log("Set risk card to red");
+        } else {
+            cardElement.style.backgroundColor = 'rgba(255, 193, 7, 0.15)'; // light yellow for Moderate
+            console.log("Set risk card to yellow");
+        }
+    }
+    
+    // Initial update
+    updateRiskCardColor();
+    
+    // Create a separate observer for risk
+    const riskObserver = new MutationObserver(function() {
+        console.log("Risk observer triggered");
+        updateRiskCardColor();
+    });
+    
+    // Start observing
+    riskObserver.observe(volatilityElement, { 
+        childList: true, 
+        characterData: true,
+        subtree: true 
+    });
+    
+    console.log("Risk monitoring setup complete");
+}
+
+// 2. DRAWDOWN MONITORING
+function setupDrawdownMonitoring(drawdownElement) {
+    console.log("Setting up drawdown monitoring");
+    
+    // Find the drawdown card element
+    const drawdownCard = findParentCard('max-drawdown');
+    
+    if (drawdownCard) {
+        setupDrawdownObserver(drawdownElement, drawdownCard);
+    } else {
+        console.error("Could not find parent card for drawdown");
+    }
+}
+
+function setupDrawdownObserver(drawdownElement, cardElement) {
+    function updateDrawdownCardColor() {
+        const drawdownText = drawdownElement.innerText || drawdownElement.textContent;
+        console.log("Drawdown text:", drawdownText);
+        
+        const cleanText = drawdownText.replace(/[^\d.-]/g, '');
+        const drawdownValue = parseFloat(cleanText);
+        
+        if (isNaN(drawdownValue)) {
+            console.error("Could not parse a valid number from drawdown text");
+            return;
+        }
+        
+        console.log("Drawdown value:", drawdownValue);
+        
+        if (drawdownValue <= -15) {
+            cardElement.style.backgroundColor = '#ffe6e6'; // Light red
+            console.log("Set drawdown card to red");
+        } else {
+            cardElement.style.backgroundColor = '#e6f7e6'; // Light green
+            console.log("Set drawdown card to green");
+        }
+    }
+    
+    // Initial update
+    updateDrawdownCardColor();
+    
+    // Create a separate observer for drawdown
+    const drawdownObserver = new MutationObserver(function() {
+        console.log("Drawdown observer triggered");
+        updateDrawdownCardColor();
+    });
+    
+    // Start observing
+    drawdownObserver.observe(drawdownElement, { 
+        childList: true, 
+        characterData: true,
+        subtree: true 
+    });
+    
+    console.log("Drawdown monitoring setup complete");
+}
+
+// 3. PORTFOLIO RETURN MONITORING (FOR BOTH PORTFOLIO VALUE AND TOTAL RETURN CARDS)
+function setupReturnMonitoring(annualizedReturnElement) {
+    console.log("Setting up annualized return monitoring");
+    
+    // Find both card elements
+    const portfolioValueCard = findParentCard('final-value');
+    const totalReturnCard = findParentCard('total-return');
+    
+    if (!portfolioValueCard) {
+        console.error("Could not find portfolio value card");
+    }
+    
+    if (!totalReturnCard) {
+        console.error("Could not find total return card");
+    }
+    
+    // Set up the monitoring if at least one card was found
+    if (portfolioValueCard || totalReturnCard) {
+        setupReturnObserver(annualizedReturnElement, portfolioValueCard, totalReturnCard);
+    }
+}
+
+function setupReturnObserver(annualizedReturnElement, portfolioValueCard, totalReturnCard) {
+    function updateReturnCards() {
+        const returnText = annualizedReturnElement.innerText || annualizedReturnElement.textContent;
+        console.log("Annualized return text:", returnText);
+        
+        // Extract the percentage value (looking for a number followed by % per year)
+        const matches = returnText.match(/(-?\d+\.?\d*)%/);
+        if (!matches || matches.length < 2) {
+            console.error("Could not parse annualized return percentage");
+            return;
+        }
+        
+        const annualizedReturnValue = parseFloat(matches[1]);
+        console.log("Parsed annualized return value:", annualizedReturnValue);
+        
+        // Apply the appropriate background color based on the threshold
+        if (annualizedReturnValue >= 6) {
+            console.log("Setting cards to green (>= 6%)");
+            if (portfolioValueCard) portfolioValueCard.style.backgroundColor = '#e6f7e6'; // Light green
+            if (totalReturnCard) totalReturnCard.style.backgroundColor = '#e6f7e6'; // Light green
+        } else {
+            console.log("Setting cards to red (< 6%)");
+            if (portfolioValueCard) portfolioValueCard.style.backgroundColor = '#ffe6e6'; // Light red
+            if (totalReturnCard) totalReturnCard.style.backgroundColor = '#ffe6e6'; // Light red
+        }
+    }
+    
+    // Initial update
+    updateReturnCards();
+    
+    // Create an observer for the annualized return
+    const returnObserver = new MutationObserver(function() {
+        console.log("Annualized return observer triggered");
+        updateReturnCards();
+    });
+    
+    // Start observing
+    returnObserver.observe(annualizedReturnElement, { 
+        childList: true, 
+        characterData: true,
+        subtree: true 
+    });
+    
+    console.log("Annualized return monitoring setup complete");
+}
+
+// Initialize all monitors when the page loads
+window.addEventListener('load', function() {
+    console.log("Window loaded, setting up all monitors");
+    
+    // 1. Set up risk/volatility monitoring
+    waitForElement('volatility', setupRiskMonitoring, 100, 10000);
+    
+    // 2. Set up maximum drawdown monitoring
+    waitForElement('max-drawdown', setupDrawdownMonitoring, 100, 10000);
+    
+    // 3. Set up return monitoring (for both portfolio value and total return cards)
+    waitForElement('annualized-return', setupReturnMonitoring, 100, 10000);
+});
+
+
+        /////
+        
+        // Function to fetch date range from API
+        function fetchDateRange() {
+            fetch(API_DATE_RANGE)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    minDate = new Date(data.min_date);
+                    maxDate = new Date(data.max_date);
+                    
+                    // Set default selected dates to max range
+                    selectedStartDate = minDate;
+                    selectedEndDate = maxDate;
+                    
+                    // Display date range text initially
+                    updateDateRangeDisplay();
+                    
+                    // Display ETF returns if needed
+                    const etfReturns = data.etf_returns;
+                    for (const etf in etfReturns) {
+                        const returnEl = document.getElementById(`${etf.toLowerCase()}-return`);
+                        if (returnEl) {
+                            returnEl.textContent = `${etfReturns[etf].toFixed(2)}%`;
+                        }
+                    }
+                    
+                    // Now that we have the date range, trigger the initial calculation
+                    calculateAndFetchResults();
+                })
+                .catch(error => {
+                    showApiError(`Failed to fetch date range: ${error.message}`);
+                });
+        }
+
+        // Function to initialize time period buttons
+        function initializeTimePeriodButtons() {
+            const buttons = document.querySelectorAll('.time-btn');
             
-            // Handle resize
-            window.addEventListener('resize', debounce(() => {
-                initChart();
-                if (portfolioData.length > 0) {
-                    updateChart(portfolioData, componentData);
+            buttons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    buttons.forEach(btn => btn.classList.remove('active'));
+                    
+                    // Add active class to clicked button
+                    this.classList.add('active');
+                    
+                    // Get the selected period
+                    const period = this.getAttribute('data-period');
+                    
+                    // Calculate start and end dates based on the period
+                    if (period === 'MAX') {
+                        selectedStartDate = minDate;
+                        selectedEndDate = maxDate;
+                    } else {
+                        selectedEndDate = new Date(maxDate); // Use a copy of maxDate
+                        selectedStartDate = calculateStartDate(period);
+                    }
+                    
+                    // Update the date range display
+                    updateDateRangeDisplay();
+                    
+                    // If allocations are valid, trigger calculation
+                    if (checkAllocation()) {
+                        calculateAndFetchResults();
+                    }
+                });
+            });
+        }
+
+        // Function to calculate start date based on period
+        function calculateStartDate(period) {
+        const endDate = new Date(selectedEndDate);
+        const startDate = new Date(endDate);
+        
+        switch (period) {
+            case '1M':
+                startDate.setMonth(endDate.getMonth() - 1);
+                break;
+            case '6M':
+                startDate.setMonth(endDate.getMonth() - 6);
+                break;
+            case '1Y':
+                startDate.setFullYear(endDate.getFullYear() - 1);
+                break;
+            case '3Y':
+                startDate.setFullYear(endDate.getFullYear() - 3);
+                break;
+            case '5Y':
+                startDate.setFullYear(endDate.getFullYear() - 5);
+                break;
+            default:
+                startDate = new Date(minDate);
+        }
+        
+        // Ensure the start date is not earlier than the minimum available date
+        if (startDate < minDate) {
+            startDate = new Date(minDate);
+        }
+        
+        return startDate;
+        }
+
+        // Function to update the date range display
+        function updateDateRangeDisplay() {
+        const dateDisplay = document.getElementById('date-range-display');
+        dateDisplay.textContent = `From ${formatDate(selectedStartDate)} to ${formatDate(selectedEndDate)}`;
+        }
+
+        // Function to initialize allocation sliders ['SPY', 'GBTC', 'BRK-B', 'VUG']
+        function initializeAllocationSliders() {
+            const spySlider = document.getElementById('spy-allocation');
+            const gbtcSlider = document.getElementById('gbtc-allocation');
+            const brkbSlider = document.getElementById('brkb-allocation');
+            const vugSlider = document.getElementById('vug-allocation');
+            
+            const spyValue = document.getElementById('spy-value');
+            const gbtcValue = document.getElementById('gbtc-value');
+            const brkbValue = document.getElementById('brkb-value');
+            const vugValue = document.getElementById('vug-value');
+            
+            spySlider.addEventListener('input', function() {
+                spyValue.textContent = `${spySlider.value}%`;
+                checkAllocation();
+            }); 
+            
+            gbtcSlider.addEventListener('input', function() {
+                gbtcValue.textContent = `${gbtcSlider.value}%`;
+                checkAllocation();
+            }); 
+            
+            brkbSlider.addEventListener('input', function() {
+                brkbValue.textContent = `${brkbSlider.value}%`;
+                checkAllocation();
+            });
+            
+            vugSlider.addEventListener('input', function() {
+                vugValue.textContent = `${vugSlider.value}%`;
+                checkAllocation();
+            });  
+        }
+        
+        // Function to check if allocations sum to 100% ['SPY', 'GBTC', 'BRK-B', 'VUG']
+        function checkAllocation() {
+            const spyValue = parseInt(document.getElementById('spy-allocation').value);
+            const gbtcValue = parseInt(document.getElementById('gbtc-allocation').value);
+            const brkbValue = parseInt(document.getElementById('brkb-allocation').value);
+            const vugValue = parseInt(document.getElementById('vug-allocation').value);
+            
+            const total = spyValue + gbtcValue + brkbValue + vugValue;
+            const warningEl = document.getElementById('allocation-warning');
+            
+            if (total !== 100) {
+                warningEl.textContent = `Total allocation: ${total}% (should be 100%)`;
+                return false;
+            } else {
+                warningEl.textContent = '';
+                return true;
+            }
+        }
+        
+// Function to initialize tabs
+function initializeTabs() {
+            const tabs = document.querySelectorAll('.tab');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
+                    
+                    // Remove active class from all tabs and tab content
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                    
+                    // Add active class to clicked tab and corresponding content
+                    this.classList.add('active');
+                    document.getElementById(tabId).classList.add('active');
+                    
+                    // Re-render charts when tab becomes visible to fix layout issues
+                    setTimeout(() => {
+                        if (tabId === 'growth' && portfolioData) {
+                            // Use the new comparison chart instead of the old growth chart
+                            createPortfolioAgainstSpyChart(portfolioData, portfolioData);
+                        } else if (tabId === 'drawdown' && portfolioData) {
+                            createDrawdownChart(portfolioData);
+                        } else if (tabId === 'comparison' && portfolioData) {
+                            createComparisonChart(portfolioData, etfPerformance);
+                        } else if (tabId === 'yearly' && yearlyReturns) {
+                            createYearlyReturnsChart(yearlyReturns);
+                        } else if (tabId === 'company-weightage') {
+                            createCompanyWeightageChart(); // Mavis
+                        } else if (tabId === 'industry-weightage') {
+                            createIndustryWeightageChart(); // Angela
+                        }
+                    }, 50);
+                });
+            });
+        }
+
+        // Helper function to get current allocations
+        function getCurrentAllocations() {
+            return {
+                'SPY': parseInt(document.getElementById('spy-allocation').value),
+                'GBTC': parseInt(document.getElementById('gbtc-allocation').value),
+                'BRK-B': parseInt(document.getElementById('brkb-allocation').value),
+                'VUG': parseInt(document.getElementById('vug-allocation').value)
+            };
+        }
+        
+        // Function to calculate and fetch results from API
+        function calculateAndFetchResults() {
+            // Check if allocations are valid
+            if (!checkAllocation()) {
+                alert('Total allocation must be 100%. Please adjust your allocations.');
+                return;
+            }
+            
+            // Get input values
+            const initialInvestment = parseFloat(document.getElementById('initial-investment').value);
+            const spyAllocation = parseInt(document.getElementById('spy-allocation').value);
+            const gbtcAllocation = parseInt(document.getElementById('gbtc-allocation').value);
+            const brkbAllocation = parseInt(document.getElementById('brkb-allocation').value);
+            const vugAllocation = parseInt(document.getElementById('vug-allocation').value);
+            
+            // Use the selected date range
+            const startDate = formatDateForAPI(selectedStartDate);
+            const endDate = formatDateForAPI(selectedEndDate);
+            
+            // Prepare API request payload
+            const payload = {
+                initial_investment: initialInvestment,
+                allocations: {
+                    'SPY': spyAllocation,
+                    'GBTC': gbtcAllocation,
+                    'BRK-B': brkbAllocation,
+                    'VUG': vugAllocation
+                },
+                start_date: startDate,
+                end_date: endDate
+            };
+            
+            // Show loading state
+            document.querySelectorAll('.loading').forEach(el => {
+                el.style.display = 'block';
+            });
+            
+            // Clear any previous error messages
+            hideApiError();
+            
+            // Fetch all data at once
+            fetchAllData(payload);
+        }
+
+        // Helper function to format dates for API (YYYY-MM-DD)
+        function formatDateForAPI(date) {
+            if (!date) return null;
+            
+            const d = new Date(date);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            
+            return `${year}-${month}-${day}`;
+        }
+        
+        // Function to fetch all data from the API
+        function fetchAllData(payload) {
+            // Use the calculate-all endpoint
+            fetch(API_CALCULATE_ALL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        try {
+                            const err = JSON.parse(text);
+                            throw new Error(err.error || `HTTP error! Status: ${response.status}`);
+                        } catch(e) {
+                            throw new Error(`HTTP error! Status: ${response.status}, Body: ${text.substring(0, 100)}...`);
+                        }
+                    });
                 }
-            }, 250));
+                return response.text().then(text => {
+                    // Replace NaN with null in the response to handle JSON parsing issues
+                    const cleanedText = text.replace(/NaN/g, 'null');
+                    return JSON.parse(cleanedText);
+                });
+            })
+            .then(data => {
+                // Store the data
+                const metrics = data.metrics;
+                portfolioData = data.portfolio_data;
+                etfPerformance = data.etf_performance;
+                yearlyReturns = data.yearly_returns;
+                
+                console.log("Data received:", {
+                    portfolioDataPoints: portfolioData?.length || 0,
+                    etfPerformanceEntries: Object.keys(etfPerformance || {}).length,
+                    yearlyReturnsPoints: yearlyReturns?.length || 0
+                });
+                
+                // Update metrics display
+                updateMetricsDisplay(metrics, payload.initial_investment);
+                
+                // We'll use SPY data for comparison - extract it from portfolio data
+                // (Since we need the same date range as our portfolio data)
+                
+                // Create charts - using the new comparison chart instead of growth chart
+                createPortfolioAgainstSpyChart(portfolioData, portfolioData); // Use same data source for both
+                createDrawdownChart(portfolioData);
+                createComparisonChart(portfolioData, etfPerformance);
+                createYearlyReturnsChart(yearlyReturns);
+                createCompanyWeightageChart(); // Mavis
+                createIndustryWeightageChart(); // Angela 
+                
+                // Hide loading indicators
+                document.querySelectorAll('.loading').forEach(el => {
+                    el.style.display = 'none';
+                });
+            })
+            .catch(error => {
+                showApiError(`Failed to fetch portfolio data: ${error.message}`);
+                
+                // Hide loading indicators
+                document.querySelectorAll('.loading').forEach(el => {
+                    el.style.display = 'none';
+                });
+            });
+        }
+
+        // Helper function to show API error
+        function showApiError(message) {
+            const errorEl = document.getElementById('api-error');
+            const messageEl = document.getElementById('error-message');
+            messageEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+
+        // Helper function to hide API error
+        function hideApiError() {
+            const errorEl = document.getElementById('api-error');
+            errorEl.style.display = 'none';
+        }
+
+        // Helper function to format date
+        function formatDate(date) {
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
         }
         
-        // Validate weights
-        function validateWeights() {
-            const spyWeight = parseFloat(document.getElementById('spy-weight').value) || 0;
-            const gbtcWeight = parseFloat(document.getElementById('gbtc-weight').value) || 0;
-            const vugWeight = parseFloat(document.getElementById('vug-weight').value) || 0;
-            const brkbWeight = parseFloat(document.getElementById('brkb-weight').value) || 0;
+        // Function to update metrics display
+        function updateMetricsDisplay(metrics, initialInvestment) {
+            document.getElementById('final-value').textContent = formatCurrency(metrics.final_value);
+            document.getElementById('initial-value').textContent = `Initial: ${formatCurrency(initialInvestment)}`;
+            document.getElementById('total-return').textContent = formatPercentage(metrics.total_return);
+            document.getElementById('annualized-return').textContent = `Annualized: ${formatPercentage(metrics.annualized_return)} per year`;
+            document.getElementById('max-drawdown').textContent = formatPercentage(metrics.max_drawdown);
+            document.getElementById('volatility').textContent = `${metrics.risk_level} (${formatPercentage(metrics.volatility)})`;
+        }
+
+        // Helper function to format currency
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(value);
+        }
+
+        // Helper function to format percentage
+        function formatPercentage(value) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'percent',
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 1
+            }).format(value);
+        }
+
+
+        // Function to create portfolio vs SPY comparison chart
+        function createPortfolioAgainstSpyChart(portfolioData, spyData) {
+            const chartContainer = document.getElementById('portfolio-growth-chart');
+            chartContainer.innerHTML = '';
             
-            const sum = spyWeight + gbtcWeight + vugWeight + brkbWeight;
-            const validationMessage = document.getElementById('validation-message');
-            const updateBtn = document.getElementById('updateBtn');
-            
-            // Check if any weights are negative
-            if (spyWeight < 0 || gbtcWeight < 0 || vugWeight < 0 || brkbWeight < 0) {
-                validationMessage.textContent = 'All weights must be positive values.';
-                updateBtn.disabled = true;
-                return false;
+            // Check if we have data
+            if (!portfolioData || portfolioData.length === 0 || !spyData || spyData.length === 0) {
+                chartContainer.innerHTML = '<div class="error">No data available for comparison</div>';
+                return;
             }
             
-            // Check if weights sum to 1
-            if (Math.abs(sum - 1) > 0.01) {
-                validationMessage.textContent = `Weights must sum to 1. Current sum: ${sum.toFixed(2)}`;
-                updateBtn.disabled = true;
-                return false;
-            }
+            const margin = {top: 20, right: 80, bottom: 50, left: 80};
+            const width = chartContainer.clientWidth - margin.left - margin.right;
+            const height = 400 - margin.top - margin.bottom;
             
-            // Valid weights
-            validationMessage.textContent = '';
-            updateBtn.disabled = false;
-            return true;
-        }
-        
-        // Reset weights to equal
-        function resetToEqual() {
-            document.getElementById('spy-weight').value = 0.25;
-            document.getElementById('gbtc-weight').value = 0.25;
-            document.getElementById('vug-weight').value = 0.25;
-            document.getElementById('brkb-weight').value = 0.25;
-            validateWeights();
-            updatePortfolioData();
-        }
-        
-        // Initialize chart
-        function initChart() {
-            // Clear previous chart
-            document.getElementById('chart-area').innerHTML = '';
-            document.getElementById('chart-area').classList.remove('loading');
-            
-            // Create SVG element
-            svg = d3.select('#chart-area')
+            const svg = d3.select(chartContainer)
                 .append('svg')
                 .attr('width', width + margin.left + margin.right)
                 .attr('height', height + margin.top + margin.bottom)
                 .append('g')
                 .attr('transform', `translate(${margin.left},${margin.top})`);
             
-            // Initialize scales
-            xScale = d3.scaleTime().range([0, width]);
-            yScale = d3.scaleLinear().range([height, 0]);
+            // Make sure dates are Date objects and sort chronologically
+            portfolioData = portfolioData.map(d => ({
+                ...d,
+                Date: d.Date instanceof Date ? d.Date : new Date(d.Date)
+            })).sort((a, b) => a.Date - b.Date);
             
-            // Initialize axes
-            xAxis = svg.append('g')
-                .attr('class', 'x-axis')
-                .attr('transform', `translate(0,${height})`);
-                
-            yAxis = svg.append('g')
-                .attr('class', 'y-axis');
+            spyData = spyData.map(d => ({
+                ...d,
+                Date: d.Date instanceof Date ? d.Date : new Date(d.Date)
+            })).sort((a, b) => a.Date - b.Date);
             
-            // Add grid lines
+            // Ensure we have enough data points
+            if (portfolioData.length < 2 || spyData.length < 2) {
+                chartContainer.innerHTML = '<div class="error">Not enough data points for comparison</div>';
+                return;
+            }
+            
+            // For comparison, we need to normalize both portfolio and SPY to start at 1
+            const portfolioStartValue = portfolioData[0].total_value;
+            const spyStartValue = spyData[0].SPY;
+            
+            // Create normalized data for comparison, filtering out invalid values
+            const normalizedPortfolioData = portfolioData
+                .filter(d => typeof d.total_value === 'number' && !isNaN(d.total_value) && portfolioStartValue > 0)
+                .map(d => ({
+                    Date: d.Date,
+                    value: d.total_value / portfolioStartValue
+                }));
+            
+            const normalizedSpyData = spyData
+                .filter(d => typeof d.SPY === 'number' && !isNaN(d.SPY) && spyStartValue > 0)
+                .map(d => ({
+                    Date: d.Date,
+                    value: d.SPY / spyStartValue
+                }));
+            
+            // Check if we still have enough data after filtering
+            if (normalizedPortfolioData.length < 2 || normalizedSpyData.length < 2) {
+                chartContainer.innerHTML = '<div class="error">Not enough valid data points after normalization</div>';
+                return;
+            }
+            
+            // Determine a common date range for both datasets
+            let dateExtent = [
+                Math.max(normalizedPortfolioData[0].Date, normalizedSpyData[0].Date),
+                Math.min(
+                    normalizedPortfolioData[normalizedPortfolioData.length-1].Date,
+                    normalizedSpyData[normalizedSpyData.length-1].Date
+                )
+            ];
+            
+            // Verify the date range is valid
+            if (dateExtent[0] >= dateExtent[1]) {
+                // If date ranges don't overlap enough, use the full range
+                dateExtent = d3.extent([
+                    ...normalizedPortfolioData.map(d => d.Date),
+                    ...normalizedSpyData.map(d => d.Date)
+                ]);
+            }
+            
+            // Find max value for y-axis scaling
+            const maxPortfolioValue = d3.max(normalizedPortfolioData, d => d.value);
+            const maxSpyValue = d3.max(normalizedSpyData, d => d.value);
+            const maxValue = Math.max(maxPortfolioValue, maxSpyValue);
+            
+            // X scale
+            const x = d3.scaleTime()
+                .domain(dateExtent)
+                .range([0, width]);
+            
+            // Y scale with 10% padding
+            const y = d3.scaleLinear()
+                .domain([0, maxValue * 1.1])
+                .range([height, 0]);
+            
+            // X axis
+            svg.append('g')
+                .attr('class', 'axis')
+                .attr('transform', `translate(0,${height})`)
+                .call(d3.axisBottom(x)
+                    .ticks(width > 500 ? 10 : 5)
+                    .tickFormat(d3.timeFormat('%b %Y')))
+                .selectAll('text')
+                .style('text-anchor', 'end')
+                .attr('dx', '-.8em')
+                .attr('dy', '.15em')
+                .attr('transform', 'rotate(-45)');
+            
+            // Y axis
+            svg.append('g')
+                .attr('class', 'axis')
+                .call(d3.axisLeft(y)
+                    .tickFormat(d => d3.format('.1f')(d)));
+            
+            // Grid lines to improve readability
             svg.append('g')
                 .attr('class', 'grid')
+                .call(d3.axisLeft(y)
+                    .ticks(10)
+                    .tickSize(-width)
+                    .tickFormat(''))
                 .style('stroke', '#e0e0e0')
                 .style('stroke-opacity', 0.7)
-                .style('shape-rendering', 'crispEdges')
-                .style('stroke-dasharray', '3,3');
+                .style('shape-rendering', 'crispEdges');
             
-            // Add axes labels
+            // Add Y axis label
             svg.append('text')
-                .attr('class', 'x-axis-label')
-                .attr('text-anchor', 'middle')
-                .attr('x', width / 2)
-                .attr('y', height + margin.bottom - 10)
-                .text('Date')
-                .style('fill', '#666');
-                
-            svg.append('text')
-                .attr('class', 'y-axis-label')
-                .attr('text-anchor', 'middle')
                 .attr('transform', 'rotate(-90)')
+                .attr('y', -60)
                 .attr('x', -height / 2)
-                .attr('y', -margin.left + 15)
+                .attr('text-anchor', 'middle')
                 .text('Value (Normalized)')
                 .style('fill', '#666');
             
             // Add chart title
             svg.append('text')
-                .attr('class', 'chart-title')
                 .attr('text-anchor', 'middle')
                 .attr('x', width / 2)
-                .attr('y', -margin.top / 2)
+                .attr('y', -margin.top / 2 + 10)
                 .text('Portfolio vs. S&P 500 Performance')
-                .style('font-size', '18px')
+                .style('font-size', '16px')
                 .style('font-weight', 'bold')
                 .style('fill', '#2c3e50');
             
-            // Initialize tooltip
-            tooltip = d3.select('#tooltip');
+            // Colors for lines
+            const portfolioColor = '#2c3e50';  // Portfolio in dark blue
+            const spyColor = '#1f77b4';        // SPY in lighter blue
             
-            // Initialize portfolio line
-            portfolioLine = svg.append('path')
-                .attr('class', 'portfolio-line')
-                .style('fill', 'none')
-                .style('stroke', colorScheme.portfolio_value)
-                .style('stroke-width', 3)
-                .style('opacity', 0.8);
-                
-            // Init legend
-            updateLegend();
-        }
-        
-        // Update portfolio data
-        async function updatePortfolioData() {
-            if (updateInProgress) return;
-            updateInProgress = true;
-            
-            const spyWeight = parseFloat(document.getElementById('spy-weight').value) || 0;
-            const gbtcWeight = parseFloat(document.getElementById('gbtc-weight').value) || 0;
-            const vugWeight = parseFloat(document.getElementById('vug-weight').value) || 0;
-            const brkbWeight = parseFloat(document.getElementById('brkb-weight').value) || 0;
-            
-            // Show loading state
-            document.getElementById('chart-area').innerHTML = '<div class="loading">Loading portfolio data...</div>';
-            
-            // Prepare portfolio data
-            const portfolio = {
-                tickers: {
-                    'SPY': spyWeight,
-                    'GBTC': gbtcWeight,
-                    'VUG': vugWeight,
-                    'BRK-B': brkbWeight
-                }
-            };
-            
-            try {
-                const response = await fetch(apiUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(portfolio)
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`Server returned ${response.status}: ${response.statusText}`);
-                }
-                
-                const data = await response.json();
-                
-                // Update data
-                portfolioData = data.portfolio_data;
-                componentData = data.component_data;
-                
-                // Re-initialize chart (clears loading state)
-                initChart();
-                
-                // Update chart with new data
-                updateChart(portfolioData, componentData);
-                
-            } catch (error) {
-                console.error('Error fetching portfolio data:', error);
-                document.getElementById('chart-area').innerHTML = `
-                    <div style="text-align: center; padding: 40px; color: #dc3545;">
-                        <div style="font-weight: bold; margin-bottom: 10px;">Error Loading Data</div>
-                        <div>${error.message}</div>
-                        <div style="margin-top: 15px; font-size: 14px;">
-                            Make sure the Flask microservice is running at ${apiUrl}
-                        </div>
-                    </div>
-                `;
-            } finally {
-                updateInProgress = false;
-            }
-        }
-        
-        // Update chart with new data
-        function updateChart(portfolioData, componentData) {
-            if (!portfolioData || portfolioData.length === 0) return;
-            
-            // Convert string dates to Date objects
-            portfolioData.forEach(d => d.date = new Date(d.date));
-            Object.keys(componentData).forEach(ticker => {
-                componentData[ticker].forEach(d => d.date = new Date(d.date));
-            });
-            
-            // Update domains
-            const dateExtent = d3.extent(portfolioData, d => d.date);
-            xScale.domain(dateExtent);
-            
-            // We only need to compare portfolio with SPY
-            const spyData = componentData['SPY'];
-            let maxValue = d3.max(portfolioData, d => d.portfolio_value);
-            const spyMax = d3.max(spyData, d => d.normalized_price);
-            maxValue = Math.max(maxValue, spyMax);
-            
-            // Add 10% padding to y-axis
-            yScale.domain([0, maxValue * 1.1]);
-            
-            // Update axes
-            xAxis.call(
-                d3.axisBottom(xScale)
-                .ticks(width > 600 ? 10 : 5)
-                .tickFormat(d3.timeFormat('%b %Y'))
-            );
-            
-            yAxis.call(
-                d3.axisLeft(yScale)
-                .ticks(10)
-                .tickFormat(d => d3.format('.1f')(d))
-            );
-            
-            // Update grid lines
-            svg.select('.grid')
-                .call(
-                    d3.axisLeft(yScale)
-                    .ticks(10)
-                    .tickSize(-width)
-                    .tickFormat('')
-                );
-            
-            // Line generator for portfolio
+            // Line generator with smooth curve
             const line = d3.line()
-                .x(d => xScale(d.date))
-                .y(d => yScale(d.portfolio_value))
+                .x(d => x(d.Date))
+                .y(d => y(d.value))
+                .defined(d => !isNaN(d.value))
                 .curve(d3.curveMonotoneX);
             
-            // Update portfolio line
-            portfolioLine
-                .datum(portfolioData)
-                .transition()
-                .duration(750)
+            // Draw portfolio line
+            svg.append('path')
+                .datum(normalizedPortfolioData)
+                .attr('class', 'portfolio-line')
+                .attr('fill', 'none')
+                .attr('stroke', portfolioColor)
+                .attr('stroke-width', 3)
                 .attr('d', line);
             
-            // Remove old component lines
-            svg.selectAll('.component-line').remove();
-            
-            // Only add SPY line
-            const spyLine = d3.line()
-                .x(d => xScale(d.date))
-                .y(d => yScale(d.normalized_price))
-                .curve(d3.curveMonotoneX);
-            
+            // Draw SPY line
             svg.append('path')
-                .datum(spyData)
-                .attr('class', 'component-line')
-                .attr('data-ticker', 'SPY')
-                .style('fill', 'none')
-                .style('stroke', colorScheme['SPY'])
-                .style('stroke-width', 1.5)
-                .style('opacity', 0.6)
-                .attr('d', spyLine);
+                .datum(normalizedSpyData)
+                .attr('class', 'spy-line')
+                .attr('fill', 'none')
+                .attr('stroke', spyColor)
+                .attr('stroke-width', 1.5)
+                .attr('stroke-dasharray', '5,5')  // Make SPY line dashed
+                .attr('d', line);
             
-            // Add interactive elements
-            addInteractivity();
+            // Create tooltip
+            const tooltip = d3.select('#tooltip');
             
-            // Update legend
-            updateLegend();
-        }
-        
-        // Add interactivity to chart
-        function addInteractivity() {
-            // Remove previous elements if they exist
-            svg.selectAll('.overlay').remove();
-            svg.selectAll('.focus').remove();
+            // Create a bisector for finding closest data point
+            const bisect = d3.bisector(d => d.Date).left;
             
-            // Create focus element for tooltip
-            const focus = svg.append('g')
-                .attr('class', 'focus')
-                .style('display', 'none');
+            // Add tooltip vertical line
+            const tooltipLine = svg.append("line")
+                .attr("stroke", "#ddd")
+                .attr("stroke-width", 1)
+                .attr("stroke-dasharray", "3,3")
+                .attr("y1", 0)
+                .attr("y2", height)
+                .style("opacity", 0);
+            
+            // Add dots for highlighting points
+            const portfolioDot = svg.append("circle")
+                .attr("r", 5)
+                .attr("fill", portfolioColor)
+                .attr("stroke", "white")
+                .attr("stroke-width", 2)
+                .style("opacity", 0);
                 
-            // Add circle to focus
-            focus.append('circle')
-                .attr('r', 5)
-                .style('fill', 'none')
-                .style('stroke', '#2c3e50')
-                .style('stroke-width', 2);
+            const spyDot = svg.append("circle")
+                .attr("r", 4)
+                .attr("fill", spyColor)
+                .attr("stroke", "white")
+                .attr("stroke-width", 2)
+                .style("opacity", 0);
             
-            // Add vertical line
-            focus.append('line')
-                .attr('class', 'focus-line')
-                .attr('y1', 0)
-                .attr('y2', height)
-                .style('stroke', '#2c3e50')
-                .style('stroke-width', 1)
-                .style('stroke-dasharray', '3,3')
-                .style('opacity', 0.5);
-                
-            // Create overlay for mouse events
+            // Add transparent overlay for mouse interaction
             svg.append('rect')
-                .attr('class', 'overlay')
                 .attr('width', width)
                 .attr('height', height)
                 .style('fill', 'none')
                 .style('pointer-events', 'all')
                 .on('mouseover', () => {
-                    focus.style('display', null);
                     tooltip.style('opacity', 1);
+                    tooltipLine.style('opacity', 1);
+                    portfolioDot.style('opacity', 1);
+                    spyDot.style('opacity', 1);
                 })
                 .on('mouseout', () => {
-                    focus.style('display', 'none');
                     tooltip.style('opacity', 0);
+                    tooltipLine.style('opacity', 0);
+                    portfolioDot.style('opacity', 0);
+                    spyDot.style('opacity', 0);
                 })
-                .on('mousemove', mousemove);
-            
-            function mousemove(event) {
-                // Get x position in data space
-                const x0 = xScale.invert(d3.pointer(event)[0]);
-                
-                // Find closest data point
-                const bisectDate = d3.bisector(d => d.date).left;
-                const i = bisectDate(portfolioData, x0, 1);
-                
-                // Handle edge cases
-                if (i >= portfolioData.length) return;
-                
-                const d0 = portfolioData[i - 1];
-                const d1 = portfolioData[i];
-                const d = x0 - d0.date > d1.date - x0 ? d1 : d0;
-                
-                // Update focus position
-                const xPos = xScale(d.date);
-                focus.attr('transform', `translate(${xPos},${yScale(d.portfolio_value)})`);
-                
-                // Update vertical line
-                focus.select('.focus-line')
-                    .attr('transform', `translate(${xPos},0)`)
-                    .attr('y1', 0)
-                    .attr('y2', height);
-                
-                // Format date for tooltip
-                const formattedDate = d3.timeFormat('%b %d, %Y')(d.date);
-                
-                // Find SPY data point
-                const spyData = componentData['SPY'];
-                const spyI = bisectDate(spyData, x0, 1);
-                let spyValue = null;
-                
-                if (spyI < spyData.length) {
-                    const sd0 = spyData[spyI - 1];
-                    const sd1 = spyData[spyI];
-                    const sd = x0 - sd0.date > sd1.date - x0 ? sd1 : sd0;
-                    spyValue = sd.normalized_price;
-                }
-                
-                // Create tooltip content
-                let tooltipContent = `<div style="font-weight:bold;margin-bottom:5px;">${formattedDate}</div>`;
-                
-                // Portfolio value
-                tooltipContent += `<div style="margin-bottom:8px;font-weight:bold;display:flex;align-items:center;">
-                                    <span style="display:inline-block;width:12px;height:12px;background:${colorScheme.portfolio_value};margin-right:5px;border-radius:2px;"></span>
-                                    Portfolio: ${d.portfolio_value.toFixed(4)}</div>`;
-                
-                // SPY value
-                if (spyValue !== null) {
-                    tooltipContent += `<div style="display:flex;align-items:center;margin-top:3px;">
-                                        <span style="display:inline-block;width:10px;height:10px;background:${colorScheme['SPY']};margin-right:5px;border-radius:2px;"></span>
-                                        SPY: ${spyValue.toFixed(4)}</div>`;
-                
-                    // Add outperformance
-                    const diff = d.portfolio_value - spyValue;
-                    const diffColor = diff >= 0 ? '#28a745' : '#dc3545';
-                    tooltipContent += `<div style="margin-top:5px;color:${diffColor};">
-                                      ${diff >= 0 ? 'Outperforming' : 'Underperforming'} SPY by ${Math.abs(diff).toFixed(4)}</div>`;
-                }
-                
-                // Position and show tooltip
-                tooltip
-                    .html(tooltipContent)
+                .on('mousemove', function(event) {
+                    // Get mouse x-position in data space
+                    const mouseX = d3.pointer(event)[0];
+                    const x0 = x.invert(mouseX);
+                    
+                    // Find closest portfolio data point
+                    const i = bisect(normalizedPortfolioData, x0, 1);
+                    if (i >= normalizedPortfolioData.length) return;
+                    
+                    const d0 = normalizedPortfolioData[i - 1];
+                    const d1 = normalizedPortfolioData[i];
+                    if (!d0 || !d1) return;
+                    
+                    const d = x0 - d0.Date > d1.Date - x0 ? d1 : d0;
+                    
+                    // Find closest SPY data point
+                    const j = bisect(normalizedSpyData, x0, 1);
+                    let spyPoint = null;
+                    if (j < normalizedSpyData.length && j > 0) {
+                        const s0 = normalizedSpyData[j - 1];
+                        const s1 = normalizedSpyData[j];
+                        if (s0 && s1) {
+                            spyPoint = x0 - s0.Date > s1.Date - x0 ? s1 : s0;
+                        }
+                    }
+                    
+                    // Update vertical line
+                    tooltipLine
+                        .attr("x1", x(d.Date))
+                        .attr("x2", x(d.Date));
+                    
+                    // Update dots
+                    portfolioDot
+                        .attr("cx", x(d.Date))
+                        .attr("cy", y(d.value));
+                        
+                    if (spyPoint) {
+                        spyDot
+                            .attr("cx", x(spyPoint.Date))
+                            .attr("cy", y(spyPoint.value))
+                            .style("opacity", 1);
+                    } else {
+                        spyDot.style("opacity", 0);
+                    }
+                    
+                    // Format date for tooltip
+                    const formattedDate = formatDate(d.Date);
+                    
+                    // Calculate outperformance
+                    let outperformanceHTML = '';
+                    if (spyPoint) {
+                        const diff = d.value - spyPoint.value;
+                        const percentDiff = (diff / spyPoint.value) * 100;
+                        const diffColor = diff >= 0 ? '#28a745' : '#dc3545';
+                        
+                        outperformanceHTML = `
+                            <div style="margin-top: 8px; padding-top: 5px; border-top: 1px solid #eee;">
+                                <span style="color: ${diffColor}; font-weight: bold;">
+                                    ${diff >= 0 ? 'Outperforming' : 'Underperforming'} by 
+                                    ${Math.abs(percentDiff).toFixed(2)}%
+                                </span>
+                            </div>
+                        `;
+                    }
+                    
+                    // Create tooltip content
+                    tooltip.html(`
+                        <div style="font-weight: bold; margin-bottom: 5px;">${formattedDate}</div>
+                        <div>
+                            <span style="display: inline-block; width: 12px; height: 12px; background: ${portfolioColor}; margin-right: 5px;"></span>
+                            Portfolio: ${d.value.toFixed(2)}x
+                        </div>
+                        ${spyPoint ? `
+                        <div style="margin-top: 5px;">
+                            <span style="display: inline-block; width: 12px; height: 12px; background: ${spyColor}; margin-right: 5px;"></span>
+                            S&P 500: ${spyPoint.value.toFixed(2)}x
+                        </div>` : ''}
+                        ${outperformanceHTML}
+                    `)
                     .style('left', (event.pageX + 15) + 'px')
                     .style('top', (event.pageY - 28) + 'px');
-            }
-        }
-        
-        // Update legend
-        function updateLegend() {
-            const legend = d3.select('#legend');
-            legend.html('');
+                });
+            
+            // Create legend
+            const legend = document.getElementById('growth-legend');
+            legend.innerHTML = '';
             
             // Portfolio legend item
-            const portfolioItem = legend.append('div')
-                .attr('class', 'legend-item');
-                
-            portfolioItem.append('div')
-                .attr('class', 'legend-color')
-                .style('background-color', colorScheme.portfolio_value);
-                
-            portfolioItem.append('span')
-                .text('Your Portfolio');
+            const portfolioLegend = document.createElement('div');
+            portfolioLegend.className = 'legend-item';
+            
+            const portfolioColor1 = document.createElement('div');
+            portfolioColor1.className = 'legend-color';
+            portfolioColor1.style.backgroundColor = portfolioColor;
+            
+            const portfolioText = document.createElement('span');
+            portfolioText.textContent = 'Your Portfolio';
+            
+            portfolioLegend.appendChild(portfolioColor1);
+            portfolioLegend.appendChild(portfolioText);
+            legend.appendChild(portfolioLegend);
             
             // SPY legend item
-            const spyItem = legend.append('div')
-                .attr('class', 'legend-item');
+            const spyLegend = document.createElement('div');
+            spyLegend.className = 'legend-item';
+            
+            const spyColor1 = document.createElement('div');
+            spyColor1.className = 'legend-color';
+            spyColor1.style.backgroundColor = spyColor;
+            
+            const spyText = document.createElement('span');
+            spyText.textContent = 'S&P 500 (SPY)';
+            
+            spyLegend.appendChild(spyColor1);
+            spyLegend.appendChild(spyText);
+            legend.appendChild(spyLegend);
+        }
+
+        function createDrawdownChart(portfolioData) {
+            const chartContainer = document.getElementById('drawdown-chart');
+            chartContainer.innerHTML = '';
+            
+            // Check if we have data
+            if (!portfolioData || portfolioData.length === 0) {
+                chartContainer.innerHTML = '<div class="error">No data available for drawdown analysis</div>';
+                return;
+            }
+            
+            // Check container width first
+            const containerWidth = chartContainer.clientWidth;
+            
+            if (containerWidth <= 0) {
+                // Wait for the layout to stabilize (e.g., tab becoming visible)
+                setTimeout(() => createDrawdownChart(portfolioData), 100);
+                return;
+            }
+            
+            // Use smaller margins if container is narrow
+            const margin = containerWidth < 400 
+                ? {top: 20, right: 30, bottom: 50, left: 40}
+                : {top: 20, right: 80, bottom: 50, left: 80};
+            
+            const width = Math.max(containerWidth - margin.left - margin.right, 100); // Ensure minimum width
+            const height = 400 - margin.top - margin.bottom;
+            
+            const svg = d3.select(chartContainer)
+                .append('svg')
+                .attr('width', width + margin.left + margin.right)
+                .attr('height', height + margin.top + margin.bottom)
+                .append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+            
+            // Make sure dates are Date objects and sort data chronologically
+            portfolioData = portfolioData
+                .map(d => ({
+                    ...d,
+                    Date: d.Date instanceof Date ? d.Date : new Date(d.Date),
+                    // Ensure drawdown is numeric and within reasonable bounds
+                    drawdown: typeof d.drawdown === 'number' && !isNaN(d.drawdown) ? 
+                            Math.max(Math.min(d.drawdown, 0), -1) : 0,
+                    total_value: typeof d.total_value === 'number' && !isNaN(d.total_value) ?
+                                d.total_value : 0,
+                    peak_value: typeof d.peak_value === 'number' && !isNaN(d.peak_value) ?
+                                d.peak_value : 0
+                }))
+                .sort((a, b) => a.Date - b.Date);
+            
+            // If we have fewer than 2 data points after filtering, show error
+            if (portfolioData.length < 2) {
+                chartContainer.innerHTML = '<div class="error">Not enough valid data points for drawdown analysis</div>';
+                return;
+            }
+            
+            // Calculate domain for drawdown
+            const minDrawdown = d3.min(portfolioData, d => d.drawdown);
+            
+            // X scale
+            const x = d3.scaleTime()
+                .domain(d3.extent(portfolioData, d => d.Date))
+                .range([0, width]);
+            
+            // Y scale for drawdown (negative values)
+            // Set a reasonable minimum (e.g., -0.1 for -10% if no drawdown)
+            const yMin = Math.min(minDrawdown * 1.1 || -0.1, -0.1);
+            
+            const y = d3.scaleLinear()
+                .domain([yMin, 0]) 
+                .range([height, 0]);
+            
+            // X axis
+            svg.append('g')
+                .attr('class', 'axis')
+                .attr('transform', `translate(0,${height})`)
+                .call(d3.axisBottom(x)
+                    .ticks(width > 500 ? 10 : 5)
+                    .tickFormat(d3.timeFormat('%b %Y')))
+                .selectAll('text')
+                .style('text-anchor', 'end')
+                .attr('dx', '-.8em')
+                .attr('dy', '.15em')
+                .attr('transform', 'rotate(-45)');
+            
+            // Y axis
+            svg.append('g')
+                .attr('class', 'axis')
+                .call(d3.axisLeft(y)
+                    .tickFormat(d => `${d3.format('.0%')(d)}`));
+            
+            // Add Y axis label
+            svg.append('text')
+                .attr('transform', 'rotate(-90)')
+                .attr('y', -margin.left + 20) // Adjust based on margin
+                .attr('x', -height / 2)
+                .attr('text-anchor', 'middle')
+                .text('Drawdown (%)')
+                .style('fill', '#666');
+            
+            // Create the area generator for drawdown visualization
+            const area = d3.area()
+                .x(d => x(d.Date))
+                .y0(d => y(d.drawdown))  // Bottom of the area is at the drawdown value
+                .y1(y(0))                // Top of the area is at zero
+                .defined(d => !isNaN(d.drawdown))
+                .curve(d3.curveMonotoneX); // Add smooth curve
+            
+            // Draw the area in red (representing drawdown)
+            svg.append('path')
+                .datum(portfolioData)
+                .attr('fill', 'rgba(255, 0, 0, 0.3)')
+                .attr('d', area);
+            
+            // Draw the drawdown line
+            const line = d3.line()
+                .x(d => x(d.Date))
+                .y(d => y(d.drawdown))
+                .defined(d => !isNaN(d.drawdown))
+                .curve(d3.curveMonotoneX); // Add smooth curve
+            
+            svg.append('path')
+                .datum(portfolioData)
+                .attr('fill', 'none')
+                .attr('stroke', 'rgb(255, 0, 0)')
+                .attr('stroke-width', 2)
+                .attr('d', line);
+            
+            // Add a zero line
+            svg.append('line')
+                .attr('x1', 0)
+                .attr('x2', width)
+                .attr('y1', y(0))
+                .attr('y2', y(0))
+                .attr('stroke', '#888')
+                .attr('stroke-dasharray', '3,3');
+            
+            // Add grid lines for better readability
+            svg.append('g')
+                .attr('class', 'grid')
+                .call(d3.axisLeft(y)
+                    .tickValues([-0.1, -0.2, -0.3, -0.4, -0.5]) // 10%, 20%, 30%, 40%, 50% drawdown lines
+                    .tickSize(-width)
+                    .tickFormat(''))
+                .style('stroke', '#e0e0e0')
+                .style('stroke-opacity', 0.7)
+                .style('shape-rendering', 'crispEdges');
+            
+            // Add vertical grid lines
+            svg.append('g')
+                .attr('class', 'grid')
+                .attr('transform', `translate(0,${height})`)
+                .call(d3.axisBottom(x)
+                    .ticks(10)
+                    .tickSize(-height)
+                    .tickFormat(''))
+                .style('stroke', '#e0e0e0')
+                .style('stroke-opacity', 0.5)
+                .style('shape-rendering', 'crispEdges');
+            
+            // Add tooltip elements
+            const tooltip = d3.select('#tooltip');
+            const bisect = d3.bisector(d => d.Date).left;
+            
+            // Add tooltip vertical line and dot
+            const tooltipLine = svg.append("line")
+                .attr("stroke", "#666")
+                .attr("stroke-width", 1)
+                .attr("stroke-dasharray", "3,3")
+                .attr("y1", 0)
+                .attr("y2", height)
+                .style("opacity", 0);
                 
-            spyItem.append('div')
-                .attr('class', 'legend-color')
-                .style('background-color', colorScheme['SPY']);
+            const tooltipDot = svg.append("circle")
+                .attr("r", 5)
+                .attr("fill", "rgb(255, 0, 0)")
+                .attr("stroke", "white")
+                .attr("stroke-width", 2)
+                .style("opacity", 0);
+            
+            // Add transparent overlay for mouse interaction
+            svg.append('rect')
+                .attr('width', width > 0 ? width : 0) // Ensure width is not negative
+                .attr('height', height)
+                .style('fill', 'none')
+                .style('pointer-events', 'all')
+                .on('mouseover', function() {
+                    tooltip.style('opacity', 1);
+                    tooltipLine.style('opacity', 1);
+                    tooltipDot.style('opacity', 1);
+                })
+                .on('mouseout', function() {
+                    tooltip.style('opacity', 0);
+                    tooltipLine.style('opacity', 0);
+                    tooltipDot.style('opacity', 0);
+                })
+                .on('mousemove', function(event) {
+                    const mouseX = d3.pointer(event)[0];
+                    const x0 = x.invert(mouseX);
+                    const i = bisect(portfolioData, x0, 1);
+                    
+                    if (i >= portfolioData.length) return;
+                    
+                    const d0 = portfolioData[i - 1];
+                    const d1 = portfolioData[i];
+                    if (!d0 || !d1) return;
+                    
+                    const d = x0 - d0.Date > d1.Date - x0 ? d1 : d0;
+                    
+                    // Update tooltip line position
+                    tooltipLine
+                        .attr("x1", x(d.Date))
+                        .attr("x2", x(d.Date));
+                        
+                    // Update tooltip dot position
+                    tooltipDot
+                        .attr("cx", x(d.Date))
+                        .attr("cy", y(d.drawdown));
+                    
+                    // Format tooltip content
+                    tooltip.style('left', (event.pageX + 15) + 'px')
+                        .style('top', (event.pageY - 28) + 'px')
+                        .html(`
+                            <div style="font-weight: bold; margin-bottom: 5px;">${formatDate(d.Date)}</div>
+                            <div style="color: ${d.drawdown < -0.1 ? '#dc3545' : '#6c757d'}">
+                                <strong>Drawdown:</strong> ${d3.format('.2%')(d.drawdown)}
+                            </div>
+                            <div style="margin-top: 5px;">
+                                <strong>Peak Value:</strong> ${formatCurrency(d.peak_value)}
+                            </div>
+                            <div>
+                                <strong>Current Value:</strong> ${formatCurrency(d.total_value)}
+                            </div>
+                            <div>
+                                <strong>Decline Amount:</strong> ${formatCurrency(d.total_value - d.peak_value)}
+                            </div>
+                        `);
+                });
+            
+            // Add annotations for major drawdown events
+            // Find significant drawdowns (below -20%)
+            const significantDrawdowns = portfolioData.filter(d => d.drawdown < -0.2);
+            
+            if (significantDrawdowns.length > 0) {
+                // Find local minimums in drawdowns by comparing neighbors
+                const drawdownEvents = [];
                 
-            spyItem.append('span')
-                .text('S&P 500 (SPY)');
+                for (let i = 1; i < portfolioData.length - 1; i++) {
+                    const prev = portfolioData[i-1];
+                    const curr = portfolioData[i];
+                    const next = portfolioData[i+1];
+                    
+                    // If current point is a local minimum and below -15%
+                    if (curr.drawdown < -0.15 && 
+                        curr.drawdown <= prev.drawdown && 
+                        curr.drawdown <= next.drawdown) {
+                        
+                        // Check if we already have a similar drawdown event nearby
+                        const isUnique = !drawdownEvents.some(event => 
+                            Math.abs(event.Date - curr.Date) < 30 * 24 * 60 * 60 * 1000 && // Within 30 days
+                            Math.abs(event.drawdown - curr.drawdown) < 0.05 // Within 5% drawdown difference
+                        );
+                        
+                        if (isUnique) {
+                            drawdownEvents.push(curr);
+                        }
+                    }
+                }
+                
+                // Sort by severity and take top 3
+                drawdownEvents.sort((a, b) => a.drawdown - b.drawdown);
+                const topDrawdowns = drawdownEvents.slice(0, 3);
+                
+                // Add annotations
+                topDrawdowns.forEach(event => {
+                    // Create annotation
+                    svg.append("line")
+                        .attr("x1", x(event.Date))
+                        .attr("x2", x(event.Date))
+                        .attr("y1", y(event.drawdown))
+                        .attr("y2", y(event.drawdown) - 40)
+                        .attr("stroke", "#ff0000")
+                        .attr("stroke-width", 1)
+                        .attr("stroke-dasharray", "3,3");
+                        
+                    svg.append("circle")
+                        .attr("cx", x(event.Date))
+                        .attr("cy", y(event.drawdown))
+                        .attr("r", 4)
+                        .attr("fill", "#ff0000");
+                        
+                    svg.append("text")
+                        .attr("x", x(event.Date))
+                        .attr("y", y(event.drawdown) - 45)
+                        .attr("text-anchor", "middle")
+                        .attr("font-size", "10px")
+                        .text(`${d3.format('.1%')(event.drawdown)}`)
+                        .style("fill", "#ff0000");
+                });
+            }
+        }
+
+        // Function to create ETF comparison chart
+        function createComparisonChart(portfolioData, etfPerformance) {
+            const chartContainer = document.getElementById('etf-comparison-chart');
+            chartContainer.innerHTML = '';
+            
+            // Check if we have the required data
+            if (!portfolioData || !etfPerformance || portfolioData.length === 0) {
+                chartContainer.innerHTML = '<div class="error">No ETF comparison data available</div>';
+                console.error("Missing portfolio data or ETF performance data");
+                return;
+            }
+            
+            // Check container width
+            const containerWidth = chartContainer.clientWidth;
+            if (containerWidth <= 0) {
+                setTimeout(() => createComparisonChart(portfolioData, etfPerformance), 100);
+                return;
+            }
+            
+            const margin = {top: 20, right: 80, bottom: 50, left: 80};
+            const width = Math.max(containerWidth - margin.left - margin.right, 100);
+            const height = 400 - margin.top - margin.bottom;
+            
+            const svg = d3.select(chartContainer)
+                .append('svg')
+                .attr('width', width + margin.left + margin.right)
+                .attr('height', height + margin.top + margin.bottom)
+                .append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+            
+            // Make sure dates are Date objects and sort chronologically
+            portfolioData = portfolioData.map(d => {
+                return {
+                    ...d,
+                    Date: d.Date instanceof Date ? d.Date : new Date(d.Date)
+                };
+            }).sort((a, b) => a.Date - b.Date);
+            
+            // Get list of ETFs in the performance data
+            const etfs = Object.keys(etfPerformance);
+            
+            if (etfs.length === 0) {
+                chartContainer.innerHTML = '<div class="error">No ETF data found in performance data</div>';
+                return;
+            }
+            
+            // Process data to get normalized returns for each ETF
+            // First, check what normalization fields are available
+            const sampleEntry = portfolioData[0];
+            const normFields = etfs.map(etf => `${etf}_norm`).filter(field => field in sampleEntry);
+            
+            // Calculate normalized data with proper handling of missing values
+            let normalizedData;
+            
+            if (normFields.length === etfs.length) {
+                // Use existing normalization data
+                normalizedData = portfolioData.map(d => {
+                    const result = { Date: d.Date };
+                    etfs.forEach(etf => {
+                        const normField = `${etf}_norm`;
+                        if (normField in d && !isNaN(d[normField])) {
+                            // Convert to percentage, but don't subtract 1 if already normalized
+                            result[etf] = (d[normField] - 1) * 100;
+                        }
+                    });
+                    return result;
+                });
+            } else {
+                // Manually calculate normalization
+                const firstDayValues = {};
+                etfs.forEach(etf => {
+                    if (etf in portfolioData[0] && !isNaN(portfolioData[0][etf])) {
+                        firstDayValues[etf] = portfolioData[0][etf];
+                    }
+                });
+                
+                normalizedData = portfolioData.map(d => {
+                    const result = { Date: d.Date };
+                    etfs.forEach(etf => {
+                        if (etf in d && etf in firstDayValues && 
+                            !isNaN(d[etf]) && firstDayValues[etf] > 0) {
+                            result[etf] = ((d[etf] / firstDayValues[etf]) - 1) * 100;
+                        }
+                    });
+                    return result;
+                });
+            }
+            
+            // Validate data and ensure there are no huge gaps
+            const validEtfs = etfs.filter(etf => 
+                normalizedData.some(d => etf in d && !isNaN(d[etf]))
+            );
+            
+            if (validEtfs.length === 0) {
+                chartContainer.innerHTML = '<div class="error">No valid ETF data after normalization</div>';
+                return;
+            }
+            
+            // X scale
+            const x = d3.scaleTime()
+                .domain(d3.extent(normalizedData, d => d.Date))
+                .range([0, width]);
+            
+            // Find min and max values across all ETFs
+            const allValues = [];
+            normalizedData.forEach(d => {
+                validEtfs.forEach(etf => {
+                    if (etf in d && !isNaN(d[etf])) {
+                        allValues.push(d[etf]);
+                    }
+                });
+            });
+            
+            const minValue = d3.min(allValues) || -5;
+            const maxValue = d3.max(allValues) || 5;
+            
+            // Y scale with padding
+            const y = d3.scaleLinear()
+                .domain([Math.min(minValue, -5), Math.max(maxValue * 1.05, 5)])
+                .range([height, 0]);
+            
+            // X axis
+            svg.append('g')
+                .attr('class', 'axis')
+                .attr('transform', `translate(0,${height})`)
+                .call(d3.axisBottom(x)
+                    .ticks(width > 500 ? 10 : 5)
+                    .tickFormat(d3.timeFormat('%b %Y')))
+                .selectAll('text')
+                .style('text-anchor', 'end')
+                .attr('dx', '-.8em')
+                .attr('dy', '.15em')
+                .attr('transform', 'rotate(-45)');
+            
+            // Y axis
+            svg.append('g')
+                .attr('class', 'axis')
+                .call(d3.axisLeft(y)
+                    .tickFormat(d => `${d3.format('.0f')(d)}%`));
+            
+            // Add Y axis label
+            svg.append('text')
+                .attr('transform', 'rotate(-90)')
+                .attr('y', -60)
+                .attr('x', -height / 2)
+                .attr('text-anchor', 'middle')
+                .text('Return (%)');
+            
+            // Add a zero line
+            svg.append('line')
+                .attr('x1', 0)
+                .attr('x2', width)
+                .attr('y1', y(0))
+                .attr('y2', y(0))
+                .attr('stroke', '#888')
+                .attr('stroke-dasharray', '3,3');
+            
+            // Colors for ETFs
+            const colors = {
+                'SPY': '#00897B',
+                'GBTC': '#3F51B5',
+                'BRK-B': '#FF9800',
+                'VUG': '#E91E63'
+            };
+            
+            // Create line generator with curve
+            const line = d3.line()
+                .x(d => x(d.Date))
+                .y(d => y(d.value))
+                .defined(d => !isNaN(d.value))
+                .curve(d3.curveMonotoneX); // Add a curve for smoother lines
+            
+            // Create lines for each ETF
+            validEtfs.forEach(etf => {
+                // Filter for consecutive valid data points to avoid large jumps
+                const etfData = [];
+                let lastValidIndex = -1;
+                
+                normalizedData.forEach((d, i) => {
+                    if (d[etf] !== undefined && !isNaN(d[etf])) {
+                        // If there's a large gap between points, start a new segment
+                        if (lastValidIndex !== -1 && i - lastValidIndex > 5) {
+                            // End the previous segment
+                            svg.append('path')
+                                .datum(etfData)
+                                .attr('fill', 'none')
+                                .attr('stroke', colors[etf] || '#999')
+                                .attr('stroke-width', 2)
+                                .attr('d', line);
+                            
+                            // Start a new array for the next segment
+                            etfData.length = 0;
+                        }
+                        
+                        etfData.push({
+                            Date: d.Date,
+                            value: d[etf]
+                        });
+                        
+                        lastValidIndex = i;
+                    }
+                });
+                
+                // Draw the final segment if we have data
+                if (etfData.length > 1) {
+                    svg.append('path')
+                        .datum(etfData)
+                        .attr('fill', 'none')
+                        .attr('stroke', colors[etf] || '#999')
+                        .attr('stroke-width', 2)
+                        .attr('d', line);
+                }
+            });
+            
+            // Create a tooltip for comparison
+            const tooltip = d3.select('#tooltip');
+            const bisect = d3.bisector(d => d.Date).left;
+            
+            // Add vertical line for tooltip
+            const tooltipLine = svg.append("line")
+                .attr("stroke", "#ddd")
+                .attr("stroke-width", 1)
+                .attr("stroke-dasharray", "3,3")
+                .attr("y1", 0)
+                .attr("y2", height)
+                .style("opacity", 0);
+                
+            // Add circles to highlight points
+            const tooltipDots = {};
+            validEtfs.forEach(etf => {
+                tooltipDots[etf] = svg.append("circle")
+                    .attr("r", 4)
+                    .attr("fill", colors[etf] || '#999')
+                    .attr("stroke", "white")
+                    .attr("stroke-width", 2)
+                    .style("opacity", 0);
+            });
+            
+            svg.append('rect')
+                .attr('width', width > 0 ? width : 0)
+                .attr('height', height)
+                .style('fill', 'none')
+                .style('pointer-events', 'all')
+                .on('mousemove', function(event) {
+                    const mouseX = d3.pointer(event)[0];
+                    const x0 = x.invert(mouseX);
+                    const i = bisect(normalizedData, x0, 1);
+                    
+                    if (i >= normalizedData.length) return;
+                    
+                    const d0 = normalizedData[i - 1];
+                    const d1 = normalizedData[i];
+                    const d = x0 - d0.Date > d1.Date - x0 ? d1 : d0;
+                    
+                    // Show vertical line
+                    tooltipLine
+                        .attr("x1", x(d.Date))
+                        .attr("x2", x(d.Date))
+                        .style("opacity", 1);
+                    
+                    // Show dots at each valid point
+                    validEtfs.forEach(etf => {
+                        if (etf in d && !isNaN(d[etf])) {
+                            tooltipDots[etf]
+                                .attr("cx", x(d.Date))
+                                .attr("cy", y(d[etf]))
+                                .style("opacity", 1);
+                        } else {
+                            tooltipDots[etf].style("opacity", 0);
+                        }
+                    });
+                    
+                    const tooltipContent = `<strong>Date:</strong> ${formatDate(d.Date)}<br>` + 
+                        validEtfs.map(etf => {
+                            if (etf in d && !isNaN(d[etf])) {
+                                return `<span style="color:${colors[etf]}"><strong>${etf}:</strong> ${d[etf].toFixed(2)}%</span>`;
+                            }
+                            return '';
+                        }).filter(s => s !== '').join('<br>');
+                    
+                    tooltip.style('opacity', 1)
+                        .style('left', (event.pageX + 15) + 'px')
+                        .style('top', (event.pageY - 28) + 'px')
+                        .html(tooltipContent);
+                })
+                .on('mouseout', function() {
+                    tooltip.style('opacity', 0);
+                    tooltipLine.style("opacity", 0);
+                    Object.values(tooltipDots).forEach(dot => dot.style("opacity", 0));
+                });
+            
+            // Create the legend
+            const legend = document.getElementById('comparison-legend');
+            legend.innerHTML = '';
+            
+            validEtfs.forEach(etf => {
+                const item = document.createElement('div');
+                item.className = 'legend-item';
+                
+                const colorBox = document.createElement('div');
+                colorBox.className = 'legend-color';
+                colorBox.style.backgroundColor = colors[etf] || '#999';
+                
+                const text = document.createElement('span');
+                text.textContent = etf;
+                
+                item.appendChild(colorBox);
+                item.appendChild(text);
+                legend.appendChild(item);
+            });
+        }
+
+        // Function to create yearly returns chart
+        function createYearlyReturnsChart(yearlyReturns) {
+            const chartContainer = document.getElementById('yearly-returns-chart');
+            chartContainer.innerHTML = '';
+            
+            // Debug logging
+            console.log("Yearly Returns Data:", yearlyReturns);
+            
+            // Check if we have the required data
+            if (!yearlyReturns || yearlyReturns.length === 0) {
+                chartContainer.innerHTML = '<div class="error">No yearly returns data available</div>';
+                console.error("Missing yearly returns data");
+                return;
+            }
+            
+            // Check container width
+            const containerWidth = chartContainer.clientWidth;
+            if (containerWidth <= 0) {
+                setTimeout(() => createYearlyReturnsChart(yearlyReturns), 100);
+                return;
+            }
+            
+            const margin = {top: 20, right: 80, bottom: 50, left: 80};
+            const width = Math.max(containerWidth - margin.left - margin.right, 100);
+            const height = 400 - margin.top - margin.bottom;
+            
+            const svg = d3.select(chartContainer)
+                .append('svg')
+                .attr('width', width + margin.left + margin.right)
+                .attr('height', height + margin.top + margin.bottom)
+                .append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+            
+            // Filter out invalid data
+            const validReturns = yearlyReturns.filter(d => 
+                d.year !== undefined && 
+                d.yearly_return !== undefined && 
+                !isNaN(d.yearly_return)
+            );
+            
+            console.log("Valid yearly returns:", validReturns);
+            
+            if (validReturns.length === 0) {
+                chartContainer.innerHTML = '<div class="error">No valid yearly returns data</div>';
+                return;
+            }
+            
+            // Make sure years are parsed as numbers
+            validReturns.forEach(d => {
+                if (typeof d.year === 'string') {
+                    d.year = parseInt(d.year, 10);
+                }
+            });
+            
+            // Sort by year
+            validReturns.sort((a, b) => a.year - b.year);
+            
+            // X scale
+            const x = d3.scaleBand()
+                .domain(validReturns.map(d => d.year))
+                .range([0, width])
+                .padding(0.2);
+            
+            // Find min and max values
+            const minReturnValue = d3.min(validReturns, d => d.yearly_return) * 100;
+            const maxReturnValue = d3.max(validReturns, d => d.yearly_return) * 100;
+            
+            console.log("Value range:", {minReturnValue, maxReturnValue});
+            
+            // Y scale - set minimum to at least -15%
+            const yMin = Math.min(minReturnValue, -60); // Ensure y-axis goes down to at least -60%
+            const yMax = Math.max(maxReturnValue, 5);   // Ensure y-axis goes up to at least 5%
+            
+            const y = d3.scaleLinear()
+                .domain([yMin, yMax])
+                .range([height, 0]);
+            
+            // X axis
+            svg.append('g')
+                .attr('class', 'axis')
+                .attr('transform', `translate(0,${height})`)
+                .call(d3.axisBottom(x)
+                    .tickFormat(d => d.toString()));
+            
+            // Y axis
+            svg.append('g')
+                .attr('class', 'axis')
+                .call(d3.axisLeft(y)
+                    .tickFormat(d => `${d3.format('.0f')(d)}%`)
+                    .tickValues([-60, -40, -20, 0, 20, 40, 60, 80, 100, 120].filter(v => v >= yMin && v <= yMax))
+                );
+            
+            // Add Y axis label
+            svg.append('text')
+                .attr('transform', 'rotate(-90)')
+                .attr('y', -60)
+                .attr('x', -height / 2)
+                .attr('text-anchor', 'middle')
+                .text('Return (%)');
+            
+            // Add a zero line
+            svg.append('line')
+                .attr('x1', 0)
+                .attr('x2', width)
+                .attr('y1', y(0))
+                .attr('y2', y(0))
+                .attr('stroke', '#888')
+                .attr('stroke-dasharray', '3,3');
+            
+            // Create bars
+            svg.selectAll('.bar')
+                .data(validReturns)
+                .enter()
+                .append('rect')
+                .attr('class', 'bar')
+                .attr('x', d => x(d.year))
+                .attr('width', x.bandwidth())
+                .attr('y', d => d.yearly_return >= 0 ? y(d.yearly_return * 100) : y(0))
+                .attr('height', d => Math.abs(y(d.yearly_return * 100) - y(0)))
+                .attr('fill', d => d.yearly_return >= 0 ? 'rgb(0, 153, 76)' : 'rgb(204, 0, 0)');
+            
+            // Add text labels to bars
+            svg.selectAll('.label')
+                .data(validReturns)
+                .enter()
+                .append('text')
+                .attr('class', 'label')
+                .attr('x', d => x(d.year) + x.bandwidth() / 2)
+                .attr('y', d => d.yearly_return >= 0 ? y(d.yearly_return * 100) - 5 : y(d.yearly_return * 100) + 15)
+                .attr('text-anchor', 'middle')
+                .attr('fill', d => d.yearly_return >= 0 ? 'black' : 'black')
+                .text(d => `${(d.yearly_return * 100).toFixed(1)}%`);
+            
+            // Create a tooltip for yearly returns
+            const tooltip = d3.select('#tooltip');
+            
+            svg.selectAll('.bar')
+                .on('mouseover', function(event, d) {
+                    tooltip.style('opacity', 1)
+                        .style('left', (event.pageX + 15) + 'px')
+                        .style('top', (event.pageY - 28) + 'px')
+                        .html(`
+                            <strong>Year:</strong> ${d.year}<br>
+                            <strong>Return:</strong> ${(d.yearly_return * 100).toFixed(2)}%
+                        `);
+                })
+                .on('mouseout', function() {
+                    tooltip.style('opacity', 0);
+                });
+            
+            console.log("Yearly returns chart created successfully");
+        }
+
+        function createCompanyWeightageChart() {
+            // Mavis
+        }
+
+        function createIndustryWeightageChart() {
+            // Angela
+        }
+
+        // Helper function to show API error
+        function showApiError(message) {
+            const errorEl = document.getElementById('api-error');
+            const messageEl = document.getElementById('error-message');
+            messageEl.textContent = message;
+            errorEl.style.display = 'block';
         }
         
-        // Debounce function for resize handling
-        function debounce(func, wait) {
-            let timeout;
-            return function() {
-                const context = this;
-                const args = arguments;
-                clearTimeout(timeout);
-                timeout = setTimeout(() => func.apply(context, args), wait);
-            };
+        // Helper function to hide API error
+        function hideApiError() {
+            const errorEl = document.getElementById('api-error');
+            errorEl.style.display = 'none';
+        }
+        
+        // Helper function to format currency
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(value);
+        }
+        
+        // Helper function to format percentage
+        function formatPercentage(value) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'percent',
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 1
+            }).format(value);
+        }
+        
+        // Helper function to format date
+        function formatDate(date) {
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
         }
     </script>
 </body>

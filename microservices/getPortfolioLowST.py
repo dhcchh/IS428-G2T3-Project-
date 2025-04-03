@@ -11,7 +11,7 @@ app = Flask(__name__)
 CORS(app)  
 
 # Global variables
-DATA_FILE = os.environ.get('ETF_DATA_FILE', 'etf_data_for_tableau.csv')
+DATA_FILE = os.environ.get('ETF_DATA_FILE', 'lowSTetf.csv')
 ETF_DF = None
 MIN_DATE = None
 MAX_DATE = None
@@ -537,5 +537,5 @@ if __name__ == "__main__":
     load_data()
     
     # Run the Flask application
-    port = int(os.environ.get('PORT', 5001))
+    port = int(os.environ.get('PORT', 5003))
     app.run(host='0.0.0.0', port=port)

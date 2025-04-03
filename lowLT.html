@@ -457,7 +457,7 @@
 
     <script>
         // API URLs
-        const API_BASE_URL = 'http://localhost:5001';
+        const API_BASE_URL = 'http://localhost:5002';
         const API_DATE_RANGE = `${API_BASE_URL}/api/date-range`;
         const API_PORTFOLIO_VALUE = `${API_BASE_URL}/api/portfolio-value`;
         const API_TOTAL_RETURN = `${API_BASE_URL}/api/total-return`;
@@ -503,30 +503,241 @@
             // Initial calculation will be triggered after date range is fetched
         });
 
-        // Function to update the risk card background color
-        function updateRiskCardColor() {
-            const riskCard = document.getElementById('risk-card');
-            const volatilityText = document.getElementById('volatility').innerText;
-            
-            if (volatilityText.includes('Very Low') || volatilityText.includes('Low')) {
-                riskCard.style.backgroundColor = 'rgba(40, 167, 69, 0.15)'; // light green
-            } else if (volatilityText.includes('High') || volatilityText.includes('Very High')) {
-                riskCard.style.backgroundColor = 'rgba(220, 53, 69, 0.15)'; // light red
-            } else {
-                riskCard.style.backgroundColor = 'rgba(255, 193, 7, 0.15)'; // light yellow for Moderate
-            }
+        /////
+
+
+        // Utility function to wait for elements to exist in the DOM
+function waitForElement(elementId, callback, checkFrequencyInMs, timeoutInMs) {
+    var startTimeInMs = Date.now();
+    var checkElementAndCallback = function() {
+        var element = document.getElementById(elementId);
+        if (element) {
+            console.log(elementId + " element found!");
+            callback(element);
+            return;
         }
+        
+        if (timeoutInMs && Date.now() - startTimeInMs > timeoutInMs) {
+            console.log(elementId + " element not found within timeout period");
+            return;
+        }
+        
+        setTimeout(checkElementAndCallback, checkFrequencyInMs);
+    };
+    
+    checkElementAndCallback();
+}
 
-        // Call the function initially
+// Helper function to find the parent metric card of an element
+function findParentCard(elementId) {
+    const element = document.getElementById(elementId);
+    if (!element) {
+        console.log("Element with ID " + elementId + " not found");
+        return null;
+    }
+    
+    // Find parent metric card
+    const parentCard = element.closest('.metric-card');
+    if (parentCard) {
+        console.log("Found parent card for " + elementId);
+        return parentCard;
+    } else {
+        console.log("Could not find parent card for " + elementId);
+        return null;
+    }
+}
+
+// 1. RISK/VOLATILITY MONITORING
+function setupRiskMonitoring(volatilityElement) {
+    console.log("Setting up risk/volatility monitoring");
+    
+    // Find the risk card element
+    const riskCard = findParentCard('volatility');
+    
+    if (riskCard) {
+        setupRiskObserver(volatilityElement, riskCard);
+    } else {
+        console.error("Could not find parent card for volatility");
+    }
+}
+
+function setupRiskObserver(volatilityElement, cardElement) {
+    function updateRiskCardColor() {
+        const volatilityText = volatilityElement.innerText || volatilityElement.textContent;
+        console.log("Volatility text:", volatilityText);
+        
+        if (volatilityText.includes('Very Low') || volatilityText.includes('Low')) {
+            cardElement.style.backgroundColor = 'rgba(40, 167, 69, 0.15)'; // light green
+            console.log("Set risk card to green");
+        } else if (volatilityText.includes('High') || volatilityText.includes('Very High')) {
+            cardElement.style.backgroundColor = 'rgba(220, 53, 69, 0.15)'; // light red
+            console.log("Set risk card to red");
+        } else {
+            cardElement.style.backgroundColor = 'rgba(255, 193, 7, 0.15)'; // light yellow for Moderate
+            console.log("Set risk card to yellow");
+        }
+    }
+    
+    // Initial update
+    updateRiskCardColor();
+    
+    // Create a separate observer for risk
+    const riskObserver = new MutationObserver(function() {
+        console.log("Risk observer triggered");
         updateRiskCardColor();
+    });
+    
+    // Start observing
+    riskObserver.observe(volatilityElement, { 
+        childList: true, 
+        characterData: true,
+        subtree: true 
+    });
+    
+    console.log("Risk monitoring setup complete");
+}
 
-        // Set up a MutationObserver to watch for changes to the volatility text
-        const observer = new MutationObserver(updateRiskCardColor);
-        observer.observe(document.getElementById('volatility'), { 
-            childList: true, 
-            characterData: true,
-            subtree: true
-        });
+// 2. DRAWDOWN MONITORING
+function setupDrawdownMonitoring(drawdownElement) {
+    console.log("Setting up drawdown monitoring");
+    
+    // Find the drawdown card element
+    const drawdownCard = findParentCard('max-drawdown');
+    
+    if (drawdownCard) {
+        setupDrawdownObserver(drawdownElement, drawdownCard);
+    } else {
+        console.error("Could not find parent card for drawdown");
+    }
+}
+
+function setupDrawdownObserver(drawdownElement, cardElement) {
+    function updateDrawdownCardColor() {
+        const drawdownText = drawdownElement.innerText || drawdownElement.textContent;
+        console.log("Drawdown text:", drawdownText);
+        
+        const cleanText = drawdownText.replace(/[^\d.-]/g, '');
+        const drawdownValue = parseFloat(cleanText);
+        
+        if (isNaN(drawdownValue)) {
+            console.error("Could not parse a valid number from drawdown text");
+            return;
+        }
+        
+        console.log("Drawdown value:", drawdownValue);
+        
+        if (drawdownValue <= -15) {
+            cardElement.style.backgroundColor = '#ffe6e6'; // Light red
+            console.log("Set drawdown card to red");
+        } else {
+            cardElement.style.backgroundColor = '#e6f7e6'; // Light green
+            console.log("Set drawdown card to green");
+        }
+    }
+    
+    // Initial update
+    updateDrawdownCardColor();
+    
+    // Create a separate observer for drawdown
+    const drawdownObserver = new MutationObserver(function() {
+        console.log("Drawdown observer triggered");
+        updateDrawdownCardColor();
+    });
+    
+    // Start observing
+    drawdownObserver.observe(drawdownElement, { 
+        childList: true, 
+        characterData: true,
+        subtree: true 
+    });
+    
+    console.log("Drawdown monitoring setup complete");
+}
+
+// 3. PORTFOLIO RETURN MONITORING (FOR BOTH PORTFOLIO VALUE AND TOTAL RETURN CARDS)
+function setupReturnMonitoring(annualizedReturnElement) {
+    console.log("Setting up annualized return monitoring");
+    
+    // Find both card elements
+    const portfolioValueCard = findParentCard('final-value');
+    const totalReturnCard = findParentCard('total-return');
+    
+    if (!portfolioValueCard) {
+        console.error("Could not find portfolio value card");
+    }
+    
+    if (!totalReturnCard) {
+        console.error("Could not find total return card");
+    }
+    
+    // Set up the monitoring if at least one card was found
+    if (portfolioValueCard || totalReturnCard) {
+        setupReturnObserver(annualizedReturnElement, portfolioValueCard, totalReturnCard);
+    }
+}
+
+function setupReturnObserver(annualizedReturnElement, portfolioValueCard, totalReturnCard) {
+    function updateReturnCards() {
+        const returnText = annualizedReturnElement.innerText || annualizedReturnElement.textContent;
+        console.log("Annualized return text:", returnText);
+        
+        // Extract the percentage value (looking for a number followed by % per year)
+        const matches = returnText.match(/(-?\d+\.?\d*)%/);
+        if (!matches || matches.length < 2) {
+            console.error("Could not parse annualized return percentage");
+            return;
+        }
+        
+        const annualizedReturnValue = parseFloat(matches[1]);
+        console.log("Parsed annualized return value:", annualizedReturnValue);
+        
+        // Apply the appropriate background color based on the threshold
+        if (annualizedReturnValue >= 6) {
+            console.log("Setting cards to green (>= 6%)");
+            if (portfolioValueCard) portfolioValueCard.style.backgroundColor = '#e6f7e6'; // Light green
+            if (totalReturnCard) totalReturnCard.style.backgroundColor = '#e6f7e6'; // Light green
+        } else {
+            console.log("Setting cards to red (< 6%)");
+            if (portfolioValueCard) portfolioValueCard.style.backgroundColor = '#ffe6e6'; // Light red
+            if (totalReturnCard) totalReturnCard.style.backgroundColor = '#ffe6e6'; // Light red
+        }
+    }
+    
+    // Initial update
+    updateReturnCards();
+    
+    // Create an observer for the annualized return
+    const returnObserver = new MutationObserver(function() {
+        console.log("Annualized return observer triggered");
+        updateReturnCards();
+    });
+    
+    // Start observing
+    returnObserver.observe(annualizedReturnElement, { 
+        childList: true, 
+        characterData: true,
+        subtree: true 
+    });
+    
+    console.log("Annualized return monitoring setup complete");
+}
+
+// Initialize all monitors when the page loads
+window.addEventListener('load', function() {
+    console.log("Window loaded, setting up all monitors");
+    
+    // 1. Set up risk/volatility monitoring
+    waitForElement('volatility', setupRiskMonitoring, 100, 10000);
+    
+    // 2. Set up maximum drawdown monitoring
+    waitForElement('max-drawdown', setupDrawdownMonitoring, 100, 10000);
+    
+    // 3. Set up return monitoring (for both portfolio value and total return cards)
+    waitForElement('annualized-return', setupReturnMonitoring, 100, 10000);
+});
+
+
+        /////
         
         // Function to fetch date range from API
         function fetchDateRange() {
