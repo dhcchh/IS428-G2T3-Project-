@@ -3,1812 +3,1332 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Beating Inflation: Investment Dashboard</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <title>Low Risk Short-Term Investment Dashboard</title>
+    <script src="https://d3js.org/d3.v7.min.js" charset="utf-8"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 20px;
-            background-color: #f5f5f5;
+            background-color: #f8f9fa;
+            color: #333;
         }
-        
-        .dashboard {
-            max-width: 1200px;
+        .container {
+            max-width: 1400px;
             margin: 0 auto;
         }
-        
         .header {
             text-align: center;
             margin-bottom: 30px;
         }
-        
         .header h1 {
-            color: #1a5276;
             margin-bottom: 10px;
-        }
-        
-        .header p {
-            color: #566573;
-            font-size: 16px;
-            max-width: 800px;
-            margin: 0 auto;
-        }
-        
-        .chart-container {
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            margin-bottom: 30px;
-        }
-        
-        .chart-title {
-            font-size: 18px;
-            font-weight: bold;
             color: #2c3e50;
-            margin-bottom: 15px;
         }
-        
-        .chart-description {
-            font-size: 14px;
+        .header h5 {
+            margin-top: 0;
             color: #7f8c8d;
+        }
+        .dashboard {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+        }
+        .controls {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .controls h3 {
+            margin-top: 0;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .control-group {
             margin-bottom: 20px;
         }
-        
-        .chart {
-            width: 100%;
-            height: 400px;
+        .control-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
         }
-        
+        .slider-container {
+            margin-bottom: 15px;
+        }
+        .slider-container .slider-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+        }
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .metric-card {
+            background-color: white;
+            padding: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .metric-card h3 {
+            margin: 10px 0;
+            font-size: 1.8rem;
+        }
+        .metric-card p {
+            margin: 0;
+            color: #7f8c8d;
+            font-size: 0.9rem;
+        }
+        .charts {
+            display: grid;
+            grid-template-rows: auto;
+            gap: 20px;
+        }
+        .chart-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .chart-container h3 {
+            margin-top: 0;
+            margin-bottom: 20px;
+        }
         .tooltip {
             position: absolute;
-            padding: 10px;
             background-color: rgba(0, 0, 0, 0.8);
             color: white;
+            padding: 8px 12px;
             border-radius: 4px;
+            font-size: 0.9rem;
             pointer-events: none;
-            font-size: 12px;
-            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.2s;
         }
-        
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        input[type="range"] {
+            width: 100%;
+        }
+        .allocation-display {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 5px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            margin-top: 20px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .tab-container {
+            border-bottom: 1px solid #ddd;
+            margin-bottom: 20px;
+        }
+        .tabs {
+            display: flex;
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+        }
+        .tab.active {
+            border-bottom-color: #3498db;
+            font-weight: 500;
+        }
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+        .warning {
+            color: #e74c3c;
+            margin-top: 5px;
+            font-size: 0.9rem;
+        }
+        .axis line, .axis path {
+            stroke: #ddd;
+        }
+        .axis text {
+            fill: #666;
+            font-size: 0.8rem;
+        }
+        .notes {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-top: 20px;
+        }
+        .notes h5 {
+            margin-top: 0;
+        }
+        .notes ul {
+            padding-left: 20px;
+        }
         .legend {
             display: flex;
-            flex-wrap: wrap;
             justify-content: center;
+            flex-wrap: wrap;
             margin-top: 10px;
         }
-        
         .legend-item {
             display: flex;
             align-items: center;
-            margin-right: 15px;
+            margin-right: 20px;
             margin-bottom: 5px;
         }
-        
         .legend-color {
-            width: 12px;
-            height: 12px;
+            width: 15px;
+            height: 15px;
             margin-right: 5px;
             border-radius: 2px;
         }
-        
-        .axis-label {
-            font-size: 12px;
-            fill: #7f8c8d;
-        }
-        
-        .row {
-            display: flex;
-            flex-wrap: wrap;
-            margin: 0 -15px;
-        }
-        
-        .col-6 {
-            flex: 0 0 50%;
-            max-width: 50%;
-            padding: 0 15px;
-            box-sizing: border-box;
-        }
-        
-        @media (max-width: 768px) {
-            .col-6 {
-                flex: 0 0 100%;
-                max-width: 100%;
-            }
-        }
-        
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 20px;
-        }
-        
-        th, td {
-            padding: 8px 12px;
-            text-align: left;
-            border-bottom: 1px solid #e1e1e1;
-        }
-        
-        th {
-            background-color: #f8f9fa;
-            font-weight: bold;
-            color: #2c3e50;
-        }
-        
-        tbody tr:hover {
-            background-color: #f1f8ff;
-        }
-        
-        .positive {
-            color: #27ae60;
-        }
-        
-        .negative {
+        .api-error {
+            background-color: #fee;
             color: #e74c3c;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
         }
-        
-        .button-group {
+        /* CSS for the time period buttons */
+        .time-period-buttons {
             display: flex;
-            justify-content: center;
-            margin-bottom: 15px;
+            justify-content: space-between;
+            margin: 15px 0;
         }
-        
-        .time-button {
+
+        .time-btn {
+            flex: 1;
+            padding: 8px 0;
+            margin: 0 4px;
             background-color: #f8f9fa;
             border: 1px solid #ddd;
-            color: #333;
-            padding: 8px 12px;
-            margin: 0 5px;
             border-radius: 4px;
             cursor: pointer;
-            font-size: 14px;
-            transition: all 0.2s;
+            font-weight: 500;
+            transition: all 0.2s ease;
         }
-        
-        .time-button.active {
-            background-color: #1a5276;
-            color: white;
-            border-color: #1a5276;
+
+        .time-btn:first-child {
+            margin-left: 0;
         }
-        
-        .time-button:hover:not(.active) {
+
+        .time-btn:last-child {
+            margin-right: 0;
+        }
+
+        .time-btn:hover {
             background-color: #e9ecef;
         }
-        
-        .correlation-table td {
-            text-align: center;
+
+        .time-btn.active {
+            background-color: #3498db;
+            color: white;
+            border-color: #3498db;
         }
-        
-        .correlation-cell {
-            padding: 8px;
-            border-radius: 4px;
+        .portfolio-line {
+            stroke-width: 3px;
+            stroke-linejoin: round;
+            stroke-linecap: round;
+        }
+
+        .spy-line {
+            stroke-width: 2px;
+            stroke-dasharray: 5, 5;
+            stroke-linejoin: round;
+            stroke-linecap: round;
+        }
+
+        .outperformance-positive {
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .outperformance-negative {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .grid line {
+            stroke: #e0e0e0;
+            stroke-opacity: 0.7;
+            shape-rendering: crispEdges;
+        }
+
+        .grid path {
+            stroke-width: 0;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+        }
+        .loading:after {
+            content: '...';
+            animation: dots 1.5s steps(5, end) infinite;
+        }
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
         }
     </style>
 </head>
 <body>
-    <div class="dashboard">
+    <div class="container">
         <div class="header">
-            <h1>Beating Inflation: Why Investing Outperforms Traditional Savings</h1>
-            <p>An interactive data visualization showing how strategic investing can provide a more effective hedge against inflation compared to traditional savings methods.</p>
+            <h1>Low Risk Short-Term Investment Dashboard</h1>
+            <h5>Time in the Market Beats Timing the Market</h5>
         </div>
         
-        <div class="chart-container">
-            <div class="chart-title">Real vs Nominal Returns</div>
-            <div class="chart-description">This chart compares the nominal (before inflation) and real (inflation-adjusted) returns of our low-risk, long-term portfolio.</div>
-            <div class="button-group" id="real-nominal-time-buttons">
-                <button class="time-button" data-period="1y">1Y</button>
-                <button class="time-button" data-period="3y">3Y</button>
-                <button class="time-button active" data-period="5y">5Y</button>
-                <button class="time-button" data-period="max">Max</button>
+        <div id="api-error" class="api-error">
+            <strong>Error connecting to API:</strong> <span id="error-message"></span>
+        </div>
+        
+        <div class="dashboard">
+            <div class="controls">
+                <h3>Investment Parameters</h3>
+                
+        <!-- HTML for time period buttons -->
+        <div class="control-group">
+            <label>Investment Period:</label>
+            <div class="time-period-buttons">
+                <button class="time-btn" data-period="1M">1M</button>
+                <button class="time-btn" data-period="6M">6M</button>
+                <button class="time-btn" data-period="1Y">1Y</button>
+                <button class="time-btn" data-period="3Y">3Y</button>
+                <button class="time-btn" data-period="5Y">5Y</button>
+                <button class="time-btn active" data-period="MAX">Max</button>
             </div>
-            <div id="real-nominal-chart" class="chart"></div>
+            <div id="date-range-display" style="text-align: center; margin-top: 10px; display: none;">Loading date range...</div>
         </div>
-        
-        <div class="chart-container">
-            <div class="chart-title">Bank Savings vs Investment Portfolio</div>
-            <div class="chart-description">This chart compares the growth of $10,000 invested in a traditional savings account versus our low-risk ETF portfolio.</div>
-            <div class="button-group" id="bank-vs-portfolio-time-buttons">
-                <button class="time-button" data-period="1y">1Y</button>
-                <button class="time-button" data-period="3y">3Y</button>
-                <button class="time-button active" data-period="5y">5Y</button>
-                <button class="time-button" data-period="max">Max</button>
+                
+                <div class="control-group">
+                    <label>Initial Investment (USD):</label>
+                    <input type="number" id="initial-investment" min="1000" max="1000000" step="1000" value="10000">
+                    <small style="color: #7f8c8d;">Min: $1,000 - Max: $1,000,000</small>
+                </div>
+                
+                <div class="control-group">
+                    <label>Portfolio Allocation:</label>
+                    
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>USMV</span>
+                            <span id="usmv-value">25%</span>
+                        </div>
+                        <input type="range" id="usmv-allocation" min="0" max="100" step="5" value="25">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>VYM</span>
+                            <span id="vym-value">25%</span>
+                        </div>
+                        <input type="range" id="vym-allocation" min="0" max="100" step="5" value="25">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>SPLV</span>
+                            <span id="splv-value">25%</span>
+                        </div>
+                        <input type="range" id="splv-allocation" min="0" max="100" step="5" value="25">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>AGG</span>
+                            <span id="agg-value">25%</span>
+                        </div>
+                        <input type="range" id="agg-allocation" min="0" max="100" step="5" value="25">
+                    </div>
+                    
+                    <div id="allocation-warning" class="warning"></div>
+                </div>
+                
+                <button id="calculate-button">Calculate Returns</button>
             </div>
-            <div id="bank-vs-portfolio-chart" class="chart"></div>
-        </div>
-        
-        <div class="row">
-            <div class="col-6">
-                <div class="chart-container">
-                    <div class="chart-title">Portfolio Performance Over Time</div>
-                    <div class="chart-description">Long-term performance of each ETF in our portfolio.</div>
-                    <div id="portfolio-performance-chart" class="chart"></div>
+            
+            <div class="content">
+                <div class="metrics">
+                    <div class="metric-card">
+                        <h4>Final Portfolio Value</h4>
+                        <h3 id="final-value">$0.00</h3>
+                        <p id="initial-value">Initial: $0.00</p>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <h4>Total Return</h4>
+                        <h3 id="total-return">0.0%</h3>
+                        <p id="annualized-return">Annualized: 0.0% per year</p>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <h4>Maximum Drawdown</h4>
+                        <h3 id="max-drawdown">0.0%</h3>
+                        <p>Largest decline from peak</p>
+                    </div>
+                    
+                    <div class="metric-card" id="risk-card">
+                        <h4>Risk Level</h4>
+                        <h3 id="volatility">Low (0.0%)</h3>
+                        <p>Portfolio volatility</p>
+                    </div>       
+                </div>
+                
+                <div class="tab-container">
+                    <ul class="tabs">
+                        <li class="tab active" data-tab="candlestick">Candlestick</li>
+                        <li class="tab" data-tab="company">Company Weightage</li>
+                        <li class="tab" data-tab="industry">Industry Weightage</li>
+                        <li class="tab" data-tab="correlation">Correlation Matrix</li>
+                        <li class="tab" data-tab="drawdown">Drawdown Analysis</li>
+                    </ul>
+                </div>
+                
+                <div class="charts">
+                    <div id="candlestick" class="tab-content active">
+                        <div class="chart-container">
+                            <h3>Candlestick Chart</h3>
+                            <div id="candlestick-chart">
+                                <div class="loading">Loading data</div>
+                            </div>
+                            <div class="legend" id="growth-legend"></div>
+                        </div>
+                    </div>
+
+                    <div id="company" class="tab-content">
+                        <div class="chart-container">
+                            <h3>Company Weightage</h3>
+                            <div id="company-chart">
+                                <div class="loading">Loading data</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="industry" class="tab-content">
+                        <div class="chart-container">
+                            <h3>Industry Weightage</h3>
+                            <div id="industry-chart">
+                                <div class="loading">Loading data</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="correlation" class="tab-content">
+                        <div class="chart-container">
+                            <h3>Correlation Matrix</h3>
+                            <div id="correlation-chart">
+                                <div class="loading">Loading data</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="drawdown" class="tab-content">
+                        <div class="chart-container">
+                            <h3>Portfolio Drawdown Analysis</h3>
+                            <div id="drawdown-chart">
+                                <div class="loading">Loading data</div>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
-            <div class="col-6">
-                <div class="chart-container">
-                    <div class="chart-title">ETF Sector Allocation</div>
-                    <div class="chart-description">Breakdown of sectors represented in our low-risk portfolio.</div>
-                    <div id="sector-allocation-chart" class="chart"></div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="row">
-            <div class="col-6">
-                <div class="chart-container">
-                    <div class="chart-title">Top Holdings by ETF</div>
-                    <div class="chart-description">The largest company positions in each ETF.</div>
-                    <div id="top-holdings-chart" class="chart"></div>
-                </div>
-            </div>
-            <div class="col-6">
-                <div class="chart-container">
-                    <div class="chart-title">Risk vs. Return Analysis</div>
-                    <div class="chart-description">Volatility and returns of each ETF in our portfolio.</div>
-                    <div id="risk-return-chart" class="chart"></div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="chart-container">
-            <div class="chart-title">Correlation Matrix</div>
-            <div class="chart-description">How the ETFs in our portfolio move in relation to each other. Lower correlation means better diversification.</div>
-            <div id="correlation-matrix" class="chart"></div>
-        </div>
-        
-        <div class="chart-container">
-            <div class="chart-title">Expected Returns</div>
-            <div class="chart-description">Projected future value of a $10,000 investment in our portfolio vs. bank savings over time.</div>
-            <div id="expected-returns-chart" class="chart"></div>
         </div>
     </div>
 
+    <!-- Add a tooltip div -->
+    <div id="tooltip" class="tooltip"></div>
+
     <script>
-        // Main data structures to hold our processed data
-        let etfData = {};
-        let portfolioData = [];
-        let bankAndRealData = [];
-        let performanceMetrics = {};
-        let correlationMatrix = {};
-        let sectorAllocations = {};
-        let topHoldings = {};
+        // API URLs
+        const API_BASE_URL = 'http://localhost:5003';
+        const API_DATE_RANGE = `${API_BASE_URL}/api/date-range`;
+        const API_PORTFOLIO_VALUE = `${API_BASE_URL}/api/portfolio-value`;
+        const API_TOTAL_RETURN = `${API_BASE_URL}/api/total-return`;
+        const API_MAX_DRAWDOWN = `${API_BASE_URL}/api/max-drawdown`;
+        const API_RISK_LEVEL = `${API_BASE_URL}/api/risk-level`;
+        const API_PORTFOLIO_GROWTH = `${API_BASE_URL}/api/portfolio-growth`;
+        const API_DRAWDOWN_ANALYSIS = `${API_BASE_URL}/api/drawdown-analysis`;
+        const API_ETF_COMPARISON = `${API_BASE_URL}/api/etf-comparison`;
+        const API_YEARLY_RETURNS = `${API_BASE_URL}/api/yearly-returns`;
+        const API_CALCULATE_ALL = `${API_BASE_URL}/api/calculate-all`;
+        
 
-        // Colors for our ETFs
-        const etfColors = {
-            'AGG': '#4e79a7',
-            'BND': '#59a14f',
-            'SPLV': '#edc949',
-            'USMV': '#af7aa1',
-            'VYM': '#ff9da7',
-            'portfolio': '#76b7b2',
-            'bank': '#f28e2c',
-            'nominal': '#4e79a7',
-            'real': '#e15759'
-        };
-
-        // Format functions
-        const formatPercent = d3.format('.1%');
-        const formatCurrency = d3.format('$,.2f');
-        const formatDate = d3.timeFormat('%b %d, %Y');
-        const parseDate = d3.timeParse('%Y-%m-%d');
-
-        // Function to filter data by time period
-        function filterDataByPeriod(data, period) {
-            const endDate = new Date(data[data.length - 1].date);
-            let startDate;
+        // Global variables
+        let minDate, maxDate;
+        let selectedStartDate, selectedEndDate;
+        let portfolioData = null;
+        let drawdownData = null;
+        let etfPerformance = null;
+        let yearlyReturns = null;
+        
+        // Main application
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize tooltips
+            const tooltip = d3.select('#tooltip');
             
-            switch(period) {
-                case '1y':
-                    startDate = new Date(endDate);
-                    startDate.setFullYear(endDate.getFullYear() - 1);
-                    break;
-                case '3y':
-                    startDate = new Date(endDate);
-                    startDate.setFullYear(endDate.getFullYear() - 3);
-                    break;
-                case '5y':
-                    startDate = new Date(endDate);
-                    startDate.setFullYear(endDate.getFullYear() - 5);
-                    break;
-                case 'max':
-                default:
-                    return data;
-            }
+            // Initialize date range
+            fetchDateRange();
             
-            return data.filter(d => new Date(d.date) >= startDate);
+            // Initialize allocation sliders
+            initializeAllocationSliders();
+            
+            // Set up tabs
+            initializeTabs();
+            
+            // Set up time period buttons
+            initializeTimePeriodButtons();
+            
+            // Set up calculate button
+            document.getElementById('calculate-button').addEventListener('click', function() {
+                calculateAndFetchResults();
+            });
+            
+            // Initial calculation will be triggered after date range is fetched
+        });
+
+        /////
+
+
+        // Utility function to wait for elements to exist in the DOM
+        function waitForElement(elementId, callback, checkFrequencyInMs, timeoutInMs) {
+            var startTimeInMs = Date.now();
+            var checkElementAndCallback = function() {
+                var element = document.getElementById(elementId);
+                if (element) {
+                    console.log(elementId + " element found!");
+                    callback(element);
+                    return;
+                }
+                
+                if (timeoutInMs && Date.now() - startTimeInMs > timeoutInMs) {
+                    console.log(elementId + " element not found within timeout period");
+                    return;
+                }
+                
+                setTimeout(checkElementAndCallback, checkFrequencyInMs);
+            };
+            
+            checkElementAndCallback();
         }
 
-        // Load and process all data
-        async function loadData() {
-            try {
-                // Load ETF price data
-                const etfFiles = ['agg.csv', 'bnd.csv', 'splv.csv', 'usmv.csv', 'vym.csv'];
-                const allocationFiles = ['agg_share_allocation.csv', 'bnd_share_allocation.csv', 'splv_share_allocation.csv', 'usmv_share_allocation.csv', 'vym_share_allocation.csv'];
+        // Helper function to find the parent metric card of an element
+        function findParentCard(elementId) {
+            const element = document.getElementById(elementId);
+            if (!element) {
+                console.log("Element with ID " + elementId + " not found");
+                return null;
+            }
+            
+            // Find parent metric card
+            const parentCard = element.closest('.metric-card');
+            if (parentCard) {
+                console.log("Found parent card for " + elementId);
+                return parentCard;
+            } else {
+                console.log("Could not find parent card for " + elementId);
+                return null;
+            }
+        }
+
+        // 1. RISK/VOLATILITY MONITORING
+        function setupRiskMonitoring(volatilityElement) {
+            console.log("Setting up risk/volatility monitoring");
+            
+            // Find the risk card element
+            const riskCard = findParentCard('volatility');
+            
+            if (riskCard) {
+                setupRiskObserver(volatilityElement, riskCard);
+            } else {
+                console.error("Could not find parent card for volatility");
+            }
+        }
+
+        function setupRiskObserver(volatilityElement, cardElement) {
+            function updateRiskCardColor() {
+                const volatilityText = volatilityElement.innerText || volatilityElement.textContent;
+                console.log("Volatility text:", volatilityText);
                 
-                // Process ETF price data
-                for (const file of etfFiles) {
-                    const ticker = file.split('.')[0].toUpperCase();
-                    const response = await fetch('mavis datasets/' + file);
-                    const csvText = await response.text();
-                    
-                    const rows = d3.csvParse(csvText);
-                    etfData[ticker] = rows.map(row => ({
-                        date: row.Date,
-                        open: +row.Open,
-                        high: +row.High,
-                        low: +row.Low,
-                        close: +row.Close,
-                        adjClose: +row['Adj Close'],
-                        volume: +row.Volume,
-                        dividends: +row.Dividends
-                    })).filter(d => d.adjClose > 0);
+                if (volatilityText.includes('Very Low') || volatilityText.includes('Low')) {
+                    cardElement.style.backgroundColor = 'rgba(40, 167, 69, 0.15)'; // light green
+                    console.log("Set risk card to green");
+                } else if (volatilityText.includes('High') || volatilityText.includes('Very High')) {
+                    cardElement.style.backgroundColor = 'rgba(220, 53, 69, 0.15)'; // light red
+                    console.log("Set risk card to red");
+                } else {
+                    cardElement.style.backgroundColor = 'rgba(255, 193, 7, 0.15)'; // light yellow for Moderate
+                    console.log("Set risk card to yellow");
+                }
+            }
+            
+            // Initial update
+            updateRiskCardColor();
+            
+            // Create a separate observer for risk
+            const riskObserver = new MutationObserver(function() {
+                console.log("Risk observer triggered");
+                updateRiskCardColor();
+            });
+            
+            // Start observing
+            riskObserver.observe(volatilityElement, { 
+                childList: true, 
+                characterData: true,
+                subtree: true 
+            });
+            
+            console.log("Risk monitoring setup complete");
+        }
+
+        // 2. DRAWDOWN MONITORING
+        function setupDrawdownMonitoring(drawdownElement) {
+            console.log("Setting up drawdown monitoring");
+            
+            // Find the drawdown card element
+            const drawdownCard = findParentCard('max-drawdown');
+            
+            if (drawdownCard) {
+                setupDrawdownObserver(drawdownElement, drawdownCard);
+            } else {
+                console.error("Could not find parent card for drawdown");
+            }
+        }
+
+        function setupDrawdownObserver(drawdownElement, cardElement) {
+            function updateDrawdownCardColor() {
+                const drawdownText = drawdownElement.innerText || drawdownElement.textContent;
+                console.log("Drawdown text:", drawdownText);
+                
+                const cleanText = drawdownText.replace(/[^\d.-]/g, '');
+                const drawdownValue = parseFloat(cleanText);
+                
+                if (isNaN(drawdownValue)) {
+                    console.error("Could not parse a valid number from drawdown text");
+                    return;
                 }
                 
-                // Process allocation data
-                for (const file of allocationFiles) {
-                    const ticker = file.split('_')[0].toUpperCase();
-                    const response = await fetch('mavis datasets/' + file);
-                    const csvText = await response.text();
-                    
-                    const rows = d3.csvParse(csvText);
-                    const allocData = rows.map(row => ({
-                        name: row.Name,
-                        ticker: row.Ticker,
-                        weight: typeof row.Weight === 'string' ? 
-                            parseFloat(row.Weight.replace('%', '')) : 
-                            +row.Weight,
-                        sector: row.Industry || 'Unknown'
-                    }));
-                    
-                    // Calculate sector allocations
-                    const sectors = {};
-                    allocData.forEach(d => {
-                        if (!sectors[d.sector]) sectors[d.sector] = 0;
-                        sectors[d.sector] += d.weight;
-                    });
-                    
-                    sectorAllocations[ticker] = Object.entries(sectors)
-                        .map(([sector, weight]) => ({ sector, weight }))
-                        .filter(d => d.weight > 0)
-                        .sort((a, b) => b.weight - a.weight);
-                    
-                    // Get top holdings
-                    topHoldings[ticker] = allocData
-                        .sort((a, b) => b.weight - a.weight)
-                        .slice(0, 10);
+                console.log("Drawdown value:", drawdownValue);
+                
+                if (drawdownValue <= -15) {
+                    cardElement.style.backgroundColor = '#ffe6e6'; // Light red
+                    console.log("Set drawdown card to red");
+                } else {
+                    cardElement.style.backgroundColor = '#e6f7e6'; // Light green
+                    console.log("Set drawdown card to green");
+                }
+            }
+            
+            // Initial update
+            updateDrawdownCardColor();
+            
+            // Create a separate observer for drawdown
+            const drawdownObserver = new MutationObserver(function() {
+                console.log("Drawdown observer triggered");
+                updateDrawdownCardColor();
+            });
+            
+            // Start observing
+            drawdownObserver.observe(drawdownElement, { 
+                childList: true, 
+                characterData: true,
+                subtree: true 
+            });
+            
+            console.log("Drawdown monitoring setup complete");
+        }
+
+        // 3. PORTFOLIO RETURN MONITORING (FOR BOTH PORTFOLIO VALUE AND TOTAL RETURN CARDS)
+        function setupReturnMonitoring(annualizedReturnElement) {
+            console.log("Setting up annualized return monitoring");
+            
+            // Find both card elements
+            const portfolioValueCard = findParentCard('final-value');
+            const totalReturnCard = findParentCard('total-return');
+            
+            if (!portfolioValueCard) {
+                console.error("Could not find portfolio value card");
+            }
+            
+            if (!totalReturnCard) {
+                console.error("Could not find total return card");
+            }
+            
+            // Set up the monitoring if at least one card was found
+            if (portfolioValueCard || totalReturnCard) {
+                setupReturnObserver(annualizedReturnElement, portfolioValueCard, totalReturnCard);
+            }
+        }
+
+        function setupReturnObserver(annualizedReturnElement, portfolioValueCard, totalReturnCard) {
+            function updateReturnCards() {
+                const returnText = annualizedReturnElement.innerText || annualizedReturnElement.textContent;
+                console.log("Annualized return text:", returnText);
+                
+                // Extract the percentage value (looking for a number followed by % per year)
+                const matches = returnText.match(/(-?\d+\.?\d*)%/);
+                if (!matches || matches.length < 2) {
+                    console.error("Could not parse annualized return percentage");
+                    return;
                 }
                 
-                // Find common date range for all ETFs
-                const startDates = Object.values(etfData).map(data => new Date(data[0].date));
-                const endDates = Object.values(etfData).map(data => new Date(data[data.length - 1].date));
+                const annualizedReturnValue = parseFloat(matches[1]);
+                console.log("Parsed annualized return value:", annualizedReturnValue);
                 
-                const latestStart = new Date(Math.max(...startDates));
-                const earliestEnd = new Date(Math.min(...endDates));
-                
-                // Create aligned dataset across all ETFs
-                const dateMap = {};
-                
-                for (const ticker in etfData) {
-                    etfData[ticker].forEach(d => {
-                        const dateObj = new Date(d.date);
-                        if (dateObj >= latestStart && dateObj <= earliestEnd) {
-                            if (!dateMap[d.date]) {
-                                dateMap[d.date] = { date: d.date, dateObj };
-                            }
-                            dateMap[d.date][ticker] = d.adjClose;
+                // Apply the appropriate background color based on the threshold
+                if (annualizedReturnValue >= 6) {
+                    console.log("Setting cards to green (>= 6%)");
+                    if (portfolioValueCard) portfolioValueCard.style.backgroundColor = '#e6f7e6'; // Light green
+                    if (totalReturnCard) totalReturnCard.style.backgroundColor = '#e6f7e6'; // Light green
+                } else {
+                    console.log("Setting cards to red (< 6%)");
+                    if (portfolioValueCard) portfolioValueCard.style.backgroundColor = '#ffe6e6'; // Light red
+                    if (totalReturnCard) totalReturnCard.style.backgroundColor = '#ffe6e6'; // Light red
+                }
+            }
+            
+            // Initial update
+            updateReturnCards();
+            
+            // Create an observer for the annualized return
+            const returnObserver = new MutationObserver(function() {
+                console.log("Annualized return observer triggered");
+                updateReturnCards();
+            });
+            
+            // Start observing
+            returnObserver.observe(annualizedReturnElement, { 
+                childList: true, 
+                characterData: true,
+                subtree: true 
+            });
+            
+            console.log("Annualized return monitoring setup complete");
+        }
+
+        // Initialize all monitors when the page loads
+        window.addEventListener('load', function() {
+            console.log("Window loaded, setting up all monitors");
+            
+            // 1. Set up risk/volatility monitoring
+            waitForElement('volatility', setupRiskMonitoring, 100, 10000);
+            
+            // 2. Set up maximum drawdown monitoring
+            waitForElement('max-drawdown', setupDrawdownMonitoring, 100, 10000);
+            
+            // 3. Set up return monitoring (for both portfolio value and total return cards)
+            waitForElement('annualized-return', setupReturnMonitoring, 100, 10000);
+        });
+
+
+        /////
+        
+        // Function to fetch date range from API
+        function fetchDateRange() {
+            fetch(API_DATE_RANGE)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! Status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    minDate = new Date(data.min_date);
+                    maxDate = new Date(data.max_date);
+                    
+                    // Set default selected dates to max range
+                    selectedStartDate = minDate;
+                    selectedEndDate = maxDate;
+                    
+                    // Display date range text initially
+                    updateDateRangeDisplay();
+                    
+                    // Display ETF returns if needed
+                    const etfReturns = data.etf_returns;
+                    for (const etf in etfReturns) {
+                        const returnEl = document.getElementById(`${etf.toLowerCase()}-return`);
+                        if (returnEl) {
+                            returnEl.textContent = `${etfReturns[etf].toFixed(2)}%`;
                         }
-                    });
-                }
-                
-                // Convert date map to array and sort by date
-                const alignedData = Object.values(dateMap)
-                    .filter(d => Object.keys(d).length === Object.keys(etfData).length + 2) // Only keep dates with all ETFs
-                    .sort((a, b) => a.dateObj - b.dateObj);
-                
-                // Calculate portfolio performance (equal weighted)
-                portfolioData = alignedData.map(d => {
-                    const tickers = Object.keys(etfData);
-                    const etfPrices = tickers.map(ticker => d[ticker]);
-                    const portfolioValue = etfPrices.reduce((sum, price) => sum + price, 0) / tickers.length;
+                    }
                     
-                    return {
-                        date: d.date,
-                        dateObj: d.dateObj,
-                        portfolio: portfolioValue,
-                        ...tickers.reduce((acc, ticker) => ({ ...acc, [ticker]: d[ticker] }), {})
-                    };
+                    // Now that we have the date range, trigger the initial calculation
+                    calculateAndFetchResults();
+                })
+                .catch(error => {
+                    showApiError(`Failed to fetch date range: ${error.message}`);
                 });
-                
-                // Normalize to index = 100 at start
-                const initialValues = {};
-                Object.keys(etfData).forEach(ticker => {
-                    initialValues[ticker] = portfolioData[0][ticker];
-                });
-                initialValues.portfolio = portfolioData[0].portfolio;
-                
-                portfolioData.forEach(d => {
-                    Object.keys(initialValues).forEach(key => {
-                        d[`${key}Index`] = (d[key] / initialValues[key]) * 100;
-                    });
-                });
-                
-                // Simulate bank savings (0.5% annual interest) and inflation-adjusted returns (2% inflation)
-                const bankAnnualRate = 0.005;
-                const inflationAnnualRate = 0.02;
-                
-                // Calculate daily rates
-                const bankDailyRate = Math.pow(1 + bankAnnualRate, 1/252) - 1;
-                const inflationDailyRate = Math.pow(1 + inflationAnnualRate, 1/252) - 1;
-                
-                let bankValue = 100;
-                
-                bankAndRealData = portfolioData.map((d, i) => {
-                    const entry = {
-                        date: d.date,
-                        dateObj: d.dateObj,
-                        portfolioNominal: d.portfolioIndex
-                    };
+        }
+
+        // Function to initialize time period buttons
+        function initializeTimePeriodButtons() {
+            const buttons = document.querySelectorAll('.time-btn');
+            
+            buttons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    buttons.forEach(btn => btn.classList.remove('active'));
                     
-                    // Update bank value (compound interest)
-                    if (i > 0) {
-                        const prevDate = new Date(portfolioData[i-1].date);
-                        const currentDate = new Date(d.date);
-                        const daysDiff = (currentDate - prevDate) / (1000 * 60 * 60 * 24);
-                        bankValue *= Math.pow(1 + bankDailyRate, daysDiff);
-                        
-                        // Calculate real (inflation-adjusted) values
-                        const daysSinceStart = (currentDate - new Date(portfolioData[0].date)) / (1000 * 60 * 60 * 24);
-                        const inflationFactor = Math.pow(1 + inflationDailyRate, daysSinceStart);
-                        entry.portfolioReal = d.portfolioIndex / inflationFactor;
+                    // Add active class to clicked button
+                    this.classList.add('active');
+                    
+                    // Get the selected period
+                    const period = this.getAttribute('data-period');
+                    
+                    // Calculate start and end dates based on the period
+                    if (period === 'MAX') {
+                        selectedStartDate = minDate;
+                        selectedEndDate = maxDate;
                     } else {
-                        entry.portfolioReal = d.portfolioIndex;
+                        selectedEndDate = new Date(maxDate); // Use a copy of maxDate
+                        selectedStartDate = calculateStartDate(period);
                     }
                     
-                    entry.bankIndex = bankValue;
+                    // Update the date range display
+                    updateDateRangeDisplay();
                     
-                    return entry;
+                    // If allocations are valid, trigger calculation
+                    if (checkAllocation()) {
+                        calculateAndFetchResults();
+                    }
                 });
-                
-                // Calculate performance metrics for each ETF
-                for (const ticker in etfData) {
-                    const prices = portfolioData.map(d => d[ticker]);
-                    const dailyReturns = [];
+            });
+        }
+
+        // Function to calculate start date based on period
+        function calculateStartDate(period) {
+        const endDate = new Date(selectedEndDate);
+        const startDate = new Date(endDate);
+        
+        switch (period) {
+            case '1M':
+                startDate.setMonth(endDate.getMonth() - 1);
+                break;
+            case '6M':
+                startDate.setMonth(endDate.getMonth() - 6);
+                break;
+            case '1Y':
+                startDate.setFullYear(endDate.getFullYear() - 1);
+                break;
+            case '3Y':
+                startDate.setFullYear(endDate.getFullYear() - 3);
+                break;
+            case '5Y':
+                startDate.setFullYear(endDate.getFullYear() - 5);
+                break;
+            default:
+                startDate = new Date(minDate);
+        }
+        
+        // Ensure the start date is not earlier than the minimum available date
+        if (startDate < minDate) {
+            startDate = new Date(minDate);
+        }
+        
+        return startDate;
+        }
+
+        // Function to update the date range display
+        function updateDateRangeDisplay() {
+        const dateDisplay = document.getElementById('date-range-display');
+        dateDisplay.textContent = `From ${formatDate(selectedStartDate)} to ${formatDate(selectedEndDate)}`;
+        }
+
+        // Function to initialize allocation sliders [SPY, BND, VTIP, VXUS] to [USMV, VYM, SPLV, AGG]
+        function initializeAllocationSliders() {
+            const usmvSlider = document.getElementById('usmv-allocation');
+            const vymSlider = document.getElementById('vym-allocation');
+            const splvSlider = document.getElementById('splv-allocation');
+            const aggSlider = document.getElementById('agg-allocation');
+            
+            const usmvValue = document.getElementById('usmv-value');
+            const vymValue = document.getElementById('vym-value');
+            const splvValue = document.getElementById('splv-value');
+            const aggValue = document.getElementById('agg-value');
+            
+            usmvSlider.addEventListener('input', function() {
+                usmvValue.textContent = `${usmvSlider.value}%`;
+                checkAllocation();
+            });
+            
+            vymSlider.addEventListener('input', function() {
+                vymValue.textContent = `${vymSlider.value}%`;
+                checkAllocation();
+            });
+            
+            splvSlider.addEventListener('input', function() {
+                splvValue.textContent = `${splvSlider.value}%`;
+                checkAllocation();
+            });
+            
+            aggSlider.addEventListener('input', function() {
+                aggValue.textContent = `${aggSlider.value}%`;
+                checkAllocation();
+            });
+        }
+        
+        // Function to check if allocations sum to 100%
+        function checkAllocation() {
+            const usmvValue = parseInt(document.getElementById('usmv-allocation').value);
+            const vymValue = parseInt(document.getElementById('vym-allocation').value);
+            const splvValue = parseInt(document.getElementById('splv-allocation').value);
+            const aggValue = parseInt(document.getElementById('agg-allocation').value);
+            
+            const total = usmvValue + vymValue + splvValue + aggValue;
+            const warningEl = document.getElementById('allocation-warning');
+            
+            if (total !== 100) {
+                warningEl.textContent = `Total allocation: ${total}% (should be 100%)`;
+                return false;
+            } else {
+                warningEl.textContent = '';
+                return true;
+            }
+        }
+        
+        // Function to initialize tabs
+        function initializeTabs() {
+            const tabs = document.querySelectorAll('.tab');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    const tabId = this.getAttribute('data-tab');
                     
-                    for (let i = 1; i < prices.length; i++) {
-                        dailyReturns.push(prices[i] / prices[i-1] - 1);
-                    }
+                    // Remove active class from all tabs and tab content
+                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
                     
-                    const mean = dailyReturns.reduce((sum, val) => sum + val, 0) / dailyReturns.length;
-                    const variance = dailyReturns.reduce((sum, val) => sum + Math.pow(val - mean, 2), 0) / dailyReturns.length;
-                    const volatility = Math.sqrt(variance) * Math.sqrt(252); // Annualized volatility
+                    // Add active class to clicked tab and corresponding content
+                    this.classList.add('active');
+                    document.getElementById(tabId).classList.add('active');
                     
-                    // Calculate annualized return
-                    const firstPrice = prices[0];
-                    const lastPrice = prices[prices.length - 1];
-                    const years = portfolioData.length / 252; // Assuming ~252 trading days per year
-                    const annualizedReturn = Math.pow(lastPrice / firstPrice, 1 / years) - 1;
-                    
-                    performanceMetrics[ticker] = {
-                        annualizedReturn,
-                        volatility,
-                        sharpeRatio: (annualizedReturn - 0.01) / volatility // Assuming 1% risk-free rate
-                    };
-                }
-                
-                // Add portfolio metrics
-                const portfolioPrices = portfolioData.map(d => d.portfolio);
-                const portfolioDailyReturns = [];
-                
-                for (let i = 1; i < portfolioPrices.length; i++) {
-                    portfolioDailyReturns.push(portfolioPrices[i] / portfolioPrices[i-1] - 1);
-                }
-                
-                const portfolioMean = portfolioDailyReturns.reduce((sum, val) => sum + val, 0) / portfolioDailyReturns.length;
-                const portfolioVariance = portfolioDailyReturns.reduce((sum, val) => sum + Math.pow(val - portfolioMean, 2), 0) / portfolioDailyReturns.length;
-                const portfolioVolatility = Math.sqrt(portfolioVariance) * Math.sqrt(252);
-                
-                const portfolioFirstPrice = portfolioPrices[0];
-                const portfolioLastPrice = portfolioPrices[portfolioPrices.length - 1];
-                const portfolioYears = portfolioData.length / 252;
-                const portfolioAnnualizedReturn = Math.pow(portfolioLastPrice / portfolioFirstPrice, 1 / portfolioYears) - 1;
-                
-                performanceMetrics.portfolio = {
-                    annualizedReturn: portfolioAnnualizedReturn,
-                    volatility: portfolioVolatility,
-                    sharpeRatio: (portfolioAnnualizedReturn - 0.01) / portfolioVolatility
-                };
-                
-                // Calculate correlation matrix
-                correlationMatrix = {};
-                const tickers = [...Object.keys(etfData), 'portfolio'];
-                
-                for (const ticker1 of tickers) {
-                    correlationMatrix[ticker1] = {};
-                    
-                    for (const ticker2 of tickers) {
-                        // Extract returns for both tickers
-                        const returns1 = [];
-                        const returns2 = [];
-                        
-                        for (let i = 1; i < portfolioData.length; i++) {
-                            returns1.push(portfolioData[i][ticker1] / portfolioData[i-1][ticker1] - 1);
-                            returns2.push(portfolioData[i][ticker2] / portfolioData[i-1][ticker2] - 1);
+                    // Re-render charts when tab becomes visible to fix layout issues
+                    setTimeout(() => {
+                        if (tabId === 'candlestick' && portfolioData) {
+                            createCandlestickChart();
+                        } else if (tabId === 'company' && portfolioData) {
+                            createCompanyWeightageChart();
+                        } else if (tabId === 'industry' && portfolioData) {
+                            createIndustryWeightageChart();
+                        } else if (tabId === 'correlation' && portfolioData) {
+                            createCorrelationMatrix();
+                        } else if (tabId === 'drawdown' && portfolioData) {
+                            createDrawdownChart(portfolioData);
                         }
-                        
-                        correlationMatrix[ticker1][ticker2] = calculateCorrelation(returns1, returns2);
-                    }
+                    }, 50);
+                });
+            });
+        }
+
+        // Helper function to get current allocations
+        function getCurrentAllocations() {
+            return {
+                'USMV': parseInt(document.getElementById('usmv-allocation').value),
+                'VYM': parseInt(document.getElementById('vym-allocation').value),
+                'SPLV': parseInt(document.getElementById('splv-allocation').value),
+                'AGG': parseInt(document.getElementById('agg-allocation').value)
+            };
+        }
+        
+        // Function to calculate and fetch results from API
+        function calculateAndFetchResults() {
+            // Check if allocations are valid
+            if (!checkAllocation()) {
+                alert('Total allocation must be 100%. Please adjust your allocations.');
+                return;
+            }
+            
+            // Get input values
+            const initialInvestment = parseFloat(document.getElementById('initial-investment').value);
+            const usmvAllocation = parseInt(document.getElementById('usmv-allocation').value);
+            const vymAllocation = parseInt(document.getElementById('vym-allocation').value);
+            const splvAllocation = parseInt(document.getElementById('splv-allocation').value);
+            const aggAllocation = parseInt(document.getElementById('agg-allocation').value);
+            
+            // Use the selected date range
+            const startDate = formatDateForAPI(selectedStartDate);
+            const endDate = formatDateForAPI(selectedEndDate);
+            
+            // Prepare API request payload
+            const payload = {
+                initial_investment: initialInvestment,
+                allocations: {
+                    'USMV': usmvAllocation,
+                    'VYM': vymAllocation,
+                    'SPLV': splvAllocation,
+                    'AGG': aggAllocation
+                },
+                start_date: startDate,
+                end_date: endDate
+            };
+            
+            // Show loading state
+            document.querySelectorAll('.loading').forEach(el => {
+                el.style.display = 'block';
+            });
+            
+            // Clear any previous error messages
+            hideApiError();
+            
+            // Fetch all data at once
+            fetchAllData(payload);
+        }
+
+        // Helper function to format dates for API (YYYY-MM-DD)
+        function formatDateForAPI(date) {
+            if (!date) return null;
+            
+            const d = new Date(date);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            
+            return `${year}-${month}-${day}`;
+        }
+        
+        // Function to fetch all data from the API
+        function fetchAllData(payload) {
+            // Use the calculate-all endpoint
+            fetch(API_CALCULATE_ALL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(payload)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        try {
+                            const err = JSON.parse(text);
+                            throw new Error(err.error || `HTTP error! Status: ${response.status}`);
+                        } catch(e) {
+                            throw new Error(`HTTP error! Status: ${response.status}, Body: ${text.substring(0, 100)}...`);
+                        }
+                    });
                 }
-                
-                // Initialize charts
-                createRealNominalChart();
-                createBankVsPortfolioChart();
-                createPortfolioPerformanceChart();
-                createSectorAllocationChart();
-                createTopHoldingsChart();
-                createRiskReturnChart();
-                createCorrelationMatrix();
-                createExpectedReturnsChart();
-                
-            } catch (error) {
-                console.error('Error loading data:', error);
-            }
-        }
-        
-        // Helper function to calculate correlation
-        function calculateCorrelation(x, y) {
-            const n = x.length;
-            
-            // Calculate means
-            const meanX = x.reduce((sum, val) => sum + val, 0) / n;
-            const meanY = y.reduce((sum, val) => sum + val, 0) / n;
-            
-            // Calculate covariance and variances
-            let covariance = 0;
-            let varianceX = 0;
-            let varianceY = 0;
-            
-            for (let i = 0; i < n; i++) {
-                const xDiff = x[i] - meanX;
-                const yDiff = y[i] - meanY;
-                covariance += xDiff * yDiff;
-                varianceX += xDiff * xDiff;
-                varianceY += yDiff * yDiff;
-            }
-            
-            covariance /= n;
-            varianceX /= n;
-            varianceY /= n;
-            
-            // Calculate correlation
-            if (varianceX === 0 || varianceY === 0) return 0;
-            return covariance / (Math.sqrt(varianceX) * Math.sqrt(varianceY));
-        }
-        
-        // Chart 1: Real vs Nominal Returns
-        function createRealNominalChart() {
-            const chart = d3.select('#real-nominal-chart');
-            const width = chart.node().getBoundingClientRect().width;
-            const height = 400;
-            const margin = { top: 30, right: 80, bottom: 50, left: 60 };
-            
-            // Create SVG
-            chart.selectAll('*').remove();
-            const svg = chart.append('svg')
-                .attr('width', width)
-                .attr('height', height);
-            
-            // Add time period buttons event listeners
-            d3.selectAll('#real-nominal-time-buttons .time-button').on('click', function() {
-                d3.selectAll('#real-nominal-time-buttons .time-button').classed('active', false);
-                d3.select(this).classed('active', true);
-                updateRealNominalChart(d3.select(this).attr('data-period'));
-            });
-            
-            function updateRealNominalChart(period) {
-                // Filter data by time period
-                const filteredData = filterDataByPeriod(bankAndRealData, period);
-                
-                // Create scales
-                const x = d3.scaleTime()
-                    .domain(d3.extent(filteredData, d => new Date(d.date)))
-                    .range([margin.left, width - margin.right]);
-                
-                const y = d3.scaleLinear()
-                    .domain([
-                        d3.min([
-                            d3.min(filteredData, d => d.portfolioReal),
-                            d3.min(filteredData, d => d.portfolioNominal)
-                        ]) * 0.9,
-                        d3.max([
-                            d3.max(filteredData, d => d.portfolioReal),
-                            d3.max(filteredData, d => d.portfolioNominal)
-                        ]) * 1.1
-                    ])
-                    .range([height - margin.bottom, margin.top]);
-                
-                // Create axes
-                const xAxis = d3.axisBottom(x);
-                const yAxis = d3.axisLeft(y).tickFormat(d => `${d}%`);
-                
-                // Clear previous elements
-                svg.selectAll('.line, .axis').remove();
-                
-                // Add X axis
-                svg.append('g')
-                    .attr('class', 'axis x-axis')
-                    .attr('transform', `translate(0,${height - margin.bottom})`)
-                    .call(xAxis);
-                
-                // Add Y axis
-                svg.append('g')
-                    .attr('class', 'axis y-axis')
-                    .attr('transform', `translate(${margin.left},0)`)
-                    .call(yAxis);
-                
-                // Create line generator
-                const line = d3.line()
-                    .x(d => x(new Date(d.date)))
-                    .y(d => y(d.portfolioNominal));
-                
-                // Add nominal line
-                svg.append('path')
-                    .datum(filteredData)
-                    .attr('class', 'line')
-                    .attr('fill', 'none')
-                    .attr('stroke', etfColors.nominal)
-                    .attr('stroke-width', 2)
-                    .attr('d', line);
-                
-                // Create real line generator
-                const realLine = d3.line()
-                    .x(d => x(new Date(d.date)))
-                    .y(d => y(d.portfolioReal));
-                
-                // Add real line
-                svg.append('path')
-                    .datum(filteredData)
-                    .attr('class', 'line')
-                    .attr('fill', 'none')
-                    .attr('stroke', etfColors.real)
-                    .attr('stroke-width', 2)
-                    .attr('d', realLine);
-                
-                // Add line labels
-                svg.append('text')
-                    .attr('class', 'line-label')
-                    .attr('x', width - margin.right + 10)
-                    .attr('y', y(filteredData[filteredData.length - 1].portfolioNominal))
-                    .attr('dy', '0.35em')
-                    .style('font-size', '12px')
-                    .style('fill', etfColors.nominal)
-                    .text('Nominal');
-                
-                svg.append('text')
-                    .attr('class', 'line-label')
-                    .attr('x', width - margin.right + 10)
-                    .attr('y', y(filteredData[filteredData.length - 1].portfolioReal))
-                    .attr('dy', '0.35em')
-                    .style('font-size', '12px')
-                    .style('fill', etfColors.real)
-                    .text('Real (Inflation-Adjusted)');
-                
-                // Add axis labels
-                svg.append('text')
-                    .attr('class', 'axis-label')
-                    .attr('text-anchor', 'middle')
-                    .attr('x', width / 2)
-                    .attr('y', height - 10)
-                    .text('Date');
-                
-                svg.append('text')
-                    .attr('class', 'axis-label')
-                    .attr('text-anchor', 'middle')
-                    .attr('transform', `translate(${margin.left / 3},${height / 2}) rotate(-90)`)
-                    .text('Index Value (%)');
-                
-                // Add tooltip
-                const tooltip = d3.select('body').append('div')
-                    .attr('class', 'tooltip')
-                    .style('opacity', 0);
-                
-                const bisect = d3.bisector(d => new Date(d.date)).left;
-                
-                // Add overlay for tooltip
-                svg.append('rect')
-                    .attr('width', width - margin.left - margin.right)
-                    .attr('height', height - margin.top - margin.bottom)
-                    .attr('x', margin.left)
-                    .attr('y', margin.top)
-                    .attr('fill', 'none')
-                    .attr('pointer-events', 'all')
-                    .on('mousemove', function(event) {
-                        const x0 = x.invert(d3.pointer(event)[0]);
-                        const i = bisect(filteredData, x0, 1);
-                        const d0 = filteredData[i - 1];
-                        const d1 = filteredData[i] || d0;
-                        const d = x0 - new Date(d0.date) > new Date(d1.date) - x0 ? d1 : d0;
-                        
-                        tooltip.style('opacity', 0.9)
-                            .html(`
-                                <strong>Date:</strong> ${formatDate(new Date(d.date))}<br>
-                                <strong>Nominal:</strong> ${d.portfolioNominal.toFixed(2)}%<br>
-                                <strong>Real:</strong> ${d.portfolioReal.toFixed(2)}%<br>
-                                <strong>Inflation Impact:</strong> ${(d.portfolioNominal - d.portfolioReal).toFixed(2)}%
-                            `)
-                            .style('left', `${event.pageX + 10}px`)
-                            .style('top', `${event.pageY - 28}px`);
-                    })
-                    .on('mouseout', function() {
-                        tooltip.style('opacity', 0);
-                    });
-            }
-            
-            // Initialize with 5Y by default
-            updateRealNominalChart('5y');
-        }
-        
-        // Chart 2: Bank vs Portfolio
-        function createBankVsPortfolioChart() {
-            const chart = d3.select('#bank-vs-portfolio-chart');
-            const width = chart.node().getBoundingClientRect().width;
-            const height = 400;
-            const margin = { top: 30, right: 80, bottom: 50, left: 60 };
-            
-            // Create SVG
-            chart.selectAll('*').remove();
-            const svg = chart.append('svg')
-                .attr('width', width)
-                .attr('height', height);
-            
-            // Add time period buttons event listeners
-            d3.selectAll('#bank-vs-portfolio-time-buttons .time-button').on('click', function() {
-                d3.selectAll('#bank-vs-portfolio-time-buttons .time-button').classed('active', false);
-                d3.select(this).classed('active', true);
-                updateBankVsPortfolioChart(d3.select(this).attr('data-period'));
-            });
-            
-            function updateBankVsPortfolioChart(period) {
-                // Filter data by time period
-                const filteredData = filterDataByPeriod(bankAndRealData, period);
-                
-                // Calculate values for $10,000 initial investment
-                const scaledData = filteredData.map(d => ({
-                    ...d,
-                    portfolioValue: 10000 * (d.portfolioNominal / 100),
-                    bankValue: 10000 * (d.bankIndex / 100)
-                }));
-                
-                // Create scales
-                const x = d3.scaleTime()
-                    .domain(d3.extent(scaledData, d => new Date(d.date)))
-                    .range([margin.left, width - margin.right]);
-                
-                const y = d3.scaleLinear()
-                    .domain([
-                        d3.min([
-                            d3.min(scaledData, d => d.bankValue),
-                            d3.min(scaledData, d => d.portfolioValue)
-                        ]) * 0.9,
-                        d3.max([
-                            d3.max(scaledData, d => d.bankValue),
-                            d3.max(scaledData, d => d.portfolioValue)
-                        ]) * 1.1
-                    ])
-                    .range([height - margin.bottom, margin.top]);
-                
-                // Create axes
-                const xAxis = d3.axisBottom(x);
-                const yAxis = d3.axisLeft(y).tickFormat(d => formatCurrency(d));
-                
-                // Clear previous elements
-                svg.selectAll('.line, .axis').remove();
-                
-                // Add X axis
-                svg.append('g')
-                    .attr('class', 'axis x-axis')
-                    .attr('transform', `translate(0,${height - margin.bottom})`)
-                    .call(xAxis);
-                
-                // Add Y axis
-                svg.append('g')
-                    .attr('class', 'axis y-axis')
-                    .attr('transform', `translate(${margin.left},0)`)
-                    .call(yAxis);
-                
-                // Create portfolio line generator
-                const portfolioLine = d3.line()
-                    .x(d => x(new Date(d.date)))
-                    .y(d => y(d.portfolioValue));
-                
-                // Add portfolio line
-                svg.append('path')
-                    .datum(scaledData)
-                    .attr('class', 'line')
-                    .attr('fill', 'none')
-                    .attr('stroke', etfColors.portfolio)
-                    .attr('stroke-width', 2)
-                    .attr('d', portfolioLine);
-                
-                // Create bank line generator
-                const bankLine = d3.line()
-                    .x(d => x(new Date(d.date)))
-                    .y(d => y(d.bankValue));
-                
-                // Add bank line
-                svg.append('path')
-                    .datum(scaledData)
-                    .attr('class', 'line')
-                    .attr('fill', 'none')
-                    .attr('stroke', etfColors.bank)
-                    .attr('stroke-width', 2)
-                    .attr('d', bankLine);
-                
-                // Add line labels
-                svg.append('text')
-                    .attr('class', 'line-label')
-                    .attr('x', width - margin.right + 10)
-                    .attr('y', y(scaledData[scaledData.length - 1].portfolioValue))
-                    .attr('dy', '0.35em')
-                    .style('font-size', '12px')
-                    .style('fill', etfColors.portfolio)
-                    .text('ETF Portfolio');
-                
-                svg.append('text')
-                    .attr('class', 'line-label')
-                    .attr('x', width - margin.right + 10)
-                    .attr('y', y(scaledData[scaledData.length - 1].bankValue))
-                    .attr('dy', '0.35em')
-                    .style('font-size', '12px')
-                    .style('fill', etfColors.bank)
-                    .text('Bank Savings');
-                
-                // Add axis labels
-                svg.append('text')
-                    .attr('class', 'axis-label')
-                    .attr('text-anchor', 'middle')
-                    .attr('x', width / 2)
-                    .attr('y', height - 10)
-                    .text('Date');
-                
-                svg.append('text')
-                    .attr('class', 'axis-label')
-                    .attr('text-anchor', 'middle')
-                    .attr('transform', `translate(${margin.left / 3},${height / 2}) rotate(-90)`)
-                    .text('Value ($)');
-                
-                // Add tooltip
-                const tooltip = d3.select('body').append('div')
-                    .attr('class', 'tooltip')
-                    .style('opacity', 0);
-                
-                const bisect = d3.bisector(d => new Date(d.date)).left;
-                
-                // Add overlay for tooltip
-                svg.append('rect')
-                    .attr('width', width - margin.left - margin.right)
-                    .attr('height', height - margin.top - margin.bottom)
-                    .attr('x', margin.left)
-                    .attr('y', margin.top)
-                    .attr('fill', 'none')
-                    .attr('pointer-events', 'all')
-                    .on('mousemove', function(event) {
-                        const x0 = x.invert(d3.pointer(event)[0]);
-                        const i = bisect(scaledData, x0, 1);
-                        const d0 = scaledData[i - 1];
-                        const d1 = scaledData[i] || d0;
-                        const d = x0 - new Date(d0.date) > new Date(d1.date) - x0 ? d1 : d0;
-                        
-                        tooltip.style('opacity', 0.9)
-                            .html(`
-                                <strong>Date:</strong> ${formatDate(new Date(d.date))}<br>
-                                <strong>Portfolio:</strong> ${formatCurrency(d.portfolioValue)}<br>
-                                <strong>Bank Account:</strong> ${formatCurrency(d.bankValue)}<br>
-                                <strong>Difference:</strong> ${formatCurrency(d.portfolioValue - d.bankValue)}
-                            `)
-                            .style('left', `${event.pageX + 10}px`)
-                            .style('top', `${event.pageY - 28}px`);
-                    })
-                    .on('mouseout', function() {
-                        tooltip.style('opacity', 0);
-                    });
-            }
-            
-            // Initialize with 5Y by default
-            updateBankVsPortfolioChart('5y');
-        }
-        
-        // Chart 3: Portfolio Performance Over Time
-        function createPortfolioPerformanceChart() {
-            const chart = d3.select('#portfolio-performance-chart');
-            const width = chart.node().getBoundingClientRect().width;
-            const height = 400;
-            const margin = { top: 30, right: 120, bottom: 50, left: 60 };
-            
-            // Create SVG
-            chart.selectAll('*').remove();
-            const svg = chart.append('svg')
-                .attr('width', width)
-                .attr('height', height);
-            
-            // Use all data for this chart
-            const data = portfolioData;
-            
-            // Create scales
-            const x = d3.scaleTime()
-                .domain(d3.extent(data, d => new Date(d.date)))
-                .range([margin.left, width - margin.right]);
-            
-            const y = d3.scaleLinear()
-                .domain([
-                    d3.min(Object.keys(etfData).map(ticker => 
-                        d3.min(data, d => d[`${ticker}Index`])
-                    )) * 0.9,
-                    d3.max(Object.keys(etfData).map(ticker => 
-                        d3.max(data, d => d[`${ticker}Index`])
-                    )) * 1.1
-                ])
-                .range([height - margin.bottom, margin.top]);
-            
-            // Create axes
-            const xAxis = d3.axisBottom(x);
-            const yAxis = d3.axisLeft(y).tickFormat(d => `${d}%`);
-            
-            // Add X axis
-            svg.append('g')
-                .attr('class', 'axis x-axis')
-                .attr('transform', `translate(0,${height - margin.bottom})`)
-                .call(xAxis);
-            
-            // Add Y axis
-            svg.append('g')
-                .attr('class', 'axis y-axis')
-                .attr('transform', `translate(${margin.left},0)`)
-                .call(yAxis);
-            
-            // Create line generator
-            const line = d3.line()
-                .x(d => x(new Date(d.date)))
-                .y(d => y(d.portfolioIndex));
-            
-            // Add portfolio line
-            svg.append('path')
-                .datum(data)
-                .attr('class', 'line')
-                .attr('fill', 'none')
-                .attr('stroke', etfColors.portfolio)
-                .attr('stroke-width', 3)
-                .attr('d', line);
-            
-            // Add ETF lines
-            Object.keys(etfData).forEach(ticker => {
-                const etfLine = d3.line()
-                    .x(d => x(new Date(d.date)))
-                    .y(d => y(d[`${ticker}Index`]));
-                
-                svg.append('path')
-                    .datum(data)
-                    .attr('class', 'line')
-                    .attr('fill', 'none')
-                    .attr('stroke', etfColors[ticker])
-                    .attr('stroke-width', 1.5)
-                    .attr('stroke-dasharray', '3,3')
-                    .attr('d', etfLine);
-            });
-            
-            // Add line labels
-            svg.append('text')
-                .attr('class', 'line-label')
-                .attr('x', width - margin.right + 10)
-                .attr('y', y(data[data.length - 1].portfolioIndex))
-                .attr('dy', '0.35em')
-                .style('font-size', '12px')
-                .style('fill', etfColors.portfolio)
-                .text('Portfolio');
-            
-            // Add ETF line labels
-            Object.keys(etfData).forEach((ticker, i) => {
-                svg.append('text')
-                    .attr('class', 'line-label')
-                    .attr('x', width - margin.right + 10)
-                    .attr('y', y(data[data.length - 1][`${ticker}Index`]))
-                    .attr('dy', '0.35em')
-                    .style('font-size', '12px')
-                    .style('fill', etfColors[ticker])
-                    .text(ticker);
-            });
-            
-            // Add axis labels
-            svg.append('text')
-                .attr('class', 'axis-label')
-                .attr('text-anchor', 'middle')
-                .attr('x', width / 2)
-                .attr('y', height - 10)
-                .text('Date');
-            
-            svg.append('text')
-                .attr('class', 'axis-label')
-                .attr('text-anchor', 'middle')
-                .attr('transform', `translate(${margin.left / 3},${height / 2}) rotate(-90)`)
-                .text('Index Value (%)');
-            
-            // Add tooltip
-            const tooltip = d3.select('body').append('div')
-                .attr('class', 'tooltip')
-                .style('opacity', 0);
-            
-            const bisect = d3.bisector(d => new Date(d.date)).left;
-            
-            // Add overlay for tooltip
-            svg.append('rect')
-                .attr('width', width - margin.left - margin.right)
-                .attr('height', height - margin.top - margin.bottom)
-                .attr('x', margin.left)
-                .attr('y', margin.top)
-                .attr('fill', 'none')
-                .attr('pointer-events', 'all')
-                .on('mousemove', function(event) {
-                    const x0 = x.invert(d3.pointer(event)[0]);
-                    const i = bisect(data, x0, 1);
-                    if (i >= data.length) return;
-                    
-                    const d0 = data[Math.max(0, i - 1)];
-                    const d1 = data[i] || d0;
-                    const d = x0 - new Date(d0.date) > new Date(d1.date) - x0 ? d1 : d0;
-                    
-                    let tooltipContent = `<strong>Date:</strong> ${formatDate(new Date(d.date))}<br>
-                                        <strong>Portfolio:</strong> ${d.portfolioIndex.toFixed(2)}%<br>`;
-                    
-                    Object.keys(etfData).forEach(ticker => {
-                        tooltipContent += `<strong>${ticker}:</strong> ${d[`${ticker}Index`].toFixed(2)}%<br>`;
-                    });
-                    
-                    tooltip.style('opacity', 0.9)
-                        .html(tooltipContent)
-                        .style('left', `${event.pageX + 10}px`)
-                        .style('top', `${event.pageY - 28}px`);
-                })
-                .on('mouseout', function() {
-                    tooltip.style('opacity', 0);
+                return response.text().then(text => {
+                    // Replace NaN with null in the response to handle JSON parsing issues
+                    const cleanedText = text.replace(/NaN/g, 'null');
+                    return JSON.parse(cleanedText);
                 });
-        }
-        
-        // Chart 4: Sector Allocation
-        function createSectorAllocationChart() {
-            const chart = d3.select('#sector-allocation-chart');
-            const width = chart.node().getBoundingClientRect().width;
-            const height = 400;
-            const margin = { top: 40, right: 20, bottom: 40, left: 40 };
-            
-            // Create SVG
-            chart.selectAll('*').remove();
-            const svg = chart.append('svg')
-                .attr('width', width)
-                .attr('height', height);
-            
-            // Combine sector data from all ETFs
-            const combinedSectors = {};
-            let totalWeight = 0;
-            
-            Object.keys(sectorAllocations).forEach(ticker => {
-                sectorAllocations[ticker].forEach(item => {
-                    if (!combinedSectors[item.sector]) {
-                        combinedSectors[item.sector] = 0;
-                    }
-                    // Divide by number of ETFs to maintain equal weighting
-                    combinedSectors[item.sector] += item.weight / Object.keys(sectorAllocations).length;
-                    totalWeight += item.weight / Object.keys(sectorAllocations).length;
+            })
+            .then(data => {
+                // Store the data
+                const metrics = data.metrics;
+                portfolioData = data.portfolio_data;
+                etfPerformance = data.etf_performance;
+                yearlyReturns = data.yearly_returns;
+                
+                console.log("Data received:", {
+                    portfolioDataPoints: portfolioData?.length || 0,
+                    etfPerformanceEntries: Object.keys(etfPerformance || {}).length,
+                    yearlyReturnsPoints: yearlyReturns?.length || 0
+                });
+                
+                // Update metrics display
+                updateMetricsDisplay(metrics, payload.initial_investment);
+                
+                // Create charts - using the new comparison chart instead of growth chart
+                createCandlestickChart(); 
+                createDrawdownChart(portfolioData);
+
+                
+                // Hide loading indicators
+                document.querySelectorAll('.loading').forEach(el => {
+                    el.style.display = 'none';
+                });
+            })
+            .catch(error => {
+                showApiError(`Failed to fetch portfolio data: ${error.message}`);
+                
+                // Hide loading indicators
+                document.querySelectorAll('.loading').forEach(el => {
+                    el.style.display = 'none';
                 });
             });
-            
-            // Convert to array and sort by weight
-            const data = Object.entries(combinedSectors)
-                .map(([sector, weight]) => ({ sector, weight }))
-                .filter(d => d.weight > 0)
-                .sort((a, b) => b.weight - a.weight);
-            
-            // Normalize weights to sum to 100%
-            data.forEach(d => {
-                d.normalizedWeight = (d.weight / totalWeight) * 100;
-            });
-            
-            // Create color scale
-            const colorScale = d3.scaleOrdinal()
-                .domain(data.map(d => d.sector))
-                .range(d3.schemeTableau10);
-            
-            // Set up pie chart
-            const radius = Math.min(width, height) / 2 - 40;
-            
-            const arc = d3.arc()
-                .innerRadius(radius * 0.4)
-                .outerRadius(radius);
-            
-            const pie = d3.pie()
-                .value(d => d.normalizedWeight)
-                .sort(null);
-            
-            const pieData = pie(data);
-            
-            // Create pie chart
-            const g = svg.append('g')
-                .attr('transform', `translate(${width / 2}, ${height / 2})`);
-            
-            g.selectAll('path')
-                .data(pieData)
-                .enter()
-                .append('path')
-                .attr('d', arc)
-                .attr('fill', d => colorScale(d.data.sector))
-                .attr('stroke', 'white')
-                .style('stroke-width', '2px')
-                .style('opacity', 0.8)
-                .on('mouseover', function(event, d) {
-                    d3.select(this).style('opacity', 1);
-                    
-                    const tooltip = d3.select('body').append('div')
-                        .attr('class', 'tooltip')
-                        .style('opacity', 0.9)
-                        .html(`
-                            <strong>${d.data.sector}</strong><br>
-                            <strong>Weight:</strong> ${d.data.normalizedWeight.toFixed(1)}%
-                        `)
-                        .style('left', `${event.pageX + 10}px`)
-                        .style('top', `${event.pageY - 28}px`);
-                })
-                .on('mouseout', function() {
-                    d3.select(this).style('opacity', 0.8);
-                    d3.selectAll('.tooltip').remove();
-                });
-            
-            // Add a legend
-            const legend = svg.append('g')
-                .attr('class', 'legend')
-                .attr('transform', `translate(${width / 2}, ${height - 10})`);
-            
-            const legendRectSize = 12;
-            const legendSpacing = 4;
-            const legendItems = legend.selectAll('.legend-item')
-                .data(data)
-                .enter()
-                .append('g')
-                .attr('class', 'legend-item')
-                .attr('transform', (d, i) => {
-                    return `translate(-${width / 4}, ${i * (legendRectSize + legendSpacing) - (data.length * (legendRectSize + legendSpacing)) / 2})`;
-                });
-            
-            legendItems.append('rect')
-                .attr('width', legendRectSize)
-                .attr('height', legendRectSize)
-                .style('fill', d => colorScale(d.sector));
-            
-            legendItems.append('text')
-                .attr('x', legendRectSize + legendSpacing)
-                .attr('y', legendRectSize - 2)
-                .style('font-size', '10px')
-                .text(d => `${d.sector} (${d.normalizedWeight.toFixed(1)}%)`);
+        }
+
+        // Helper function to show API error
+        function showApiError(message) {
+            const errorEl = document.getElementById('api-error');
+            const messageEl = document.getElementById('error-message');
+            messageEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+
+        // Helper function to hide API error
+        function hideApiError() {
+            const errorEl = document.getElementById('api-error');
+            errorEl.style.display = 'none';
+        }
+
+        // Helper function to format date
+        function formatDate(date) {
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
         }
         
-        // Chart 5: Top Holdings
-        function createTopHoldingsChart() {
-            const chart = d3.select('#top-holdings-chart');
-            const width = chart.node().getBoundingClientRect().width;
-            const height = 400;
-            const margin = { top: 40, right: 20, bottom: 60, left: 120 };
-            
-            // Create SVG
-            chart.selectAll('*').remove();
-            const svg = chart.append('svg')
-                .attr('width', width)
-                .attr('height', height);
-            
-            // Select the first ETF for initial display
-            const initialTicker = Object.keys(topHoldings)[0];
-            
-            // Create buttons for ETF selection
-            const buttonContainer = chart.append('div')
-                .attr('class', 'button-group')
-                .style('margin-bottom', '10px');
-            
-            Object.keys(topHoldings).forEach(ticker => {
-                buttonContainer.append('button')
-                    .attr('class', `time-button ${ticker === initialTicker ? 'active' : ''}`)
-                    .attr('data-ticker', ticker)
-                    .text(ticker)
-                    .on('click', function() {
-                        buttonContainer.selectAll('.time-button').classed('active', false);
-                        d3.select(this).classed('active', true);
-                        updateTopHoldings(d3.select(this).attr('data-ticker'));
-                    });
-            });
-            
-            function updateTopHoldings(ticker) {
-                // Get top 10 holdings for the selected ETF
-                const data = topHoldings[ticker].slice(0, 10).reverse(); // Reverse for bottom-to-top display
-                
-                // Clear previous content
-                svg.selectAll('*').remove();
-                
-                // Create scales
-                const x = d3.scaleLinear()
-                    .domain([0, d3.max(data, d => d.weight) * 1.1])
-                    .range([margin.left, width - margin.right]);
-                
-                const y = d3.scaleBand()
-                    .domain(data.map(d => d.name))
-                    .range([margin.top, height - margin.bottom])
-                    .padding(0.3);
-                
-                // Create axes
-                const xAxis = d3.axisBottom(x).tickFormat(d => `${d}%`);
-                const yAxis = d3.axisLeft(y);
-                
-                // Add X axis
-                svg.append('g')
-                    .attr('class', 'axis x-axis')
-                    .attr('transform', `translate(0,${height - margin.bottom})`)
-                    .call(xAxis);
-                
-                // Add Y axis
-                svg.append('g')
-                    .attr('class', 'axis y-axis')
-                    .attr('transform', `translate(${margin.left},0)`)
-                    .call(yAxis);
-                
-                // Add bars
-                svg.selectAll('.bar')
-                    .data(data)
-                    .enter()
-                    .append('rect')
-                    .attr('class', 'bar')
-                    .attr('x', margin.left)
-                    .attr('y', d => y(d.name))
-                    .attr('width', d => x(d.weight) - margin.left)
-                    .attr('height', y.bandwidth())
-                    .attr('fill', etfColors[ticker])
-                    .attr('opacity', 0.8)
-                    .on('mouseover', function(event, d) {
-                        d3.select(this).attr('opacity', 1);
-                        
-                        const tooltip = d3.select('body').append('div')
-                            .attr('class', 'tooltip')
-                            .style('opacity', 0.9)
-                            .html(`
-                                <strong>${d.name}</strong><br>
-                                <strong>Weight:</strong> ${d.weight.toFixed(2)}%<br>
-                                <strong>Ticker:</strong> ${d.ticker || 'N/A'}
-                            `)
-                            .style('left', `${event.pageX + 10}px`)
-                            .style('top', `${event.pageY - 28}px`);
-                    })
-                    .on('mouseout', function() {
-                        d3.select(this).attr('opacity', 0.8);
-                        d3.selectAll('.tooltip').remove();
-                    });
-                
-                // Add value labels
-                svg.selectAll('.value-label')
-                    .data(data)
-                    .enter()
-                    .append('text')
-                    .attr('class', 'value-label')
-                    .attr('x', d => x(d.weight) + 5)
-                    .attr('y', d => y(d.name) + y.bandwidth() / 2)
-                    .attr('dy', '0.35em')
-                    .style('font-size', '10px')
-                    .text(d => `${d.weight.toFixed(2)}%`);
-                
-                // Add title
-                svg.append('text')
-                    .attr('class', 'chart-title')
-                    .attr('x', width / 2)
-                    .attr('y', 15)
-                    .attr('text-anchor', 'middle')
-                    .style('font-size', '14px')
-                    .style('font-weight', 'bold')
-                    .text(`Top 10 Holdings - ${ticker}`);
-                
-                // Add axis labels
-                svg.append('text')
-                    .attr('class', 'axis-label')
-                    .attr('text-anchor', 'middle')
-                    .attr('x', width / 2)
-                    .attr('y', height - 10)
-                    .text('Weight (%)');
-            }
-            
-            // Initialize with the first ETF
-            updateTopHoldings(initialTicker);
+        // Function to update metrics display
+        function updateMetricsDisplay(metrics, initialInvestment) {
+            document.getElementById('final-value').textContent = formatCurrency(metrics.final_value);
+            document.getElementById('initial-value').textContent = `Initial: ${formatCurrency(initialInvestment)}`;
+            document.getElementById('total-return').textContent = formatPercentage(metrics.total_return);
+            document.getElementById('annualized-return').textContent = `Annualized: ${formatPercentage(metrics.annualized_return)} per year`;
+            document.getElementById('max-drawdown').textContent = formatPercentage(metrics.max_drawdown);
+            document.getElementById('volatility').textContent = `${metrics.risk_level} (${formatPercentage(metrics.volatility)})`;
         }
-        
-        // Chart 6: Risk vs Return
-        function createRiskReturnChart() {
-            const chart = d3.select('#risk-return-chart');
-            const width = chart.node().getBoundingClientRect().width;
-            const height = 400;
-            const margin = { top: 40, right: 20, bottom: 50, left: 60 };
-            
-            // Create SVG
-            chart.selectAll('*').remove();
-            const svg = chart.append('svg')
-                .attr('width', width)
-                .attr('height', height);
-            
-            // Transform performance metrics into array
-            const data = Object.entries(performanceMetrics).map(([ticker, metrics]) => ({
-                ticker,
-                volatility: metrics.volatility * 100, // Convert to percentage
-                return: metrics.annualizedReturn * 100, // Convert to percentage
-                sharpeRatio: metrics.sharpeRatio
-            }));
-            
-            // Create scales
-            const x = d3.scaleLinear()
-                .domain([0, d3.max(data, d => d.volatility) * 1.1])
-                .range([margin.left, width - margin.right]);
-            
-            const y = d3.scaleLinear()
-                .domain([0, d3.max(data, d => d.return) * 1.1])
-                .range([height - margin.bottom, margin.top]);
-            
-            // Create axes
-            const xAxis = d3.axisBottom(x).tickFormat(d => `${d.toFixed(1)}%`);
-            const yAxis = d3.axisLeft(y).tickFormat(d => `${d.toFixed(1)}%`);
-            
-            // Add X axis
-            svg.append('g')
-                .attr('class', 'axis x-axis')
-                .attr('transform', `translate(0,${height - margin.bottom})`)
-                .call(xAxis);
-            
-            // Add Y axis
-            svg.append('g')
-                .attr('class', 'axis y-axis')
-                .attr('transform', `translate(${margin.left},0)`)
-                .call(yAxis);
-            
-            // Add axis labels
-            svg.append('text')
-                .attr('class', 'axis-label')
-                .attr('text-anchor', 'middle')
-                .attr('x', width / 2)
-                .attr('y', height - 10)
-                .text('Volatility (%)');
-            
-            svg.append('text')
-                .attr('class', 'axis-label')
-                .attr('text-anchor', 'middle')
-                .attr('transform', `translate(${margin.left / 3},${height / 2}) rotate(-90)`)
-                .text('Annualized Return (%)');
-            
-            // Add scatter points
-            svg.selectAll('.point')
-                .data(data)
-                .enter()
-                .append('circle')
-                .attr('class', 'point')
-                .attr('cx', d => x(d.volatility))
-                .attr('cy', d => y(d.return))
-                .attr('r', 8)
-                .attr('fill', d => etfColors[d.ticker])
-                .attr('opacity', 0.8)
-                .on('mouseover', function(event, d) {
-                    d3.select(this)
-                        .attr('r', 10)
-                        .attr('opacity', 1);
-                    
-                    const tooltip = d3.select('body').append('div')
-                        .attr('class', 'tooltip')
-                        .style('opacity', 0.9)
-                        .html(`
-                            <strong>${d.ticker}</strong><br>
-                            <strong>Return:</strong> ${d.return.toFixed(2)}%<br>
-                            <strong>Volatility:</strong> ${d.volatility.toFixed(2)}%<br>
-                            <strong>Sharpe Ratio:</strong> ${d.sharpeRatio.toFixed(2)}
-                        `)
-                        .style('left', `${event.pageX + 10}px`)
-                        .style('top', `${event.pageY - 28}px`);
-                })
-                .on('mouseout', function() {
-                    d3.select(this)
-                        .attr('r', 8)
-                        .attr('opacity', 0.8);
-                    d3.selectAll('.tooltip').remove();
-                });
-            
-            // Add labels for each point
-            svg.selectAll('.point-label')
-                .data(data)
-                .enter()
-                .append('text')
-                .attr('class', 'point-label')
-                .attr('x', d => x(d.volatility) + 10)
-                .attr('y', d => y(d.return))
-                .style('font-size', '12px')
-                .text(d => d.ticker);
-            
-            // Add a reference line for risk-free rate (1%)
-            svg.append('line')
-                .attr('x1', margin.left)
-                .attr('x2', width - margin.right)
-                .attr('y1', y(1))
-                .attr('y2', y(1))
-                .attr('stroke', '#999')
-                .attr('stroke-dasharray', '3,3');
-            
-            svg.append('text')
-                .attr('x', margin.left + 5)
-                .attr('y', y(1) - 5)
-                .style('font-size', '10px')
-                .style('fill', '#999')
-                .text('Risk-free rate (1%)');
+
+        // Helper function to format currency
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(value);
         }
-        
-        // Chart 7: Correlation Matrix
+
+        // Helper function to format percentage
+        function formatPercentage(value) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'percent',
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 1
+            }).format(value);
+        }
+
+
+        // Function to create candlestick chart
+        function createCandlestickChart() {
+            // Sihua
+        }
+
+        // Function to create company weightage chart
+        function createCompanyWeightageChart() {
+            // mavis
+        }
+
+        // Function to create industry weightage chart
+        function createIndustryWeightageChart() {
+            // Sihua
+        }
+
         function createCorrelationMatrix() {
-            const chart = d3.select('#correlation-matrix');
-            const width = chart.node().getBoundingClientRect().width;
-            const height = 400;
-            const margin = { top: 50, right: 50, bottom: 50, left: 50 };
+            // Sihua
+        }
+
+        // Function to create drawdown chart
+        function createDrawdownChart(portfolioData) {
+            const chartContainer = document.getElementById('drawdown-chart');
+            chartContainer.innerHTML = '';
             
-            // Create SVG
-            chart.selectAll('*').remove();
-            const svg = chart.append('svg')
-                .attr('width', width)
-                .attr('height', height);
+            // Check container width first
+            const containerWidth = chartContainer.clientWidth;
             
-            // Get ETF tickers (with portfolio)
-            const tickers = Object.keys(correlationMatrix);
+            if (containerWidth <= 0) {
+                // Wait for the layout to stabilize (e.g., tab becoming visible)
+                setTimeout(() => createDrawdownChart(portfolioData), 100);
+                return;
+            }
             
-            // Create color scale for correlation values
-            const colorScale = d3.scaleLinear()
-                .domain([-1, 0, 1])
-                .range(['#e74c3c', '#ecf0f1', '#27ae60']);
+            // Use smaller margins if container is narrow
+            const margin = containerWidth < 400 
+                ? {top: 20, right: 30, bottom: 50, left: 40}
+                : {top: 20, right: 80, bottom: 50, left: 80};
             
-            // Calculate cell size
-            const cellSize = Math.min(
-                (width - margin.left - margin.right) / tickers.length,
-                (height - margin.top - margin.bottom) / tickers.length
-            );
+            const width = Math.max(containerWidth - margin.left - margin.right, 100); // Ensure minimum width
+            const height = 400 - margin.top - margin.bottom;
             
-            // Create matrix cells
-            const matrix = svg.append('g')
+            const svg = d3.select(chartContainer)
+                .append('svg')
+                .attr('width', width + margin.left + margin.right)
+                .attr('height', height + margin.top + margin.bottom)
+                .append('g')
                 .attr('transform', `translate(${margin.left},${margin.top})`);
             
-            // Add row labels
-            matrix.selectAll('.row-label')
-                .data(tickers)
-                .enter()
-                .append('text')
-                .attr('class', 'row-label')
-                .attr('x', -5)
-                .attr('y', (d, i) => i * cellSize + cellSize / 2)
-                .attr('text-anchor', 'end')
-                .attr('alignment-baseline', 'middle')
-                .style('font-size', '12px')
-                .text(d => d);
-            
-            // Add column labels
-            matrix.selectAll('.col-label')
-                .data(tickers)
-                .enter()
-                .append('text')
-                .attr('class', 'col-label')
-                .attr('x', (d, i) => i * cellSize + cellSize / 2)
-                .attr('y', -5)
-                .attr('text-anchor', 'middle')
-                .style('font-size', '12px')
-                .text(d => d);
-            
-            // Create cells
-            tickers.forEach((ticker1, i) => {
-                tickers.forEach((ticker2, j) => {
-                    const correlation = correlationMatrix[ticker1][ticker2];
-                    
-                    matrix.append('rect')
-                        .attr('x', j * cellSize)
-                        .attr('y', i * cellSize)
-                        .attr('width', cellSize)
-                        .attr('height', cellSize)
-                        .attr('fill', colorScale(correlation))
-                        .attr('stroke', 'white')
-                        .on('mouseover', function(event) {
-                            const tooltip = d3.select('body').append('div')
-                                .attr('class', 'tooltip')
-                                .style('opacity', 0.9)
-                                .html(`
-                                    <strong>${ticker1} - ${ticker2}</strong><br>
-                                    <strong>Correlation:</strong> ${correlation.toFixed(2)}
-                                `)
-                                .style('left', `${event.pageX + 10}px`)
-                                .style('top', `${event.pageY - 28}px`);
-                        })
-                        .on('mouseout', function() {
-                            d3.selectAll('.tooltip').remove();
-                        });
-                    
-                    // Add correlation value inside cells
-                    matrix.append('text')
-                        .attr('x', j * cellSize + cellSize / 2)
-                        .attr('y', i * cellSize + cellSize / 2)
-                        .attr('text-anchor', 'middle')
-                        .attr('alignment-baseline', 'middle')
-                        .style('font-size', '10px')
-                        .style('fill', Math.abs(correlation) > 0.5 ? 'white' : 'black')
-                        .text(correlation.toFixed(2));
-                });
+            // Make sure dates are Date objects
+            portfolioData.forEach(d => {
+                if (!(d.Date instanceof Date)) {
+                    d.Date = new Date(d.Date);
+                }
             });
             
-            // Add title
-            svg.append('text')
-                .attr('class', 'chart-title')
-                .attr('x', width / 2)
-                .attr('y', 15)
-                .attr('text-anchor', 'middle')
-                .style('font-size', '14px')
-                .style('font-weight', 'bold')
-                .text('Correlation Matrix');
+            // Calculate domain for drawdown
+            const minDrawdown = d3.min(portfolioData, d => d.drawdown);
             
-            // Add legend
-            const legendWidth = 200;
-            const legendHeight = 20;
+            // X scale
+            const x = d3.scaleTime()
+                .domain(d3.extent(portfolioData, d => d.Date))
+                .range([0, width]);
             
-            const legendX = (width - legendWidth) / 2;
-            const legendY = height - 30;
-            
-            const legendScale = d3.scaleLinear()
-                .domain([-1, 0, 1])
-                .range([0, legendWidth / 2, legendWidth]);
-            
-            const legendAxis = d3.axisBottom(legendScale)
-                .tickValues([-1, -0.5, 0, 0.5, 1])
-                .tickFormat(d3.format('.1f'));
-            
-            const legend = svg.append('g')
-                .attr('transform', `translate(${legendX},${legendY})`);
-            
-            // Create gradient
-            const gradient = legend.append('defs')
-                .append('linearGradient')
-                .attr('id', 'correlation-gradient')
-                .attr('x1', '0%')
-                .attr('x2', '100%')
-                .attr('y1', '0%')
-                .attr('y2', '0%');
-            
-            gradient.append('stop')
-                .attr('offset', '0%')
-                .attr('stop-color', colorScale(-1));
-            
-            gradient.append('stop')
-                .attr('offset', '50%')
-                .attr('stop-color', colorScale(0));
-            
-            gradient.append('stop')
-                .attr('offset', '100%')
-                .attr('stop-color', colorScale(1));
-            
-            // Add gradient rect
-            legend.append('rect')
-                .attr('width', legendWidth)
-                .attr('height', legendHeight)
-                .style('fill', 'url(#correlation-gradient)');
-            
-            // Add legend axis
-            legend.append('g')
-                .attr('transform', `translate(0,${legendHeight})`)
-                .call(legendAxis);
-            
-            // Add legend title
-            legend.append('text')
-                .attr('x', legendWidth / 2)
-                .attr('y', -5)
-                .attr('text-anchor', 'middle')
-                .style('font-size', '12px')
-                .text('Correlation Value');
-        }
-        
-        // Chart 8: Expected Returns
-        function createExpectedReturnsChart() {
-            const chart = d3.select('#expected-returns-chart');
-            const width = chart.node().getBoundingClientRect().width;
-            const height = 400;
-            const margin = { top: 40, right: 150, bottom: 50, left: 80 };
-
-            // Create SVG
-            chart.selectAll('*').remove();
-            const svg = chart.append('svg')
-                .attr('width', width)
-                .attr('height', height);
-
-            // Use portfolio annualized return and bank return rates
-            const portfolioAnnualReturn = performanceMetrics.portfolio.annualizedReturn;
-            const bankAnnualReturn = 0.005; // 0.5% annual bank interest rate
-            const initialInvestment = 10000;
-
-            // Generate data for future projections (next 30 years)
-            const projectionData = [];
-
-            for (let year = 0; year <= 30; year++) {
-                const portfolioValue = initialInvestment * Math.pow(1 + portfolioAnnualReturn, year);
-                const bankValue = initialInvestment * Math.pow(1 + bankAnnualReturn, year);
-
-                projectionData.push({
-                    year,
-                    portfolioValue,
-                    bankValue
-                });
-            }
-
-            // Create scales
-            const x = d3.scaleLinear()
-                .domain([0, 30])
-                .range([margin.left, width - margin.right]);
-
+            // Y scale for drawdown (negative values)
             const y = d3.scaleLinear()
-                .domain([0, d3.max(projectionData, d => d.portfolioValue) * 1.1])
-                .range([height - margin.bottom, margin.top]);
-
-            // Create axes
-            const xAxis = d3.axisBottom(x).tickFormat(d => `Year ${d}`);
-            const yAxis = d3.axisLeft(y).tickFormat(formatCurrency);
-
-            // Add X axis
+                .domain([minDrawdown * 1.1 || -0.1, 0]) // Fallback if minDrawdown is undefined
+                .range([height, 0]);
+            
+            // X axis
             svg.append('g')
-                .attr('class', 'axis x-axis')
-                .attr('transform', `translate(0,${height - margin.bottom})`)
-                .call(xAxis);
-
-            // Add Y axis
+                .attr('class', 'axis')
+                .attr('transform', `translate(0,${height})`)
+                .call(d3.axisBottom(x)
+                    .ticks(width > 500 ? 10 : 5)
+                    .tickFormat(d3.timeFormat('%b %Y')))
+                .selectAll('text')
+                .style('text-anchor', 'end')
+                .attr('dx', '-.8em')
+                .attr('dy', '.15em')
+                .attr('transform', 'rotate(-45)');
+            
+            // Y axis
             svg.append('g')
-                .attr('class', 'axis y-axis')
-                .attr('transform', `translate(${margin.left},0)`)
-                .call(yAxis);
-
-            // Create portfolio line generator
-            const portfolioLine = d3.line()
-                .x(d => x(d.year))
-                .y(d => y(d.portfolioValue));
-
-            // Add portfolio line
-            svg.append('path')
-                .datum(projectionData)
-                .attr('class', 'line')
-                .attr('fill', 'none')
-                .attr('stroke', etfColors.portfolio)
-                .attr('stroke-width', 2)
-                .attr('d', portfolioLine);
-
-            // Create bank line generator
-            const bankLine = d3.line()
-                .x(d => x(d.year))
-                .y(d => y(d.bankValue));
-
-            // Add bank line
-            svg.append('path')
-                .datum(projectionData)
-                .attr('class', 'line')
-                .attr('fill', 'none')
-                .attr('stroke', etfColors.bank)
-                .attr('stroke-width', 2)
-                .attr('d', bankLine);
-
-            // Add important data points
-            [10, 20, 30].forEach(year => {
-                const yearData = projectionData.find(d => d.year === year);
-
-                // Portfolio markers
-                svg.append('circle')
-                    .attr('cx', x(year))
-                    .attr('cy', y(yearData.portfolioValue))
-                    .attr('r', 5)
-                    .attr('fill', etfColors.portfolio);
-
-                svg.append('text')
-                    .attr('x', x(year) + 5)
-                    .attr('y', y(yearData.portfolioValue) - 10)
-                    .style('font-size', '12px')
-                    .text(formatCurrency(yearData.portfolioValue));
-
-                // Bank markers
-                svg.append('circle')
-                    .attr('cx', x(year))
-                    .attr('cy', y(yearData.bankValue))
-                    .attr('r', 5)
-                    .attr('fill', etfColors.bank);
-
-                svg.append('text')
-                    .attr('x', x(year) + 5)
-                    .attr('y', y(yearData.bankValue) + 20)
-                    .style('font-size', '12px')
-                    .text(formatCurrency(yearData.bankValue));
-            });
-
-            // Add line labels
+                .attr('class', 'axis')
+                .call(d3.axisLeft(y)
+                    .tickFormat(d => `${d3.format('.0%')(d)}`));
+            
+            // Add Y axis label
             svg.append('text')
-                .attr('class', 'line-label')
-                .attr('x', width - margin.right + 10)
-                .attr('y', y(projectionData[projectionData.length - 1].portfolioValue))
-                .attr('dy', '0.35em')
-                .style('font-size', '12px')
-                .style('fill', etfColors.portfolio)
-                .text(`ETF Portfolio (${(portfolioAnnualReturn * 100).toFixed(1)}% annually)`);
-
-            svg.append('text')
-                .attr('class', 'line-label')
-                .attr('x', width - margin.right + 10)
-                .attr('y', y(projectionData[projectionData.length - 1].bankValue))
-                .attr('dy', '0.35em')
-                .style('font-size', '12px')
-                .style('fill', etfColors.bank)
-                .text(`Bank Savings (${(bankAnnualReturn * 100).toFixed(1)}% annually)`);
-
-            // Add axis labels
-            svg.append('text')
-                .attr('class', 'axis-label')
+                .attr('transform', 'rotate(-90)')
+                .attr('y', -margin.left + 20) // Adjust based on margin
+                .attr('x', -height / 2)
                 .attr('text-anchor', 'middle')
-                .attr('x', width / 2)
-                .attr('y', height - 10)
-                .text('Years');
-
-            svg.append('text')
-                .attr('class', 'axis-label')
-                .attr('text-anchor', 'middle')
-                .attr('transform', `translate(${margin.left / 3},${height / 2}) rotate(-90)`)
-                .text('Value ($)');
-
-            // Add initial investment marker
-            svg.append('circle')
-                .attr('cx', x(0))
-                .attr('cy', y(initialInvestment))
-                .attr('r', 5)
-                .attr('fill', '#333');
-
-            svg.append('text')
-                .attr('x', x(0) + 10)
-                .attr('y', y(initialInvestment))
-                .style('font-size', '12px')
-                .text(`Initial: ${formatCurrency(initialInvestment)}`);
-
-            // Add tooltip
-            const tooltip = d3.select('body').append('div')
-                .attr('class', 'tooltip')
-                .style('opacity', 0);
-
-            // Add overlay for tooltip
+                .text('Drawdown (%)');
+            
+            // Create the area generator for the area ABOVE the drawdown line (between drawdown and zero)
+            const area = d3.area()
+                .x(d => x(d.Date))
+                .y0(d => y(d.drawdown)) // Bottom of the area is at the drawdown value
+                .y1(y(0));              // Top of the area is at zero
+            
+            // Draw the area ABOVE the drawdown line in red
+            svg.append('path')
+                .datum(portfolioData)
+                .attr('fill', 'rgba(255, 0, 0, 0.3)')
+                .attr('d', area);
+            
+            // Draw the drawdown line
+            const line = d3.line()
+                .x(d => x(d.Date))
+                .y(d => y(d.drawdown));
+            
+            svg.append('path')
+                .datum(portfolioData)
+                .attr('fill', 'none')
+                .attr('stroke', 'rgb(255, 0, 0)')
+                .attr('stroke-width', 2)
+                .attr('d', line);
+            
+            // Add a zero line
+            svg.append('line')
+                .attr('x1', 0)
+                .attr('x2', width)
+                .attr('y1', y(0))
+                .attr('y2', y(0))
+                .attr('stroke', '#888')
+                .attr('stroke-dasharray', '3,3');
+            
+            // Create a tooltip for drawdown
+            const tooltip = d3.select('#tooltip');
+            const bisect = d3.bisector(d => d.Date).left;
+            
             svg.append('rect')
-                .attr('width', width - margin.left - margin.right)
-                .attr('height', height - margin.top - margin.bottom)
-                .attr('x', margin.left)
-                .attr('y', margin.top)
-                .attr('fill', 'none')
-                .attr('pointer-events', 'all')
+                .attr('width', width > 0 ? width : 0) // Ensure width is not negative
+                .attr('height', height)
+                .style('fill', 'none')
+                .style('pointer-events', 'all')
                 .on('mousemove', function(event) {
-                    const xPos = d3.pointer(event)[0];
-                    const year = Math.round(x.invert(xPos));
-
-                    if (year < 0 || year > 30) return;
-
-                    const d = projectionData.find(d => d.year === year);
-                    if (!d) return;
-
-                    tooltip.style('opacity', 0.9)
+                    const mouseX = d3.pointer(event)[0];
+                    const x0 = x.invert(mouseX);
+                    const i = bisect(portfolioData, x0, 1);
+                    if (i >= portfolioData.length) return;
+                    const d0 = portfolioData[i - 1];
+                    const d1 = portfolioData[i];
+                    const d = x0 - d0.Date > d1.Date - x0 ? d1 : d0;
+                    
+                    tooltip.style('opacity', 1)
+                        .style('left', (event.pageX + 15) + 'px')
+                        .style('top', (event.pageY - 28) + 'px')
                         .html(`
-                            <strong>Year ${d.year}</strong><br>
-                            <strong>Portfolio:</strong> ${formatCurrency(d.portfolioValue)}<br>
-                            <strong>Bank Account:</strong> ${formatCurrency(d.bankValue)}<br>
-                            <strong>Difference:</strong> ${formatCurrency(d.portfolioValue - d.bankValue)}
-                        `)
-                        .style('left', `${event.pageX + 10}px`)
-                        .style('top', `${event.pageY - 28}px`);
+                            <strong>Date:</strong> ${formatDate(d.Date)}<br>
+                            <strong>Drawdown:</strong> ${d3.format('.2%')(d.drawdown)}<br>
+                            <strong>Peak Value:</strong> ${formatCurrency(d.peak_value)}<br>
+                            <strong>Current Value:</strong> ${formatCurrency(d.total_value)}
+                        `);
                 })
                 .on('mouseout', function() {
                     tooltip.style('opacity', 0);
                 });
         }
 
-        // Load data and initialize charts
-        loadData();
+        // Function to create correlation matrix
+        function createCorrelationMatrix() {
+            // Sihua
+        }
+        
+        // Helper function to show API error
+        function showApiError(message) {
+            const errorEl = document.getElementById('api-error');
+            const messageEl = document.getElementById('error-message');
+            messageEl.textContent = message;
+            errorEl.style.display = 'block';
+        }
+        
+        // Helper function to hide API error
+        function hideApiError() {
+            const errorEl = document.getElementById('api-error');
+            errorEl.style.display = 'none';
+        }
+        
+        // Helper function to format currency
+        function formatCurrency(value) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            }).format(value);
+        }
+        
+        // Helper function to format percentage
+        function formatPercentage(value) {
+            return new Intl.NumberFormat('en-US', {
+                style: 'percent',
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 1
+            }).format(value);
+        }
+        
+        // Helper function to format date
+        function formatDate(date) {
+            const options = { year: 'numeric', month: 'short', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
     </script>
 </body>
 </html>

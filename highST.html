@@ -249,14 +249,14 @@
             color: white;
             border-color: #3498db;
         }
-        /* Additional CSS for Portfolio vs SPY comparison */
+        /* Additional CSS for Portfolio vs upro comparison */
         .portfolio-line {
             stroke-width: 3px;
             stroke-linejoin: round;
             stroke-linecap: round;
         }
 
-        .spy-line {
+        .upro-line {
             stroke-width: 2px;
             stroke-dasharray: 5, 5;
             stroke-linejoin: round;
@@ -299,60 +299,177 @@
     </style>
 </head>
 <body>
-    <div class="charts">
-        <div id="candlestick" class="tab-content active">
-            <div class="chart-container">
-                <div id="portfolio-candlestick-chart">
-                    <div class="loading">Loading data</div>
-                </div>
-                <div class="legend" id="candlestick-legend"></div>
-            </div>
+    <div class="container">
+        <div class="header">
+            <h1>High Risk Short-Term Investment Dashboard</h1>
+            <h5>Comprehensive Portfolio Analysis</h5>
         </div>
         
-        <div id="company" class="tab-content">
-            <div class="chart-container">
-                <h3>Company Weightage Analysis</h3>
-                <div id="company-weightage-chart">
-                    <div class="loading">Loading data</div>
-                </div>
-                <div class="legend" id="company-legend"></div>
-            </div>
+        <div id="api-error" class="api-error">
+            <strong>Error connecting to API:</strong> <span id="error-message"></span>
         </div>
         
-        <div id="industry" class="tab-content">
-            <div class="chart-container">
-                <h3>Industry Weightage Analysis</h3>
-                <div id="industry-weightage-chart">
-                    <div class="loading">Loading data</div>
+        <div class="dashboard">
+            <div class="controls">
+                <h3>Investment Parameters</h3>
+                
+                <!-- HTML for time period buttons -->
+                <div class="control-group">
+                    <label>Investment Period:</label>
+                    <div class="time-period-buttons">
+                        <button class="time-btn" data-period="1M">1M</button>
+                        <button class="time-btn" data-period="6M">6M</button>
+                        <button class="time-btn" data-period="1Y">1Y</button>
+                        <button class="time-btn" data-period="3Y">3Y</button>
+                        <button class="time-btn" data-period="5Y">5Y</button>
+                        <button class="time-btn active" data-period="MAX">Max</button>
+                    </div>
+                    <div id="date-range-display" style="text-align: center; margin-top: 10px; display: none;">Loading date range...</div>
                 </div>
-                <div class="legend" id="industry-legend"></div>
-            </div>
-        </div>
-        
-        <div id="volume" class="tab-content">
-            <div class="chart-container">
-                <h3>Volume Analysis</h3>
-                <div id="volume-chart">
-                    <div class="loading">Loading data</div>
+                
+                <div class="control-group">
+                    <label>Initial Investment (USD):</label>
+                    <input type="number" id="initial-investment" min="1000" max="1000000" step="1000" value="10000">
+                    <small style="color: #7f8c8d;">Min: $1,000 - Max: $1,000,000</small>
                 </div>
-            </div>
-        </div>
-        
-        <div id="correlation" class="tab-content">
-            <div class="chart-container">
-                <h3>Correlation Analysis</h3>
-                <div id="correlation-chart">
-                    <div class="loading">Loading data</div>
+                
+                <div class="control-group">
+                    <label>Portfolio Allocation:</label>
+                    
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>UPRO</span>
+                            <span id="upro-value">25%</span>
+                        </div>
+                        <input type="range" id="upro-allocation" min="0" max="100" step="5" value="25">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>QQQ</span>
+                            <span id="qqq-value">25%</span>
+                        </div>
+                        <input type="range" id="qqq-allocation" min="0" max="100" step="5" value="25">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>IWF</span>
+                            <span id="iwf-value">25%</span>
+                        </div>
+                        <input type="range" id="iwf-allocation" min="0" max="100" step="5" value="25">
+                    </div>
+                    
+                    <div class="slider-container">
+                        <div class="slider-label">
+                            <span>ARKK</span>
+                            <span id="arkk-value">25%</span>
+                        </div>
+                        <input type="range" id="arkk-allocation" min="0" max="100" step="5" value="25">
+                    </div>
+                    
+                    <div id="allocation-warning" class="warning"></div>
                 </div>
-                <div class="legend" id="correlation-legend"></div>
+                
+                <button id="calculate-button">Calculate Returns</button>
             </div>
-        </div>
-        
-        <div id="drawdown" class="tab-content">
-            <div class="chart-container">
-                <h3>Portfolio Drawdown Analysis</h3>
-                <div id="drawdown-chart">
-                    <div class="loading">Loading data</div>
+            
+            <div class="content">
+                <div class="metrics">
+                    <div class="metric-card">
+                        <h4>Final Portfolio Value</h4>
+                        <h3 id="final-value">$0.00</h3>
+                        <p id="initial-value">Initial: $0.00</p>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <h4>Total Return</h4>
+                        <h3 id="total-return">0.0%</h3>
+                        <p id="annualized-return">Annualized: 0.0% per year</p>
+                    </div>
+                    
+                    <div class="metric-card">
+                        <h4>Maximum Drawdown</h4>
+                        <h3 id="max-drawdown">0.0%</h3>
+                        <p>Largest decline from peak</p>
+                    </div>
+                    
+                    <div class="metric-card" id="risk-card">
+                        <h4>Risk Level</h4>
+                        <h3 id="volatility">Low (0.0%)</h3>
+                        <p>Portfolio volatility</p>
+                    </div>
+                </div>
+                
+                <div class="tab-container">
+                    <ul class="tabs">
+                        <li class="tab active" data-tab="candlestick">Candlestick</li>
+                        <li class="tab" data-tab="company-weightage">Company Weightage</li>
+                        <li class="tab" data-tab="industry-weightage">Industry Weightage</li>
+                        <li class="tab" data-tab="volume">Volume Analysis</li>
+                        <li class="tab" data-tab="correlation">Correlation</li>
+                        <li class="tab" data-tab="drawdown">Drawdown Analysis</li>
+                    </ul>
+                </div>
+                
+                <div class="charts">
+                    <div id="candlestick" class="tab-content active">
+                        <div class="chart-container">
+                            <h3>Candlestick Chart</h3>
+                            <div id="candlestick-chart">
+                                <div class="loading">Loading data</div>
+                            </div>
+                            <div class="legend" id="candlestick-legend"></div>
+                        </div>
+                    </div>
+                    
+                    <div id="company-weightage" class="tab-content">
+                        <div class="chart-container">
+                            <h3>ETF Company Weightage</h3>
+                            <div id="company-weightage-chart">
+                                <div class="loading">Loading data</div>
+                            </div>
+                            <div class="legend" id="company-weightage-legend"></div>
+                        </div>
+                    </div>
+                    
+                    <div id="industry-weightage" class="tab-content">
+                        <div class="chart-container">
+                            <h3>ETF Industry Weightage</h3>
+                            <div id="industry-weightage-chart">
+                                <div class="loading">Loading data</div>
+                            </div>
+                            <div class="legend" id="industry-weightage-legend"></div>
+                        </div>
+                    </div>
+                    
+                    <div id="volume" class="tab-content">
+                        <div class="chart-container">
+                            <h3>Volume Analysis</h3>
+                            <div id="volume-chart">
+                                <div class="loading">Loading data</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="correlation" class="tab-content">
+                        <div class="chart-container">
+                            <h3>Correlation Matrix</h3>
+                            <div id="correlation-chart">
+                                <div class="loading">Loading data</div>
+                            </div>
+                            <div class="legend" id="correlation-legend"></div>
+                        </div>
+                    </div>
+                    
+                    <div id="drawdown" class="tab-content">
+                        <div class="chart-container">
+                            <h3>Portfolio Drawdown Analysis</h3>
+                            <div id="drawdown-chart">
+                                <div class="loading">Loading data</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -375,11 +492,22 @@
         const API_YEARLY_RETURNS = `${API_BASE_URL}/api/yearly-returns`;
         const API_CALCULATE_ALL = `${API_BASE_URL}/api/calculate-all`;
         
+        // Add new API endpoints for the new charts
+        const API_COMPANY_WEIGHTAGE = `${API_BASE_URL}/api/company-weightage`;
+        const API_INDUSTRY_WEIGHTAGE = `${API_BASE_URL}/api/industry-weightage`;
+        const API_VOLUME_ANALYSIS = `${API_BASE_URL}/api/volume-analysis`;
+        const API_CORRELATION_MATRIX = `${API_BASE_URL}/api/correlation-matrix`;
+        const API_CANDLESTICK_DATA = `${API_BASE_URL}/api/candlestick-data`;
 
         // Global variables
         let minDate, maxDate;
         let selectedStartDate, selectedEndDate;
         let portfolioData = null;
+        let candlestickData = null;
+        let companyWeightageData = null;
+        let industryWeightageData = null;
+        let volumeData = null;
+        let correlationData = null;
         let drawdownData = null;
         let etfPerformance = null;
         let yearlyReturns = null;
@@ -409,6 +537,236 @@
             // Initial calculation will be triggered after date range is fetched
         });
 
+        // Utility function to wait for elements to exist in the DOM
+        function waitForElement(elementId, callback, checkFrequencyInMs, timeoutInMs) {
+            var startTimeInMs = Date.now();
+            var checkElementAndCallback = function() {
+                var element = document.getElementById(elementId);
+                if (element) {
+                    console.log(elementId + " element found!");
+                    callback(element);
+                    return;
+                }
+                
+                if (timeoutInMs && Date.now() - startTimeInMs > timeoutInMs) {
+                    console.log(elementId + " element not found within timeout period");
+                    return;
+                }
+                
+                setTimeout(checkElementAndCallback, checkFrequencyInMs);
+            };
+            
+            checkElementAndCallback();
+        }
+
+        // Helper function to find the parent metric card of an element
+        function findParentCard(elementId) {
+            const element = document.getElementById(elementId);
+            if (!element) {
+                console.log("Element with ID " + elementId + " not found");
+                return null;
+            }
+            
+            // Find parent metric card
+            const parentCard = element.closest('.metric-card');
+            if (parentCard) {
+                console.log("Found parent card for " + elementId);
+                return parentCard;
+            } else {
+                console.log("Could not find parent card for " + elementId);
+                return null;
+            }
+        }
+
+        // 1. RISK/VOLATILITY MONITORING
+        function setupRiskMonitoring(volatilityElement) {
+            console.log("Setting up risk/volatility monitoring");
+            
+            // Find the risk card element
+            const riskCard = findParentCard('volatility');
+            
+            if (riskCard) {
+                setupRiskObserver(volatilityElement, riskCard);
+            } else {
+                console.error("Could not find parent card for volatility");
+            }
+        }
+
+        function setupRiskObserver(volatilityElement, cardElement) {
+            function updateRiskCardColor() {
+                const volatilityText = volatilityElement.innerText || volatilityElement.textContent;
+                console.log("Volatility text:", volatilityText);
+                
+                if (volatilityText.includes('Very Low') || volatilityText.includes('Low')) {
+                    cardElement.style.backgroundColor = 'rgba(40, 167, 69, 0.15)'; // light green
+                    console.log("Set risk card to green");
+                } else if (volatilityText.includes('High') || volatilityText.includes('Very High')) {
+                    cardElement.style.backgroundColor = 'rgba(220, 53, 69, 0.15)'; // light red
+                    console.log("Set risk card to red");
+                } else {
+                    cardElement.style.backgroundColor = 'rgba(255, 193, 7, 0.15)'; // light yellow for Moderate
+                    console.log("Set risk card to yellow");
+                }
+            }
+            
+            // Initial update
+            updateRiskCardColor();
+            
+            // Create a separate observer for risk
+            const riskObserver = new MutationObserver(function() {
+                console.log("Risk observer triggered");
+                updateRiskCardColor();
+            });
+            
+            // Start observing
+            riskObserver.observe(volatilityElement, { 
+                childList: true, 
+                characterData: true,
+                subtree: true 
+            });
+            
+            console.log("Risk monitoring setup complete");
+        }
+
+        // 2. DRAWDOWN MONITORING
+        function setupDrawdownMonitoring(drawdownElement) {
+            console.log("Setting up drawdown monitoring");
+            
+            // Find the drawdown card element
+            const drawdownCard = findParentCard('max-drawdown');
+            
+            if (drawdownCard) {
+                setupDrawdownObserver(drawdownElement, drawdownCard);
+            } else {
+                console.error("Could not find parent card for drawdown");
+            }
+        }
+
+        function setupDrawdownObserver(drawdownElement, cardElement) {
+            function updateDrawdownCardColor() {
+                const drawdownText = drawdownElement.innerText || drawdownElement.textContent;
+                console.log("Drawdown text:", drawdownText);
+                
+                const cleanText = drawdownText.replace(/[^\d.-]/g, '');
+                const drawdownValue = parseFloat(cleanText);
+                
+                if (isNaN(drawdownValue)) {
+                    console.error("Could not parse a valid number from drawdown text");
+                    return;
+                }
+                
+                console.log("Drawdown value:", drawdownValue);
+                
+                if (drawdownValue <= -15) {
+                    cardElement.style.backgroundColor = '#ffe6e6'; // Light red
+                    console.log("Set drawdown card to red");
+                } else {
+                    cardElement.style.backgroundColor = '#e6f7e6'; // Light green
+                    console.log("Set drawdown card to green");
+                }
+            }
+            
+            // Initial update
+            updateDrawdownCardColor();
+            
+            // Create a separate observer for drawdown
+            const drawdownObserver = new MutationObserver(function() {
+                console.log("Drawdown observer triggered");
+                updateDrawdownCardColor();
+            });
+            
+            // Start observing
+            drawdownObserver.observe(drawdownElement, { 
+                childList: true, 
+                characterData: true,
+                subtree: true 
+            });
+            
+            console.log("Drawdown monitoring setup complete");
+        }
+
+        // 3. PORTFOLIO RETURN MONITORING (FOR BOTH PORTFOLIO VALUE AND TOTAL RETURN CARDS)
+        function setupReturnMonitoring(annualizedReturnElement) {
+            console.log("Setting up annualized return monitoring");
+            
+            // Find both card elements
+            const portfolioValueCard = findParentCard('final-value');
+            const totalReturnCard = findParentCard('total-return');
+            
+            if (!portfolioValueCard) {
+                console.error("Could not find portfolio value card");
+            }
+            
+            if (!totalReturnCard) {
+                console.error("Could not find total return card");
+            }
+            
+            // Set up the monitoring if at least one card was found
+            if (portfolioValueCard || totalReturnCard) {
+                setupReturnObserver(annualizedReturnElement, portfolioValueCard, totalReturnCard);
+            }
+        }
+
+        function setupReturnObserver(annualizedReturnElement, portfolioValueCard, totalReturnCard) {
+            function updateReturnCards() {
+                const returnText = annualizedReturnElement.innerText || annualizedReturnElement.textContent;
+                console.log("Annualized return text:", returnText);
+                
+                // Extract the percentage value (looking for a number followed by % per year)
+                const matches = returnText.match(/(-?\d+\.?\d*)%/);
+                if (!matches || matches.length < 2) {
+                    console.error("Could not parse annualized return percentage");
+                    return;
+                }
+                
+                const annualizedReturnValue = parseFloat(matches[1]);
+                console.log("Parsed annualized return value:", annualizedReturnValue);
+                
+                // Apply the appropriate background color based on the threshold
+                if (annualizedReturnValue >= 6) {
+                    console.log("Setting cards to green (>= 6%)");
+                    if (portfolioValueCard) portfolioValueCard.style.backgroundColor = '#e6f7e6'; // Light green
+                    if (totalReturnCard) totalReturnCard.style.backgroundColor = '#e6f7e6'; // Light green
+                } else {
+                    console.log("Setting cards to red (< 6%)");
+                    if (portfolioValueCard) portfolioValueCard.style.backgroundColor = '#ffe6e6'; // Light red
+                    if (totalReturnCard) totalReturnCard.style.backgroundColor = '#ffe6e6'; // Light red
+                }
+            }
+            
+            // Initial update
+            updateReturnCards();
+            
+            // Create an observer for the annualized return
+            const returnObserver = new MutationObserver(function() {
+                console.log("Annualized return observer triggered");
+                updateReturnCards();
+            });
+            
+            // Start observing
+            returnObserver.observe(annualizedReturnElement, { 
+                childList: true, 
+                characterData: true,
+                subtree: true 
+            });
+            
+            console.log("Annualized return monitoring setup complete");
+        }
+
+        // Initialize all monitors when the page loads
+        window.addEventListener('load', function() {
+            console.log("Window loaded, setting up all monitors");
+            
+            // 1. Set up risk/volatility monitoring
+            waitForElement('volatility', setupRiskMonitoring, 100, 10000);
+            
+            // 2. Set up maximum drawdown monitoring
+            waitForElement('max-drawdown', setupDrawdownMonitoring, 100, 10000);
+            
+            // 3. Set up return monitoring (for both portfolio value and total return cards)
+            waitForElement('annualized-return', setupReturnMonitoring, 100, 10000);
+        });
+        
         // Function to update the risk card background color
         function updateRiskCardColor() {
             const riskCard = document.getElementById('risk-card');
@@ -508,84 +866,85 @@
 
         // Function to calculate start date based on period
         function calculateStartDate(period) {
-        const endDate = new Date(selectedEndDate);
-        const startDate = new Date(endDate);
-        
-        switch (period) {
-            case '1M':
-                startDate.setMonth(endDate.getMonth() - 1);
-                break;
-            case '6M':
-                startDate.setMonth(endDate.getMonth() - 6);
-                break;
-            case '1Y':
-                startDate.setFullYear(endDate.getFullYear() - 1);
-                break;
-            case '3Y':
-                startDate.setFullYear(endDate.getFullYear() - 3);
-                break;
-            case '5Y':
-                startDate.setFullYear(endDate.getFullYear() - 5);
-                break;
-            default:
+            const endDate = new Date(selectedEndDate);
+            const startDate = new Date(endDate);
+            
+            switch (period) {
+                case '1M':
+                    startDate.setMonth(endDate.getMonth() - 1);
+                    break;
+                case '6M':
+                    startDate.setMonth(endDate.getMonth() - 6);
+                    break;
+                case '1Y':
+                    startDate.setFullYear(endDate.getFullYear() - 1);
+                    break;
+                case '3Y':
+                    startDate.setFullYear(endDate.getFullYear() - 3);
+                    break;
+                case '5Y':
+                    startDate.setFullYear(endDate.getFullYear() - 5);
+                    break;
+                default:
+                    startDate = new Date(minDate);
+            }
+            
+            // Ensure the start date is not earlier than the minimum available date
+            if (startDate < minDate) {
                 startDate = new Date(minDate);
-        }
-        
-        // Ensure the start date is not earlier than the minimum available date
-        if (startDate < minDate) {
-            startDate = new Date(minDate);
-        }
-        
-        return startDate;
+            }
+            
+            return startDate;
         }
 
         // Function to update the date range display
         function updateDateRangeDisplay() {
-        const dateDisplay = document.getElementById('date-range-display');
-        dateDisplay.textContent = `From ${formatDate(selectedStartDate)} to ${formatDate(selectedEndDate)}`;
+            const dateDisplay = document.getElementById('date-range-display');
+            dateDisplay.textContent = `From ${formatDate(selectedStartDate)} to ${formatDate(selectedEndDate)}`;
+            dateDisplay.style.display = 'none';
         }
 
-        // Function to initialize allocation sliders
+        // Function to initialize allocation sliders [SPY, BND, VTIP, VXUS] [UPRO, QQQ, IWF, ARKK]
         function initializeAllocationSliders() {
-            const spySlider = document.getElementById('spy-allocation');
-            const bndSlider = document.getElementById('bnd-allocation');
-            const vtipSlider = document.getElementById('vtip-allocation');
-            const vxusSlider = document.getElementById('vxus-allocation');
+            const uproSlider = document.getElementById('upro-allocation');
+            const qqqSlider = document.getElementById('qqq-allocation');
+            const iwfSlider = document.getElementById('iwf-allocation');
+            const arkkSlider = document.getElementById('arkk-allocation');
             
-            const spyValue = document.getElementById('spy-value');
-            const bndValue = document.getElementById('bnd-value');
-            const vtipValue = document.getElementById('vtip-value');
-            const vxusValue = document.getElementById('vxus-value');
+            const uproValue = document.getElementById('upro-value');
+            const qqqValue = document.getElementById('qqq-value');
+            const iwfValue = document.getElementById('iwf-value');
+            const arkkValue = document.getElementById('arkk-value');
             
-            spySlider.addEventListener('input', function() {
-                spyValue.textContent = `${spySlider.value}%`;
+            uproSlider.addEventListener('input', function() {
+                uproValue.textContent = `${uproSlider.value}%`;
                 checkAllocation();
             });
             
-            bndSlider.addEventListener('input', function() {
-                bndValue.textContent = `${bndSlider.value}%`;
+            qqqSlider.addEventListener('input', function() {
+                qqqValue.textContent = `${qqqSlider.value}%`;
                 checkAllocation();
             });
             
-            vtipSlider.addEventListener('input', function() {
-                vtipValue.textContent = `${vtipSlider.value}%`;
+            iwfSlider.addEventListener('input', function() {
+                iwfValue.textContent = `${iwfSlider.value}%`;
                 checkAllocation();
             });
             
-            vxusSlider.addEventListener('input', function() {
-                vxusValue.textContent = `${vxusSlider.value}%`;
+            arkkSlider.addEventListener('input', function() {
+                arkkValue.textContent = `${arkkSlider.value}%`;
                 checkAllocation();
             });
         }
         
         // Function to check if allocations sum to 100%
         function checkAllocation() {
-            const spyValue = parseInt(document.getElementById('spy-allocation').value);
-            const bndValue = parseInt(document.getElementById('bnd-allocation').value);
-            const vtipValue = parseInt(document.getElementById('vtip-allocation').value);
-            const vxusValue = parseInt(document.getElementById('vxus-allocation').value);
+            const uproValue = parseInt(document.getElementById('upro-allocation').value);
+            const qqqValue = parseInt(document.getElementById('qqq-allocation').value);
+            const iwfValue = parseInt(document.getElementById('iwf-allocation').value);
+            const arkkValue = parseInt(document.getElementById('arkk-allocation').value);
             
-            const total = spyValue + bndValue + vtipValue + vxusValue;
+            const total = uproValue + qqqValue + iwfValue + arkkValue;
             const warningEl = document.getElementById('allocation-warning');
             
             if (total !== 100) {
@@ -615,19 +974,18 @@
                     
                     // Re-render charts when tab becomes visible to fix layout issues
                     setTimeout(() => {
-                        if (tabId === 'candlestick' && portfolioData) {
-                            // Use the new comparison chart instead of the old growth chart
-                            createCandleStickChart(portfolioData, portfolioData);
-                        } else if (tabId === 'company' && portfolioData) {
-                            createCompanyWeightageChart(portfolioData);
-                        } else if (tabId === 'industry' && portfolioData) {
-                            createIndustryWeightageChart(portfolioData);
-                        }  else if (tabId === 'volume' && portfolioData) {
-                            createVolumeChart(portfolioData);
-                        } else if (tabId === 'correlation' && portfolioData) {
-                            createCorrelationAnalysisChart(portfolioData);
-                        } else if (tabId === 'drawdown' && portfolioData) {
-                            createDrawdownChart(portfolioData);
+                        if (tabId === 'candlestick' && candlestickData) {
+                            createCandlestickChart(candlestickData);
+                        } else if (tabId === 'company-weightage' && companyWeightageData) {
+                            createCompanyWeightageChart(companyWeightageData);
+                        } else if (tabId === 'industry-weightage' && industryWeightageData) {
+                            createIndustryWeightageChart(industryWeightageData);
+                        } else if (tabId === 'volume' && volumeData) {
+                            createVolumeChart(volumeData);
+                        } else if (tabId === 'correlation' && correlationData) {
+                            createCorrelationMatrix(correlationData);
+                        } else if (tabId === 'drawdown' && drawdownData) {
+                            createDrawdownChart(drawdownData);
                         }
                     }, 50);
                 });
@@ -637,10 +995,10 @@
         // Helper function to get current allocations
         function getCurrentAllocations() {
             return {
-                'SPY': parseInt(document.getElementById('spy-allocation').value),
-                'BND': parseInt(document.getElementById('bnd-allocation').value),
-                'VTIP': parseInt(document.getElementById('vtip-allocation').value),
-                'VXUS': parseInt(document.getElementById('vxus-allocation').value)
+                'UPRO': parseInt(document.getElementById('upro-allocation').value),
+                'QQQ': parseInt(document.getElementById('qqq-allocation').value),
+                'IWF': parseInt(document.getElementById('iwf-allocation').value),
+                'ARKK': parseInt(document.getElementById('arkk-allocation').value)
             };
         }
         
@@ -654,10 +1012,10 @@
             
             // Get input values
             const initialInvestment = parseFloat(document.getElementById('initial-investment').value);
-            const spyAllocation = parseInt(document.getElementById('spy-allocation').value);
-            const bndAllocation = parseInt(document.getElementById('bnd-allocation').value);
-            const vtipAllocation = parseInt(document.getElementById('vtip-allocation').value);
-            const vxusAllocation = parseInt(document.getElementById('vxus-allocation').value);
+            const uproAllocation = parseInt(document.getElementById('upro-allocation').value);
+            const qqqAllocation = parseInt(document.getElementById('qqq-allocation').value);
+            const iwfAllocation = parseInt(document.getElementById('iwf-allocation').value);
+            const arkkAllocation = parseInt(document.getElementById('arkk-allocation').value);
             
             // Use the selected date range
             const startDate = formatDateForAPI(selectedStartDate);
@@ -667,10 +1025,10 @@
             const payload = {
                 initial_investment: initialInvestment,
                 allocations: {
-                    'SPY': spyAllocation,
-                    'BND': bndAllocation,
-                    'VTIP': vtipAllocation,
-                    'VXUS': vxusAllocation
+                    'UPRO': uproAllocation,
+                    'QQQ': qqqAllocation,
+                    'IWF': iwfAllocation,
+                    'ARKK': arkkAllocation
                 },
                 start_date: startDate,
                 end_date: endDate
@@ -733,26 +1091,32 @@
                 portfolioData = data.portfolio_data;
                 etfPerformance = data.etf_performance;
                 yearlyReturns = data.yearly_returns;
+                candlestickData = data.candlestick_data || [];
+                companyWeightageData = data.company_weightage || [];
+                industryWeightageData = data.industry_weightage || [];
+                volumeData = data.volume_data || [];
+                correlationData = data.correlation_data || [];
+                drawdownData = data.drawdown_data || portfolioData; // Use portfolio data if no specific drawdown data
                 
                 console.log("Data received:", {
                     portfolioDataPoints: portfolioData?.length || 0,
                     etfPerformanceEntries: Object.keys(etfPerformance || {}).length,
-                    yearlyReturnsPoints: yearlyReturns?.length || 0
+                    yearlyReturnsPoints: yearlyReturns?.length || 0,
+                    candlestickDataPoints: candlestickData?.length || 0,
+                    companyWeightage: Object.keys(companyWeightageData || {}).length,
+                    industryWeightage: Object.keys(industryWeightageData || {}).length
                 });
                 
                 // Update metrics display
                 updateMetricsDisplay(metrics, payload.initial_investment);
                 
-                // We'll use SPY data for comparison - extract it from portfolio data
-                // (Since we need the same date range as our portfolio data)
-                
-                // Create charts - using the new comparison chart instead of growth chart
-                createCandleStickChart(); // to use highST etfs csv files
-                createCompanyWeightageChart() // to use highST etfs csv files and company microservice
-                createIndustryWeightageChart() // to use highST etfs csv files and industry microservice
-                createVolumeChart(); // to use highST etfs csv files and create volume microservice
-                createCorrelationAnalysisChart(); // to use highST etfs csv files, can just d3js correlation function
-                createDrawdownChart(); // to use highST etfs csv files and getPortfolio microservice
+                // Create charts
+                createCandlestickChart(candlestickData);
+                createCompanyWeightageChart(companyWeightageData);
+                createIndustryWeightageChart(industryWeightageData);
+                createVolumeChart(volumeData);
+                createCorrelationMatrix(correlationData);
+                createDrawdownChart(drawdownData);
                 
                 // Hide loading indicators
                 document.querySelectorAll('.loading').forEach(el => {
@@ -769,26 +1133,6 @@
             });
         }
 
-        // Helper function to show API error
-        function showApiError(message) {
-            const errorEl = document.getElementById('api-error');
-            const messageEl = document.getElementById('error-message');
-            messageEl.textContent = message;
-            errorEl.style.display = 'block';
-        }
-
-        // Helper function to hide API error
-        function hideApiError() {
-            const errorEl = document.getElementById('api-error');
-            errorEl.style.display = 'none';
-        }
-
-        // Helper function to format date
-        function formatDate(date) {
-            const options = { year: 'numeric', month: 'short', day: 'numeric' };
-            return date.toLocaleDateString('en-US', options);
-        }
-        
         // Function to update metrics display
         function updateMetricsDisplay(metrics, initialInvestment) {
             document.getElementById('final-value').textContent = formatCurrency(metrics.final_value);
@@ -799,53 +1143,361 @@
             document.getElementById('volatility').textContent = `${metrics.risk_level} (${formatPercentage(metrics.volatility)})`;
         }
 
-        // Helper function to format currency
-        function formatCurrency(value) {
-            return new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'USD',
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            }).format(value);
+        // Function to create candlestick chart
+        function createCandlestickChart(data) {
+            const chartContainer = document.getElementById('candlestick-chart');
+            chartContainer.innerHTML = '';
+            
+            // YOUR CODE HERE: Implement candlestick chart using D3.js
+            // Use data parameter which should contain OHLC (Open, High, Low, Close) data
+            
+            console.log("Creating candlestick chart with data:", data?.length || 0, "data points");
         }
 
-        // Helper function to format percentage
-        function formatPercentage(value) {
-            return new Intl.NumberFormat('en-US', {
-                style: 'percent',
-                minimumFractionDigits: 1,
-                maximumFractionDigits: 1
-            }).format(value);
+        // Function to create company weightage chart
+        function createCompanyWeightageChart(data) {
+            const chartContainer = document.getElementById('company-weightage-chart');
+            chartContainer.innerHTML = '';
+            
+            // YOUR CODE HERE: Implement company weightage chart (e.g., treemap or pie chart) using D3.js
+            // Use data parameter which should contain company weightage information
+            
+            console.log("Creating company weightage chart with data:", Object.keys(data || {}).length, "companies");
         }
 
-
-        // Function to create 
-        function createCandleStickChart() {
-
+        // Function to create industry weightage chart
+        function createIndustryWeightageChart(data) {
+            const chartContainer = document.getElementById('industry-weightage-chart');
+            chartContainer.innerHTML = '';
+            
+            // YOUR CODE HERE: Implement industry weightage chart (e.g., treemap or pie chart) using D3.js
+            // Use data parameter which should contain industry weightage information
+            
+            console.log("Creating industry weightage chart with data:", Object.keys(data || {}).length, "industries");
         }
 
-        // Function to create 
-        function createCompanyWeightageChart() {
-
+        // Function to create volume chart
+        function createVolumeChart(data) {
+            const chartContainer = document.getElementById('volume-chart');
+            chartContainer.innerHTML = '';
+            
+            // YOUR CODE HERE: Implement volume chart using D3.js
+            // Use data parameter which should contain volume data over time
+            
+            console.log("Creating volume chart with data:", data?.length || 0, "data points");
         }
 
-        // Function to create 
-        function createIndustryWeightageChart() {
-
-        }
-
-        // Function to create 
-        function createVolumeChart() {
-
-        }
-        // Function to create correlation analysis chart
-        function createCorrelationAnalysisChart() {
-
+        // Function to create correlation matrix
+        function createCorrelationMatrix(data) {
+            const chartContainer = document.getElementById('correlation-chart');
+            chartContainer.innerHTML = '';
+            
+            // YOUR CODE HERE: Implement correlation matrix heatmap using D3.js
+            // Use data parameter which should contain correlation coefficients between different assets
+            
+            console.log("Creating correlation matrix with data:", data?.length || 0, "correlations");
         }
 
         // Function to create drawdown chart
-        function createDrawdownChart() {
-
+        function createDrawdownChart(portfolioData) {
+            const chartContainer = document.getElementById('drawdown-chart');
+            chartContainer.innerHTML = '';
+            
+            // Check if we have data
+            if (!portfolioData || portfolioData.length === 0) {
+                chartContainer.innerHTML = '<div class="error">No data available for drawdown analysis</div>';
+                return;
+            }
+            
+            // Check container width first
+            const containerWidth = chartContainer.clientWidth;
+            
+            if (containerWidth <= 0) {
+                // Wait for the layout to stabilize (e.g., tab becoming visible)
+                setTimeout(() => createDrawdownChart(portfolioData), 100);
+                return;
+            }
+            
+            // Use smaller margins if container is narrow
+            const margin = containerWidth < 400 
+                ? {top: 20, right: 30, bottom: 50, left: 40}
+                : {top: 20, right: 80, bottom: 50, left: 80};
+            
+            const width = Math.max(containerWidth - margin.left - margin.right, 100); // Ensure minimum width
+            const height = 400 - margin.top - margin.bottom;
+            
+            const svg = d3.select(chartContainer)
+                .append('svg')
+                .attr('width', width + margin.left + margin.right)
+                .attr('height', height + margin.top + margin.bottom)
+                .append('g')
+                .attr('transform', `translate(${margin.left},${margin.top})`);
+            
+            // Make sure dates are Date objects and sort data chronologically
+            portfolioData = portfolioData
+                .map(d => ({
+                    ...d,
+                    Date: d.Date instanceof Date ? d.Date : new Date(d.Date),
+                    // Ensure drawdown is numeric and within reasonable bounds
+                    drawdown: typeof d.drawdown === 'number' && !isNaN(d.drawdown) ? 
+                            Math.max(Math.min(d.drawdown, 0), -1) : 0,
+                    total_value: typeof d.total_value === 'number' && !isNaN(d.total_value) ?
+                                d.total_value : 0,
+                    peak_value: typeof d.peak_value === 'number' && !isNaN(d.peak_value) ?
+                                d.peak_value : 0
+                }))
+                .sort((a, b) => a.Date - b.Date);
+            
+            // If we have fewer than 2 data points after filtering, show error
+            if (portfolioData.length < 2) {
+                chartContainer.innerHTML = '<div class="error">Not enough valid data points for drawdown analysis</div>';
+                return;
+            }
+            
+            // Calculate domain for drawdown
+            const minDrawdown = d3.min(portfolioData, d => d.drawdown);
+            
+            // X scale
+            const x = d3.scaleTime()
+                .domain(d3.extent(portfolioData, d => d.Date))
+                .range([0, width]);
+            
+            // Y scale for drawdown (negative values)
+            // Set a reasonable minimum (e.g., -0.1 for -10% if no drawdown)
+            const yMin = Math.min(minDrawdown * 1.1 || -0.1, -0.1);
+            
+            const y = d3.scaleLinear()
+                .domain([yMin, 0]) 
+                .range([height, 0]);
+            
+            // X axis
+            svg.append('g')
+                .attr('class', 'axis')
+                .attr('transform', `translate(0,${height})`)
+                .call(d3.axisBottom(x)
+                    .ticks(width > 500 ? 10 : 5)
+                    .tickFormat(d3.timeFormat('%b %Y')))
+                .selectAll('text')
+                .style('text-anchor', 'end')
+                .attr('dx', '-.8em')
+                .attr('dy', '.15em')
+                .attr('transform', 'rotate(-45)');
+            
+            // Y axis
+            svg.append('g')
+                .attr('class', 'axis')
+                .call(d3.axisLeft(y)
+                    .tickFormat(d => `${d3.format('.0%')(d)}`));
+            
+            // Add Y axis label
+            svg.append('text')
+                .attr('transform', 'rotate(-90)')
+                .attr('y', -margin.left + 20) // Adjust based on margin
+                .attr('x', -height / 2)
+                .attr('text-anchor', 'middle')
+                .text('Drawdown (%)')
+                .style('fill', '#666');
+            
+            // Create the area generator for drawdown visualization
+            const area = d3.area()
+                .x(d => x(d.Date))
+                .y0(d => y(d.drawdown))  // Bottom of the area is at the drawdown value
+                .y1(y(0))                // Top of the area is at zero
+                .defined(d => !isNaN(d.drawdown))
+                .curve(d3.curveMonotoneX); // Add smooth curve
+            
+            // Draw the area in red (representing drawdown)
+            svg.append('path')
+                .datum(portfolioData)
+                .attr('fill', 'rgba(255, 0, 0, 0.3)')
+                .attr('d', area);
+            
+            // Draw the drawdown line
+            const line = d3.line()
+                .x(d => x(d.Date))
+                .y(d => y(d.drawdown))
+                .defined(d => !isNaN(d.drawdown))
+                .curve(d3.curveMonotoneX); // Add smooth curve
+            
+            svg.append('path')
+                .datum(portfolioData)
+                .attr('fill', 'none')
+                .attr('stroke', 'rgb(255, 0, 0)')
+                .attr('stroke-width', 2)
+                .attr('d', line);
+            
+            // Add a zero line
+            svg.append('line')
+                .attr('x1', 0)
+                .attr('x2', width)
+                .attr('y1', y(0))
+                .attr('y2', y(0))
+                .attr('stroke', '#888')
+                .attr('stroke-dasharray', '3,3');
+            
+            // Add grid lines for better readability
+            svg.append('g')
+                .attr('class', 'grid')
+                .call(d3.axisLeft(y)
+                    .tickValues([-0.1, -0.2, -0.3, -0.4, -0.5]) // 10%, 20%, 30%, 40%, 50% drawdown lines
+                    .tickSize(-width)
+                    .tickFormat(''))
+                .style('stroke', '#e0e0e0')
+                .style('stroke-opacity', 0.7)
+                .style('shape-rendering', 'crispEdges');
+            
+            // Add vertical grid lines
+            svg.append('g')
+                .attr('class', 'grid')
+                .attr('transform', `translate(0,${height})`)
+                .call(d3.axisBottom(x)
+                    .ticks(10)
+                    .tickSize(-height)
+                    .tickFormat(''))
+                .style('stroke', '#e0e0e0')
+                .style('stroke-opacity', 0.5)
+                .style('shape-rendering', 'crispEdges');
+            
+            // Add tooltip elements
+            const tooltip = d3.select('#tooltip');
+            const bisect = d3.bisector(d => d.Date).left;
+            
+            // Add tooltip vertical line and dot
+            const tooltipLine = svg.append("line")
+                .attr("stroke", "#666")
+                .attr("stroke-width", 1)
+                .attr("stroke-dasharray", "3,3")
+                .attr("y1", 0)
+                .attr("y2", height)
+                .style("opacity", 0);
+                
+            const tooltipDot = svg.append("circle")
+                .attr("r", 5)
+                .attr("fill", "rgb(255, 0, 0)")
+                .attr("stroke", "white")
+                .attr("stroke-width", 2)
+                .style("opacity", 0);
+            
+            // Add transparent overlay for mouse interaction
+            svg.append('rect')
+                .attr('width', width > 0 ? width : 0) // Ensure width is not negative
+                .attr('height', height)
+                .style('fill', 'none')
+                .style('pointer-events', 'all')
+                .on('mouseover', function() {
+                    tooltip.style('opacity', 1);
+                    tooltipLine.style('opacity', 1);
+                    tooltipDot.style('opacity', 1);
+                })
+                .on('mouseout', function() {
+                    tooltip.style('opacity', 0);
+                    tooltipLine.style('opacity', 0);
+                    tooltipDot.style('opacity', 0);
+                })
+                .on('mousemove', function(event) {
+                    const mouseX = d3.pointer(event)[0];
+                    const x0 = x.invert(mouseX);
+                    const i = bisect(portfolioData, x0, 1);
+                    
+                    if (i >= portfolioData.length) return;
+                    
+                    const d0 = portfolioData[i - 1];
+                    const d1 = portfolioData[i];
+                    if (!d0 || !d1) return;
+                    
+                    const d = x0 - d0.Date > d1.Date - x0 ? d1 : d0;
+                    
+                    // Update tooltip line position
+                    tooltipLine
+                        .attr("x1", x(d.Date))
+                        .attr("x2", x(d.Date));
+                        
+                    // Update tooltip dot position
+                    tooltipDot
+                        .attr("cx", x(d.Date))
+                        .attr("cy", y(d.drawdown));
+                    
+                    // Format tooltip content
+                    tooltip.style('left', (event.pageX + 15) + 'px')
+                        .style('top', (event.pageY - 28) + 'px')
+                        .html(`
+                            <div style="font-weight: bold; margin-bottom: 5px;">${formatDate(d.Date)}</div>
+                            <div style="color: ${d.drawdown < -0.1 ? '#dc3545' : '#6c757d'}">
+                                <strong>Drawdown:</strong> ${d3.format('.2%')(d.drawdown)}
+                            </div>
+                            <div style="margin-top: 5px;">
+                                <strong>Peak Value:</strong> ${formatCurrency(d.peak_value)}
+                            </div>
+                            <div>
+                                <strong>Current Value:</strong> ${formatCurrency(d.total_value)}
+                            </div>
+                            <div>
+                                <strong>Decline Amount:</strong> ${formatCurrency(d.total_value - d.peak_value)}
+                            </div>
+                        `);
+                });
+            
+            // Add annotations for major drawdown events
+            // Find significant drawdowns (below -20%)
+            const significantDrawdowns = portfolioData.filter(d => d.drawdown < -0.2);
+            
+            if (significantDrawdowns.length > 0) {
+                // Find local minimums in drawdowns by comparing neighbors
+                const drawdownEvents = [];
+                
+                for (let i = 1; i < portfolioData.length - 1; i++) {
+                    const prev = portfolioData[i-1];
+                    const curr = portfolioData[i];
+                    const next = portfolioData[i+1];
+                    
+                    // If current point is a local minimum and below -15%
+                    if (curr.drawdown < -0.15 && 
+                        curr.drawdown <= prev.drawdown && 
+                        curr.drawdown <= next.drawdown) {
+                        
+                        // Check if we already have a similar drawdown event nearby
+                        const isUnique = !drawdownEvents.some(event => 
+                            Math.abs(event.Date - curr.Date) < 30 * 24 * 60 * 60 * 1000 && // Within 30 days
+                            Math.abs(event.drawdown - curr.drawdown) < 0.05 // Within 5% drawdown difference
+                        );
+                        
+                        if (isUnique) {
+                            drawdownEvents.push(curr);
+                        }
+                    }
+                }
+                
+                // Sort by severity and take top 3
+                drawdownEvents.sort((a, b) => a.drawdown - b.drawdown);
+                const topDrawdowns = drawdownEvents.slice(0, 3);
+                
+                // Add annotations
+                topDrawdowns.forEach(event => {
+                    // Create annotation
+                    svg.append("line")
+                        .attr("x1", x(event.Date))
+                        .attr("x2", x(event.Date))
+                        .attr("y1", y(event.drawdown))
+                        .attr("y2", y(event.drawdown) - 40)
+                        .attr("stroke", "#ff0000")
+                        .attr("stroke-width", 1)
+                        .attr("stroke-dasharray", "3,3");
+                        
+                    svg.append("circle")
+                        .attr("cx", x(event.Date))
+                        .attr("cy", y(event.drawdown))
+                        .attr("r", 4)
+                        .attr("fill", "#ff0000");
+                        
+                    svg.append("text")
+                        .attr("x", x(event.Date))
+                        .attr("y", y(event.drawdown) - 45)
+                        .attr("text-anchor", "middle")
+                        .attr("font-size", "10px")
+                        .text(`${d3.format('.1%')(event.drawdown)}`)
+                        .style("fill", "#ff0000");
+                });
+            }
         }
 
         // Helper function to show API error
@@ -855,13 +1507,13 @@
             messageEl.textContent = message;
             errorEl.style.display = 'block';
         }
-        
+
         // Helper function to hide API error
         function hideApiError() {
             const errorEl = document.getElementById('api-error');
             errorEl.style.display = 'none';
         }
-        
+
         // Helper function to format currency
         function formatCurrency(value) {
             return new Intl.NumberFormat('en-US', {
@@ -871,7 +1523,7 @@
                 maximumFractionDigits: 2
             }).format(value);
         }
-        
+
         // Helper function to format percentage
         function formatPercentage(value) {
             return new Intl.NumberFormat('en-US', {
@@ -880,7 +1532,7 @@
                 maximumFractionDigits: 1
             }).format(value);
         }
-        
+
         // Helper function to format date
         function formatDate(date) {
             const options = { year: 'numeric', month: 'short', day: 'numeric' };
@@ -888,4 +1540,3 @@
         }
     </script>
 </body>
-</html>
