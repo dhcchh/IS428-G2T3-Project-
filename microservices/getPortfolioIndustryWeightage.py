@@ -21,7 +21,11 @@ def load_industry_allocation_data(ticker):
         'SPLV': '../mavis datasets/splv_share_allocation.csv',
         'USMV': '../mavis datasets/usmv_share_allocation.csv',
         'BND': '../mavis datasets/bnd_share_allocation.csv',
-        'AGG': '../mavis datasets/agg_share_allocation.csv'
+        'AGG': '../mavis datasets/agg_share_allocation.csv',
+        'UPRO': '../angela_datasets/upro_share_allocation.csv',
+        'ARKK': '../angela_datasets/arkk_share_allocation.csv',
+        'IWF': '../angela_datasets/IWF_share_allocation.csv',
+        'QQQ': '../angela_datasets/qqq_share_allocation.csv'
     }
     
     # Check if ticker is supported
@@ -84,11 +88,15 @@ def load_industry_allocation_data(ticker):
                 weight_column = 'Weight'
             else:
                 raise ValueError(f"No weight column found in {csv_filename}")
+            
+        # Strip '%' from the 'Weight' column, only for non-empty cells
+        df[weight_column] = df[weight_column].apply(lambda x: x.replace('%', '') if isinstance(x, str) and x else x)
+        df[weight_column] = pd.to_numeric(df[weight_column], errors='coerce') # convert weight to numeric
         
         # Group by industry and sum weights
         industry_allocation = df.groupby(industry_column)[weight_column].sum().reset_index()
         industry_allocation.columns = ['Industry', 'Weight']
-    
+                
     # Ensure weights sum to 100%
     if not np.isclose(industry_allocation['Weight'].sum(), 100, atol=5):
         # Normalize weights to sum to 100%
