@@ -566,7 +566,7 @@
         const API_INDUSTRY_WEIGHTAGE = `${API_BASE_URL}/api/industry-weightage`;
         const API_VOLUME_ANALYSIS = `${API_BASE_URL}/api/volume-analysis`;
         const API_CORRELATION_MATRIX = `${API_BASE_URL}/api/correlation-matrix`;
-        const API_CANDLESTICK_DATA = `${API_BASE_URL}/api/candlestick-data`;
+        // const API_CANDLESTICK_DATA = `${API_BASE_URL}/api/candlestick-data`;
 
         // Global variables
         let minDate, maxDate;
@@ -1180,7 +1180,7 @@
                 updateMetricsDisplay(metrics, payload.initial_investment);
                 
                 // Create charts
-                createCandlestickChart();
+                createCandlestickChart(selectedStartDate, selectedEndDate);
                 createCompanyWeightageChart(companyWeightageData);
                 createIndustryWeightageChart(industryWeightageData);
                 createVolumeChart(volumeData);
@@ -1219,7 +1219,7 @@
 // logic to check if open is higher than close the open will the line higher than close, if close price is higher than open vice versa when plotting candlestick
 
 
-function createCandlestickChart() {
+function createCandlestickChart(startDate, endDate) {
     const chartContainer = document.getElementById('candlestick-chart');
     chartContainer.innerHTML = '';
     
@@ -1231,20 +1231,34 @@ function createCandlestickChart() {
         d3.csv("../angela_datasets/upro.csv")
     ]).then(function(files) {
         const [arkkData, iwfData, qqqData, uproData] = files;
+
+        // Combine all datasets into one array
+        const combinedData = [...arkkData, ...iwfData, ...qqqData, ...uproData];
+
+        // Filter data by date range
+            const filteredData = combinedData.filter(d => {
+            const date = new Date(d.Date); // Ensure Date is parsed correctly
+            return date >= startDate && date <= endDate;
+        });
+        console.log(combinedData)
+        console.log(filteredData);
         
         // Log to verify files are loaded
         console.log("Files loaded successfully!");
         console.log("ARKK data length:", arkkData.length);
-        console.log("ARKK first record:", arkkData[0]);
+        console.log("IWF last record:", arkkData[arkkData.length - 1]);
         
         console.log("IWF data length:", iwfData.length);
-        console.log("IWF first record:", iwfData[0]);
-        
+     
         console.log("QQQ data length:", qqqData.length);
-        console.log("QQQ first record:", qqqData[0]);
+        console.log("IWF last record:", qqqData[qqqData.length - 1]);
         
         console.log("UPRO data length:", uproData.length);
-        console.log("UPRO first record:", uproData[0]);
+        console.log("IWF last record:", uproData[uproData.length - 1]);
+
+
+
+
         
 
     // Check container width first
