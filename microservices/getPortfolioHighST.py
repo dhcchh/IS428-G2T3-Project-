@@ -21,7 +21,7 @@ def load_data():
     global ETF_DF, MIN_DATE, MAX_DATE
     
     ETF_DF = pd.read_csv(DATA_FILE)
-    ETF_DF['Date'] = pd.to_datetime(ETF_DF['Date'])
+    ETF_DF['Date'] = pd.to_datetime(ETF_DF['Date'], dayfirst=True)
     
     MIN_DATE = ETF_DF['Date'].min()
     MAX_DATE = ETF_DF['Date'].max()
@@ -36,7 +36,7 @@ def get_date_range_data():
         Dictionary with min_date, max_date, and etf_returns
     """
     etf_returns = {}
-    for etf in ['SPY', 'BND', 'VTIP', 'VXUS']:
+    for etf in ['UPRO', 'QQQ', 'IWF', 'ARKK']:
         total_return = (ETF_DF[etf].iloc[-1] / ETF_DF[etf].iloc[0] - 1) * 100
         etf_returns[etf] = round(total_return, 2)
     
@@ -73,11 +73,11 @@ def calculate_portfolio_value(period_df, initial_investment, allocations):
     # Normalize ETF prices to the first date
     first_date = period_df['Date'].iloc[0]
     first_prices = {}
-    for etf in ['SPY', 'BND', 'VTIP', 'VXUS']:
+    for etf in ['UPRO', 'QQQ', 'IWF', 'ARKK']:
         first_prices[etf] = period_df.loc[period_df['Date'] == first_date, etf].values[0]
     
     # Calculate values based on allocations
-    for etf in ['SPY', 'BND', 'VTIP', 'VXUS']:
+    for etf in ['UPRO', 'QQQ', 'IWF', 'ARKK']:
         # Skip if allocation is 0
         if allocations.get(etf, 0) == 0:
             period_df[f'{etf}_value'] = 0
@@ -91,7 +91,7 @@ def calculate_portfolio_value(period_df, initial_investment, allocations):
         period_df[f'{etf}_value'] = etf_investment * period_df[f'{etf}_norm']
     
     # Calculate total portfolio value
-    period_df['total_value'] = period_df['SPY_value'] + period_df['BND_value'] + period_df['VTIP_value'] + period_df['VXUS_value']
+    period_df['total_value'] = period_df['UPRO_value'] + period_df['QQQ_value'] + period_df['IWF_value'] + period_df['ARKK_value']
     
     # Calculate daily and cumulative returns
     period_df['daily_return'] = period_df['total_value'].pct_change()
@@ -170,7 +170,7 @@ def calculate_risk_metrics(portfolio_df):
 def calculate_etf_performance(period_df):
     """Calculate performance data for individual ETFs"""
     etf_performance = {}
-    for etf in ['SPY', 'BND', 'VTIP', 'VXUS']:
+    for etf in ['UPRO', 'QQQ', 'IWF', 'ARKK']:
         if etf not in period_df.columns:
             continue
             
@@ -204,10 +204,10 @@ def process_request_data():
     # Extract parameters
     initial_investment = float(data.get('initial_investment', 10000))
     allocations = data.get('allocations', {
-        'SPY': 25,
-        'BND': 25, 
-        'VTIP': 25, 
-        'VXUS': 25
+        'UPRO': 25,
+        'QQQ': 25, 
+        'IWF': 25, 
+        'ARKK': 25
     })
     
     # Validate allocations
@@ -429,12 +429,12 @@ def get_etf_comparison():
         # Calculate ETF performance
         etf_performance = calculate_etf_performance(portfolio_df)
         
-        # Prepare normalized performance data for visualization
+        # Prepare normalized performance data for visualization [SPY, BND, VTIP, VXUS] [UPRO, QQQ, IWF, ARKK]
         normalized_data = []
         
         for date_idx, row in portfolio_df.iterrows():
             date_entry = {'Date': row['Date']}
-            for etf in ['SPY', 'BND', 'VTIP', 'VXUS']:
+            for etf in ['UPRO', 'QQQ', 'IWF', 'ARKK']:
                 if allocations.get(etf, 0) > 0:
                     date_entry[f'{etf}_normalized'] = float(row[f'{etf}_norm'])
             normalized_data.append(date_entry)

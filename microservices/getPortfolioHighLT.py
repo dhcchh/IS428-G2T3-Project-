@@ -11,7 +11,7 @@ app = Flask(__name__)
 CORS(app)  
 
 # Global variables
-DATA_FILE = os.environ.get('ETF_DATA_FILE', 'highLTetf.csv')
+DATA_FILE = 'highLTetf.csv'
 ETF_DF = None
 MIN_DATE = None
 MAX_DATE = None
@@ -20,7 +20,7 @@ def load_data():
     """Load ETF data from CSV file and set global variables"""
     global ETF_DF, MIN_DATE, MAX_DATE
     
-    ETF_DF = pd.read_csv(DATA_FILE)
+    ETF_DF = pd.read_csv('highLTetf.csv')
     ETF_DF['Date'] = pd.to_datetime(ETF_DF['Date'])
     
     MIN_DATE = ETF_DF['Date'].min()
@@ -31,37 +31,97 @@ def load_data():
 def get_date_range_data():
     """
     Get the min and max dates available in the dataset and ETF total returns.
+    Ensures dates are in ISO format (YYYY-MM-DD).
     
     Returns:
         Dictionary with min_date, max_date, and etf_returns
     """
     etf_returns = {}
     for etf in ['SPY', 'GBTC', 'BRK-B', 'VUG']:
-        total_return = (ETF_DF[etf].iloc[-1] / ETF_DF[etf].iloc[0] - 1) * 100
-        etf_returns[etf] = round(total_return, 2)
+        try:
+            total_return = (ETF_DF[etf].iloc[-1] / ETF_DF[etf].iloc[0] - 1) * 100
+            etf_returns[etf] = round(total_return, 2)
+        except Exception as e:
+            etf_returns[etf] = 0.0
+            print(f"Error calculating return for {etf}: {e}")
+    
+    # Ensure dates are formatted in ISO format (YYYY-MM-DD)
+    min_date_iso = MIN_DATE.strftime('%Y-%m-%d')
+    max_date_iso = MAX_DATE.strftime('%Y-%m-%d')
+    
+    print(f"Returning date range: min={min_date_iso}, max={max_date_iso}")
     
     return {
-        "min_date": MIN_DATE.strftime('%Y-%m-%d'),
-        "max_date": MAX_DATE.strftime('%Y-%m-%d'),
+        "min_date": min_date_iso,
+        "max_date": max_date_iso,
         "etf_returns": etf_returns
     }
 
 def filter_data_by_date(start_date=None, end_date=None):
-    """Filter data by date range"""
+    """
+    Filter data by date range with improved parsing.
+    Ensures proper date handling regardless of input format.
+    """
+    global ETF_DF, MIN_DATE, MAX_DATE
+    
+    # Debug input dates
+    print(f"Filtering data with input dates: start={start_date}, end={end_date}")
+    
     # Convert string dates to timestamps if needed
     if isinstance(start_date, str):
-        start_date = pd.Timestamp(start_date)
+        try:
+            # Explicitly parse ISO format
+            if start_date.count('-') == 2:
+                # Assuming ISO format (YYYY-MM-DD)
+                year, month, day = map(int, start_date.split('-'))
+                start_date = pd.Timestamp(year=year, month=month, day=day)
+            else:
+                # Try pandas default parser
+                start_date = pd.Timestamp(start_date)
+        except Exception as e:
+            print(f"Error parsing start_date '{start_date}': {e}")
+            start_date = MIN_DATE
     elif start_date is None:
         start_date = MIN_DATE
         
     if isinstance(end_date, str):
-        end_date = pd.Timestamp(end_date)
+        try:
+            # Explicitly parse ISO format
+            if end_date.count('-') == 2:
+                # Assuming ISO format (YYYY-MM-DD)
+                year, month, day = map(int, end_date.split('-'))
+                end_date = pd.Timestamp(year=year, month=month, day=day)
+            else:
+                # Try pandas default parser
+                end_date = pd.Timestamp(end_date)
+        except Exception as e:
+            print(f"Error parsing end_date '{end_date}': {e}")
+            end_date = MAX_DATE
     elif end_date is None:
         end_date = MAX_DATE
+    
+    # Debug parsed dates
+    print(f"Parsed dates: start={start_date}, end={end_date}")
+    
+    # Ensure dates are within the available range
+    if start_date < MIN_DATE:
+        print(f"Adjusting start_date {start_date} to MIN_DATE {MIN_DATE}")
+        start_date = MIN_DATE
+        
+    if end_date > MAX_DATE:
+        print(f"Adjusting end_date {end_date} to MAX_DATE {MAX_DATE}")
+        end_date = MAX_DATE
+        
+    if start_date > end_date:
+        print(f"Swapping dates: start={start_date}, end={end_date}")
+        start_date, end_date = end_date, start_date
     
     # Filter data by date range
     mask = (ETF_DF['Date'] >= start_date) & (ETF_DF['Date'] <= end_date)
     period_df = ETF_DF.loc[mask].copy()
+    
+    # Debug results
+    print(f"Filtered data: {len(period_df)} rows from {start_date} to {end_date}")
     
     return period_df, start_date, end_date
 
@@ -83,15 +143,23 @@ def calculate_portfolio_value(period_df, initial_investment, allocations):
             period_df[f'{etf}_value'] = 0
             continue
             
-        # Calculate normalized return
-        period_df[f'{etf}_norm'] = period_df[etf] / first_prices[etf]
+        # Calculate normalized return (handle potential NaN values)
+        if first_prices[etf] > 0:
+            period_df[f'{etf}_norm'] = period_df[etf] / first_prices[etf]
+        else:
+            period_df[f'{etf}_norm'] = 1.0  # Default to no change if first price is 0 or negative
         
         # Calculate value based on allocation
         etf_investment = initial_investment * (allocations[etf] / 100)
         period_df[f'{etf}_value'] = etf_investment * period_df[f'{etf}_norm']
     
-    # Calculate total portfolio value ['SPY', 'GBTC', 'BRK-B', 'VUG']
-    period_df['total_value'] = period_df['SPY_value'] + period_df['GBTC_value'] + period_df['BRK-B_value'] + period_df['VUG_value']
+    # Calculate total portfolio value
+    period_df['total_value'] = (
+        period_df['SPY_value'] + 
+        period_df['GBTC_value'] + 
+        period_df['BRK-B_value'] + 
+        period_df['VUG_value']
+    )
     
     # Calculate daily and cumulative returns
     period_df['daily_return'] = period_df['total_value'].pct_change()
@@ -492,7 +560,7 @@ def get_yearly_returns():
 
 @app.route('/api/calculate-all', methods=['POST'])
 def calculate_all():
-    """API endpoint to calculate all portfolio metrics at once"""
+    """API endpoint to calculate all portfolio metrics at once with improved error handling"""
     try:
         result, error, status = process_request_data()
         if error:
@@ -500,6 +568,12 @@ def calculate_all():
         
         portfolio_df = result['portfolio_df']
         yearly_returns = result['yearly_returns']
+        
+        # Verify we have valid data
+        if len(portfolio_df) < 2:
+            return jsonify({
+                "error": "Insufficient data points for the selected time period"
+            }), 400
         
         # Calculate metrics
         metrics = calculate_risk_metrics(portfolio_df)
@@ -511,16 +585,26 @@ def calculate_all():
         portfolio_data = portfolio_df.to_dict(orient='records')
         yearly_data = yearly_returns.to_dict(orient='records')
         
-        # Return all results with NaN handling
-        return jsonify(safe_json_serialization({
+        # Add time period information to the response
+        response = {
             "metrics": metrics,
             "etf_performance": etf_performance,
             "portfolio_data": portfolio_data,
-            "yearly_returns": yearly_data
-        }))
+            "yearly_returns": yearly_data,
+            "time_period": {
+                "start_date": result['start_date'].strftime('%Y-%m-%d') if isinstance(result['start_date'], pd.Timestamp) else result['start_date'],
+                "end_date": result['end_date'].strftime('%Y-%m-%d') if isinstance(result['end_date'], pd.Timestamp) else result['end_date'],
+                "days": (result['end_date'] - result['start_date']).days if isinstance(result['start_date'], pd.Timestamp) and isinstance(result['end_date'], pd.Timestamp) else None
+            }
+        }
+        
+        # Return all results with NaN handling
+        return jsonify(safe_json_serialization(response))
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
     except Exception as e:
+        import traceback
+        print("Error in calculate_all:", traceback.format_exc())
         return jsonify({"error": str(e)}), 500
 
 @app.route('/health', methods=['GET'])
