@@ -1212,16 +1212,151 @@
             document.getElementById('volatility').textContent = `${metrics.risk_level} (${formatPercentage(metrics.volatility)})`;
         }
 
-        // Function to create candlestick chart
-        function createCandlestickChart(data) {
-            const chartContainer = document.getElementById('candlestick-chart');
-            chartContainer.innerHTML = '';
-            
-            // YOUR CODE HERE: Implement candlestick chart using D3.js
-            // Use data parameter which should contain OHLC (Open, High, Low, Close) data
-            
-            console.log("Creating candlestick chart with data:", data?.length || 0, "data points");
-        }
+// Function to create candlestick chart using portfolio allocation data
+function createCandlestickChart(stockData) {
+    const chartContainer = document.getElementById('candlestick-chart');
+    chartContainer.innerHTML = '';
+    
+    // Check if we have data
+    if (!stockData || stockData.length === 0) {
+        chartContainer.innerHTML = '<div class="error">No data available for candlestick analysis</div>';
+        return;
+    }
+    
+    // Check container width first
+    const containerWidth = chartContainer.clientWidth;
+    
+    if (containerWidth <= 0) {
+        // Wait for the layout to stabilize (e.g., tab becoming visible)
+        setTimeout(() => createCandlestickChart(stockData), 100);
+        return;
+    }
+    
+// First, let's fetch and process the allocation data
+Promise.all([
+    d3.csv("../angela_datasets/arkk_share_allocation.csv"),
+    d3.csv("../angela_datasets/IWF_share_allocation.csv"),
+    d3.csv("../angela_datasets/qqq_share_allocation.csv"),
+    d3.csv("../angela_datasets/upro_share_allocation.csv")
+]).then(function(files) {
+    const [arkkData, iwfData, qqqData, uproData] = files;
+    
+    // Log to verify files are loaded
+    console.log("Files loaded successfully!");
+    console.log("ARKK data length:", arkkData.length);
+    console.log("ARKK first record:", arkkData[0]);
+    
+    console.log("IWF data length:", iwfData.length);
+    console.log("IWF first record:", iwfData[0]);
+    
+    console.log("QQQ data length:", qqqData.length);
+    console.log("QQQ first record:", qqqData[0]);
+    
+    console.log("UPRO data length:", uproData.length);
+    console.log("UPRO first record:", uproData[0]);
+    
+    // Continue with your code...
+}).catch(function(error) {
+    // Log any errors in loading the files
+    console.error("Error loading files:", error);
+
+        
+        // Get the current allocations
+        const allocations = getCurrentAllocations();
+        
+        // Process data for candlestick chart based on allocations
+        // For this example, we'll use the stockData passed to the function,
+        // but apply weightings based on the allocation data
+        
+        // Continue with the original candlestick chart code
+        const margin = containerWidth < 400 
+            ? {top: 20, right: 30, bottom: 50, left: 40}
+            : {top: 20, right: 80, bottom: 50, left: 80};
+        
+        const width = Math.max(containerWidth - margin.left - margin.right, 100);
+        const height = 500 - margin.top - margin.bottom;
+        
+        const svg = d3.select(chartContainer)
+            .append('svg')
+            .attr('width', width + margin.left + margin.right)
+            .attr('height', height + margin.top + margin.bottom)
+            .append('g')
+            .attr('transform', `translate(${margin.left},${margin.top})`);
+        
+        // Process date and numeric values
+        const processedData = stockData
+            .map(d => ({
+                ...d,
+                Date: d.Date instanceof Date ? d.Date : new Date(d.Date),
+                Open: typeof d.Open === 'number' ? d.Open : parseFloat(d.Open),
+                High: typeof d.High === 'number' ? d.High : parseFloat(d.High),
+                Low: typeof d.Low === 'number' ? d.Low : parseFloat(d.Low),
+                Close: typeof d.Close === 'number' ? d.Close : parseFloat(d.Close)
+            }))
+            .filter(d => !isNaN(d.Open) && !isNaN(d.High) && !isNaN(d.Low) && !isNaN(d.Close))
+            .sort((a, b) => a.Date - b.Date);
+        
+        // Rest of your existing candlestick chart code...
+        // Implement X and Y scales, axes, candlesticks, etc.
+        
+        // Add information from allocation data to the chart
+        // For example, add a legend showing top holdings from each ETF
+        addAllocationInfo(svg, width, arkkData, iwfData, qqqData, uproData, allocations);
+        
+    }).catch(error => {
+        chartContainer.innerHTML = `<div class="error">Error loading allocation data: ${error.message}</div>`;
+    });
+}
+
+// Helper function to add allocation information to the chart
+function addAllocationInfo(svg, width, arkkData, iwfData, qqqData, uproData, allocations) {
+    // Get top 3 holdings from each ETF
+    const topHoldings = {
+        ARKK: arkkData.slice(0, 3).map(d => d.Name || d.company_name),
+        IWF: iwfData.slice(0, 3).map(d => d.Name || d.company_name),
+        QQQ: qqqData.slice(0, 3).map(d => d.Name || d.company_name),
+        UPRO: uproData.slice(0, 3).map(d => d.Name || d.company_name)
+    };
+    
+    // Create a legend with allocation percentages and top holdings
+    const legend = svg.append('g')
+        .attr('class', 'allocation-legend')
+        .attr('transform', `translate(${width - 180}, 10)`);
+    
+    // Add background for better readability
+    legend.append('rect')
+        .attr('width', 170)
+        .attr('height', 135)
+        .attr('fill', 'rgba(255, 255, 255, 0.85)')
+        .attr('rx', 5);
+    
+    // Add title
+    legend.append('text')
+        .attr('x', 10)
+        .attr('y', 20)
+        .text('Portfolio Allocation')
+        .style('font-weight', 'bold');
+    
+    // Add ETF allocations
+    const etfs = ['ARKK', 'IWF', 'QQQ', 'UPRO'];
+    const colors = ['#7b3ff3', '#2ca02c', '#1f77b4', '#ff7f0e'];
+    
+    etfs.forEach((etf, i) => {
+        // Add ETF name and allocation
+        legend.append('rect')
+            .attr('x', 10)
+            .attr('y', 30 + i * 25)
+            .attr('width', 12)
+            .attr('height', 12)
+            .attr('fill', colors[i]);
+        
+        legend.append('text')
+            .attr('x', 30)
+            .attr('y', 30 + i * 25 + 10)
+            .text(`${etf}: ${allocations[etf]}%`)
+            .style('font-size', '12px');
+    });
+}
 
         // Function to create company weightage chart
         function createCompanyWeightageChart(data) {
