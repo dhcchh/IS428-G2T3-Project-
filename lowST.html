@@ -295,6 +295,47 @@
             40% { content: '..'; }
             60%, 100% { content: '...'; }
         }
+        .tooltip-trigger {
+            position: relative;
+            display: inline-flex;
+            margin-left: 5px;
+            cursor: help;
+        }
+
+        .tooltip-trigger .info-icon {
+            width: 16px;
+            height: 16px;
+        }
+
+        .tooltip-trigger:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 100%;
+            background: #333;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 250px;
+            text-align: center;
+            z-index: 10;
+            pointer-events: none;
+            font-weight: normal;
+            line-height: 1.4;
+        }
+
+        .tooltip-trigger:hover::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 100%;
+            border: 8px solid transparent;
+            border-top-color: #333;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
@@ -382,22 +423,50 @@
                     </div>
                     
                     <div class="metric-card">
-                        <h4>Total Return</h4>
+                        <h4>Total Return
+                            <span class="tooltip-trigger" data-tooltip="The total growth rate of your investment">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="info-icon">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                </svg>
+                            </span>
+                        </h4>
                         <h3 id="total-return">0.0%</h3>
-                        <p id="annualized-return">Annualized: 0.0% per year</p>
+                        <p id="annualized-return">
+                            Annualized: 0.0% per year
+                        </p>
                     </div>
                     
                     <div class="metric-card">
-                        <h4>Maximum Drawdown</h4>
+                        <h4>
+                            Maximum Drawdown
+                            <span class="tooltip-trigger" data-tooltip="The percentage drop from your investment's highest value to its lowest point during a specific period. Shows potential losses you might face before recovery.">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="info-icon">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                </svg>
+                            </span>
+                        </h4>
                         <h3 id="max-drawdown">0.0%</h3>
                         <p>Largest decline from peak</p>
                     </div>
                     
                     <div class="metric-card" id="risk-card">
-                        <h4>Risk Level</h4>
+                        <h4>
+                            Risk Level
+                            <span class="tooltip-trigger" data-tooltip="Measures how dramatically an investment's price changes over time. Higher volatility means bigger price swings both up and down.">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="info-icon">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="12" y1="16" x2="12" y2="12"></line>
+                                    <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                                </svg>
+                            </span>
+                        </h4>
                         <h3 id="volatility">Low (0.0%)</h3>
                         <p>Portfolio volatility</p>
-                    </div>       
+                    </div>   
                 </div>
                 
                 <div class="tab-container">
