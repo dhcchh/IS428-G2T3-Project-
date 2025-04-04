@@ -1213,6 +1213,11 @@
         }
 
 // Function to create candlestick chart using portfolio allocation data
+//Logics needed:
+//- if if else (1 month, 6 months, 1 yr), for 1 yr and 6 months split into each month
+// and extract the relevant data dates based on the time period defined
+// logic to check if open is higher than close the open will the line higher than close, if close price is higher than open vice versa when plotting candlestick
+
 function createCandlestickChart(stockData) {
     const chartContainer = document.getElementById('candlestick-chart');
     chartContainer.innerHTML = '';
