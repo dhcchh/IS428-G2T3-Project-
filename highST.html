@@ -566,7 +566,7 @@
         const API_INDUSTRY_WEIGHTAGE = `${API_BASE_URL}/api/industry-weightage`;
         const API_VOLUME_ANALYSIS = `${API_BASE_URL}/api/volume-analysis`;
         const API_CORRELATION_MATRIX = `${API_BASE_URL}/api/correlation-matrix`;
-        const API_CANDLESTICK_DATA = `${API_BASE_URL}/api/candlestick-data`;
+        //const API_CANDLESTICK_DATA = `${API_BASE_URL}/api/candlestick-data`;
 
         // Global variables
         let minDate, maxDate;
@@ -1218,100 +1218,229 @@
 // and extract the relevant data dates based on the time period defined
 // logic to check if open is higher than close the open will the line higher than close, if close price is higher than open vice versa when plotting candlestick
 
-function createCandlestickChart(stockData) {
+//function createCandlestickChart(stockData) 
+function createCandlestickChart(stockData, startDate, endDate) {
     const chartContainer = document.getElementById('candlestick-chart');
     chartContainer.innerHTML = '';
-    
+
     // Check if we have data
     if (!stockData || stockData.length === 0) {
         chartContainer.innerHTML = '<div class="error">No data available for candlestick analysis</div>';
         return;
     }
-    
+
     // Check container width first
     const containerWidth = chartContainer.clientWidth;
-    
+
     if (containerWidth <= 0) {
         // Wait for the layout to stabilize (e.g., tab becoming visible)
-        setTimeout(() => createCandlestickChart(stockData), 100);
+        setTimeout(() => createCandlestickChart(stockData, startDate, endDate), 100);
         return;
     }
+
+    // Filter data by date range
+    const filteredData = stockData.filter(d => {
+        const date = new Date(d.Date);
+        return date >= startDate && date <= endDate;
+    });
+
+    if (filteredData.length === 0) {
+        chartContainer.innerHTML = '<div class="error">No data available for the selected date range</div>';
+        return;
+    }
+
+    // Group data into monthly periods
+    const groupedData = [];
+    let currentDate = new Date(endDate);
+
+    while (currentDate >= startDate) {
+        const nextDate = new Date(currentDate);
+        nextDate.setMonth(currentDate.getMonth() - 1);
+
+        const monthlyData = filteredData.filter(d => {
+            const date = new Date(d.Date);
+            return date >= nextDate && date < currentDate;
+        });
+
+        if (monthlyData.length > 0) {
+            const avgOpen = d3.mean(monthlyData, d => parseFloat(d.Open));
+            const avgHigh = d3.mean(monthlyData, d => parseFloat(d.High));
+            const avgLow = d3.mean(monthlyData, d => parseFloat(d.Low));
+            const avgClose = d3.mean(monthlyData, d => parseFloat(d.Close));
+
+            groupedData.push({
+                Date: new Date(nextDate),
+                Open: avgOpen,
+                High: avgHigh,
+                Low: avgLow,
+                Close: avgClose
+            });
+        }
+
+        currentDate = nextDate;
+    }
+
+    // Sort grouped data by date
+    groupedData.sort((a, b) => a.Date - b.Date);
+
+    // Continue with the original candlestick chart code
+    const margin = containerWidth < 400
+        ? { top: 20, right: 30, bottom: 50, left: 40 }
+        : { top: 20, right: 80, bottom: 50, left: 80 };
+
+    const width = Math.max(containerWidth - margin.left - margin.right, 100);
+    const height = 500 - margin.top - margin.bottom;
+
+    const svg = d3.select(chartContainer)
+        .append('svg')
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom)
+        .append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    // X scale
+    const x = d3.scaleBand()
+        .domain(groupedData.map(d => d.Date))
+        .range([0, width])
+        .padding(0.2);
+
+    // Y scale
+    const y = d3.scaleLinear()
+        .domain([
+            d3.min(groupedData, d => d.Low),
+            d3.max(groupedData, d => d.High)
+        ])
+        .range([height, 0]);
+
+    // X axis
+    svg.append('g')
+        .attr('transform', `translate(0,${height})`)
+        .call(d3.axisBottom(x).tickFormat(d3.timeFormat('%b %Y')))
+        .selectAll('text')
+        .attr('transform', 'rotate(-45)')
+        .style('text-anchor', 'end');
+
+    // Y axis
+    svg.append('g')
+        .call(d3.axisLeft(y));
+
+    // Draw candlesticks
+    svg.selectAll('.candlestick')
+        .data(groupedData)
+        .enter()
+        .append('line')
+        .attr('class', 'candlestick')
+        .attr('x1', d => x(d.Date) + x.bandwidth() / 2)
+        .attr('x2', d => x(d.Date) + x.bandwidth() / 2)
+        .attr('y1', d => y(d.High))
+        .attr('y2', d => y(d.Low))
+        .attr('stroke', 'black');
+
+    svg.selectAll('.candlestick-rect')
+        .data(groupedData)
+        .enter()
+        .append('rect')
+        .attr('class', 'candlestick-rect')
+        .attr('x', d => x(d.Date))
+        .attr('y', d => y(Math.max(d.Open, d.Close)))
+        .attr('width', x.bandwidth())
+        .attr('height', d => Math.abs(y(d.Open) - y(d.Close)))
+        .attr('fill', d => d.Open > d.Close ? 'red' : 'green');
+}
+//{
+//     const chartContainer = document.getElementById('candlestick-chart');
+//     chartContainer.innerHTML = '';
     
-// First, let's fetch and process the allocation data
-Promise.all([
-    d3.csv("../angela_datasets/arkk_share_allocation.csv"),
-    d3.csv("../angela_datasets/IWF_share_allocation.csv"),
-    d3.csv("../angela_datasets/qqq_share_allocation.csv"),
-    d3.csv("../angela_datasets/upro_share_allocation.csv")
-]).then(function(files) {
-    const [arkkData, iwfData, qqqData, uproData] = files;
+//     // Check if we have data
+//     if (!stockData || stockData.length === 0) {
+//         chartContainer.innerHTML = '<div class="error">No data available for candlestick analysis</div>';
+//         return;
+//     }
     
-    // Log to verify files are loaded
-    console.log("Files loaded successfully!");
-    console.log("ARKK data length:", arkkData.length);
-    console.log("ARKK first record:", arkkData[0]);
+//     // Check container width first
+//     const containerWidth = chartContainer.clientWidth;
     
-    console.log("IWF data length:", iwfData.length);
-    console.log("IWF first record:", iwfData[0]);
+//     if (containerWidth <= 0) {
+//         // Wait for the layout to stabilize (e.g., tab becoming visible)
+//         setTimeout(() => createCandlestickChart(stockData), 100);
+//         return;
+//     }
     
-    console.log("QQQ data length:", qqqData.length);
-    console.log("QQQ first record:", qqqData[0]);
+// // First, let's fetch and process the allocation data
+// Promise.all([
+//     d3.csv("../angela_datasets/arkk_share_allocation.csv"),
+//     d3.csv("../angela_datasets/IWF_share_allocation.csv"),
+//     d3.csv("../angela_datasets/qqq_share_allocation.csv"),
+//     d3.csv("../angela_datasets/upro_share_allocation.csv")
+// ]).then(function(files) {
+//     const [arkkData, iwfData, qqqData, uproData] = files;
     
-    console.log("UPRO data length:", uproData.length);
-    console.log("UPRO first record:", uproData[0]);
+//     // Log to verify files are loaded
+//     console.log("Files loaded successfully!");
+//     console.log("ARKK data length:", arkkData.length);
+//     console.log("ARKK first record:", arkkData[0]);
     
-    // Continue with your code...
-}).catch(function(error) {
-    // Log any errors in loading the files
-    console.error("Error loading files:", error);
+//     console.log("IWF data length:", iwfData.length);
+//     console.log("IWF first record:", iwfData[0]);
+    
+//     console.log("QQQ data length:", qqqData.length);
+//     console.log("QQQ first record:", qqqData[0]);
+    
+//     console.log("UPRO data length:", uproData.length);
+//     console.log("UPRO first record:", uproData[0]);
+    
+//     // Continue with your code...
+// }).catch(function(error) {
+//     // Log any errors in loading the files
+//     console.error("Error loading files:", error);
 
         
-        // Get the current allocations
-        const allocations = getCurrentAllocations();
+//         // Get the current allocations
+//         const allocations = getCurrentAllocations();
         
-        // Process data for candlestick chart based on allocations
-        // For this example, we'll use the stockData passed to the function,
-        // but apply weightings based on the allocation data
+//         // Process data for candlestick chart based on allocations
+//         // For this example, we'll use the stockData passed to the function,
+//         // but apply weightings based on the allocation data
         
-        // Continue with the original candlestick chart code
-        const margin = containerWidth < 400 
-            ? {top: 20, right: 30, bottom: 50, left: 40}
-            : {top: 20, right: 80, bottom: 50, left: 80};
+//         // Continue with the original candlestick chart code
+//         const margin = containerWidth < 400 
+//             ? {top: 20, right: 30, bottom: 50, left: 40}
+//             : {top: 20, right: 80, bottom: 50, left: 80};
         
-        const width = Math.max(containerWidth - margin.left - margin.right, 100);
-        const height = 500 - margin.top - margin.bottom;
+//         const width = Math.max(containerWidth - margin.left - margin.right, 100);
+//         const height = 500 - margin.top - margin.bottom;
         
-        const svg = d3.select(chartContainer)
-            .append('svg')
-            .attr('width', width + margin.left + margin.right)
-            .attr('height', height + margin.top + margin.bottom)
-            .append('g')
-            .attr('transform', `translate(${margin.left},${margin.top})`);
+//         const svg = d3.select(chartContainer)
+//             .append('svg')
+//             .attr('width', width + margin.left + margin.right)
+//             .attr('height', height + margin.top + margin.bottom)
+//             .append('g')
+//             .attr('transform', `translate(${margin.left},${margin.top})`);
         
-        // Process date and numeric values
-        const processedData = stockData
-            .map(d => ({
-                ...d,
-                Date: d.Date instanceof Date ? d.Date : new Date(d.Date),
-                Open: typeof d.Open === 'number' ? d.Open : parseFloat(d.Open),
-                High: typeof d.High === 'number' ? d.High : parseFloat(d.High),
-                Low: typeof d.Low === 'number' ? d.Low : parseFloat(d.Low),
-                Close: typeof d.Close === 'number' ? d.Close : parseFloat(d.Close)
-            }))
-            .filter(d => !isNaN(d.Open) && !isNaN(d.High) && !isNaN(d.Low) && !isNaN(d.Close))
-            .sort((a, b) => a.Date - b.Date);
+//         // Process date and numeric values
+//         const processedData = stockData
+//             .map(d => ({
+//                 ...d,
+//                 Date: d.Date instanceof Date ? d.Date : new Date(d.Date),
+//                 Open: typeof d.Open === 'number' ? d.Open : parseFloat(d.Open),
+//                 High: typeof d.High === 'number' ? d.High : parseFloat(d.High),
+//                 Low: typeof d.Low === 'number' ? d.Low : parseFloat(d.Low),
+//                 Close: typeof d.Close === 'number' ? d.Close : parseFloat(d.Close)
+//             }))
+//             .filter(d => !isNaN(d.Open) && !isNaN(d.High) && !isNaN(d.Low) && !isNaN(d.Close))
+//             .sort((a, b) => a.Date - b.Date);
         
-        // Rest of your existing candlestick chart code...
-        // Implement X and Y scales, axes, candlesticks, etc.
+//         // Rest of your existing candlestick chart code...
+//         // Implement X and Y scales, axes, candlesticks, etc.
         
-        // Add information from allocation data to the chart
-        // For example, add a legend showing top holdings from each ETF
-        addAllocationInfo(svg, width, arkkData, iwfData, qqqData, uproData, allocations);
+//         // Add information from allocation data to the chart
+//         // For example, add a legend showing top holdings from each ETF
+//         addAllocationInfo(svg, width, arkkData, iwfData, qqqData, uproData, allocations);
         
-    }).catch(error => {
-        chartContainer.innerHTML = `<div class="error">Error loading allocation data: ${error.message}</div>`;
-    });
-}
+//     }).catch(error => {
+//         chartContainer.innerHTML = `<div class="error">Error loading allocation data: ${error.message}</div>`;
+//     });
+// }
 
 // Helper function to add allocation information to the chart
 function addAllocationInfo(svg, width, arkkData, iwfData, qqqData, uproData, allocations) {
