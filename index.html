@@ -3,206 +3,564 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Investment Profile Selection</title>
-    <!-- Include Chart.js for visualizations -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <title>Smart Investing: Beat Inflation and Grow Your Wealth</title>
+    <!-- Include D3.js v7 -->
+    <script src="https://d3js.org/d3.v7.min.js" charset="utf-8"></script>
+    <!-- Add Google Fonts for better typography -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            text-align: center;
-            margin: 50px;
-        }
-        .btn-group {
-            margin: 10px;
-        }
-        .btn {
-            padding: 10px 20px;
-            margin: 5px;
-            font-size: 16px;
-            border: none;
-            cursor: pointer;
-            background-color: #ddd;
-            border-radius: 5px;
-        }
-        .btn.selected {
-            background-color: #007BFF;
-            color: white;
-        }
-        button[type="button"] {
-            padding: 10px 20px;
-            font-size: 18px;
-            margin-top: 20px;
-            background-color: #28a745;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
+        :root {
+            --primary-color: #2563eb;
+            --primary-light: #3b82f6;
+            --primary-dark: #1d4ed8;
+            --success-color: #10b981;
+            --success-light: #34d399;
+            --warning-color: #f59e0b;
+            --danger-color: #ef4444;
+            --text-dark: #1e293b;
+            --text-light: #94a3b8;
+            --bg-light: #f8fafc;
+            --card-bg: white;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --transition: all 0.3s ease;
         }
         
-        /* Added styles for charts */
-        .chart-container {
-            width: 90%;
-            max-width: 800px;
-            height: 400px;
-            margin: 30px auto;
-            background-color: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Poppins', Arial, sans-serif;
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+            line-height: 1.6;
+            padding: 0;
+            margin: 0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
             padding: 20px;
         }
         
-        h1 {
-            color: #007BFF;
+        header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 40px 0;
+            text-align: center;
+            box-shadow: var(--shadow);
         }
         
-        h2 {
-            color: #333;
-            margin-top: 40px;
+        .header-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+        #profileForm {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 25px;
+            font-weight: 300;
+            opacity: 0.9;
+        }
+        
+        .highlight {
+            color: var(--warning-color);
+            font-weight: 500;
         }
         
         .intro-text {
             max-width: 800px;
-            margin: 0 auto 30px auto;
-            line-height: 1.6;
-            color: #555;
-        }
-        
-        .stat-cards {
-            display: flex;
-            justify-content: space-around;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin: 30px auto;
-            max-width: 800px;
-        }
-        
-        .stat-card {
-            background-color: white;
-            border-radius: 8px;
-            padding: 20px;
-            flex: 1;
-            min-width: 150px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin: 40px auto;
+            line-height: 1.8;
+            color: var(--text-dark);
+            font-size: 1.1rem;
+            padding: 0 20px;
             text-align: center;
         }
         
+        .btn-group {
+            margin: 15px 0;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            background-color: #e2e8f0;
+            color: var(--text-dark);
+            border-radius: 8px;
+            font-weight: 500;
+            transition: var(--transition);
+        }
+        
+        .btn:hover {
+            background-color: #cbd5e1;
+            transform: translateY(-2px);
+        }
+        
+        .btn.selected {
+            background-color: var(--primary-color);
+            color: white;
+            box-shadow: var(--shadow);
+        }
+        
+        .submit-btn {
+            padding: 14px 32px;
+            font-size: 18px;
+            margin-top: 25px;
+            background-color: var(--success-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+            justify-content: center;            
+            display: flex;
+        }
+        
+        .submit-btn:hover {
+            background-color: var(--success-light);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 10px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+        
+        .section {
+            margin: 60px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .section-title {
+            text-align: center;
+            font-size: 2rem;
+            margin-bottom: 40px;
+            color: var(--primary-dark);
+            position: relative;
+            padding-bottom: 15px;
+        }
+        
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 4px;
+            background-color: var(--primary-color);
+            border-radius: 2px;
+        }
+        
+        /* Stats cards with modern design */
+        .stat-cards {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 25px;
+            margin: 40px auto;
+            max-width: 1000px;
+        }
+        
+        .stat-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 30px;
+            flex: 1;
+            min-width: 200px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            transition: var(--transition);
+            border-top: 5px solid var(--primary-color);
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        .stat-card:nth-child(2) {
+            border-top-color: var(--warning-color);
+        }
+        
+        .stat-card:nth-child(3) {
+            border-top-color: var(--success-color);
+        }
+        
+        .stat-label {
+            font-weight: 600;
+            color: var(--text-dark);
+            font-size: 1.1rem;
+            margin-bottom: 10px;
+        }
+        
         .stat-value {
-            font-size: 1.8rem;
-            font-weight: bold;
-            margin: 10px 0;
-            color: #007BFF;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin: 15px 0;
+            color: var(--primary-color);
+            line-height: 1;
+        }
+        
+        .stat-card:nth-child(2) .stat-value {
+            color: var(--warning-color);
+        }
+        
+        .stat-card:nth-child(3) .stat-value {
+            color: var(--success-color);
         }
         
         .stat-description {
-            color: #666;
+            color: var(--text-light);
             font-size: 0.9rem;
+        }
+        
+        /* Enhanced chart containers */
+        .chart-container {
+            width: 100%;
+            max-width: 1000px;
+            height: 450px;
+            margin: 40px auto;
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            padding: 30px;
+            position: relative;
+            transition: var(--transition);
+        }
+        
+        .chart-container:hover {
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* Improved D3 specific styles */
+        .axis path,
+        .axis line {
+            stroke: #cbd5e1;
+            stroke-width: 1px;
+        }
+        
+        .axis text {
+            font-size: 12px;
+            fill: var(--text-light);
+        }
+        
+        .line {
+            fill: none;
+            stroke-width: 3px;
+        }
+        
+        .area {
+            opacity: 0.2;
+        }
+        
+        .tooltip {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.98);
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 14px;
+            pointer-events: none;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+            max-width: 250px;
+        }
+        
+        .tooltip-date {
+            font-weight: 600;
+            margin-bottom: 8px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        
+        .tooltip-value {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin: 5px 0;
+        }
+        
+        .tooltip-value-label {
+            display: flex;
+            align-items: center;
+        }
+        
+        .tooltip-color {
+            width: 12px;
+            height: 12px;
+            margin-right: 8px;
+            border-radius: 2px;
+        }
+        
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 15px;
+            gap: 20px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin: 0 10px;
+            font-size: 14px;
+            background-color: rgba(241, 245, 249, 0.6);
+            padding: 6px 12px;
+            border-radius: 50px;
+        }
+        
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            margin-right: 8px;
+            border-radius: 2px;
         }
         
         .loading {
             display: none;
             text-align: center;
-            margin: 20px 0;
+            margin: 30px 0;
         }
         
         .spinner {
-            border: 4px solid rgba(0, 0, 0, 0.1);
+            border: 4px solid rgba(203, 213, 225, 0.3);
             border-radius: 50%;
-            border-top: 4px solid #007BFF;
-            width: 30px;
-            height: 30px;
+            border-top: 4px solid var(--primary-color);
+            width: 40px;
+            height: 40px;
             animation: spin 1s linear infinite;
-            margin: 0 auto;
-        }
-        
-        .error-message {
-            color: #dc3545;
-            background-color: #f8d7da;
-            border: 1px solid #f5c2c7;
-            border-radius: 5px;
-            padding: 10px;
-            margin: 20px auto;
-            max-width: 80%;
-            display: none;
+            margin: 0 auto 15px;
         }
         
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        .error-message {
+            color: var(--danger-color);
+            background-color: #fee2e2;
+            border: none;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 30px auto;
+            max-width: 80%;
+            display: none;
+            font-weight: 500;
+            text-align: center;
+        }
+        
+        /* Investment profile section */
+        .profile-section {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: var(--shadow);
+            max-width: 800px;
+            margin: 0 auto 60px;
+        }
+        
+        .profile-section h2 {
+            margin-bottom: 30px;
+            text-align: center;
+            color: var(--primary-dark);
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        .form-group label {
+            display: flex; 
+            margin-bottom: 8px;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-weight: 500;
+            color: var(--text-dark);
+            font-size: 1.1rem;
+        }
+        /* Added responsive design */
+        @media (max-width: 768px) {
+            .stat-cards {
+                flex-direction: column;
+                padding: 0 20px;
+            }
+            
+            .stat-card {
+                min-width: 100%;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .section-title {
+                font-size: 1.8rem;
+            }
+            
+            .chart-container {
+                height: 350px;
+                padding: 20px;
+                margin: 30px 20px;
+            }
+            
+            .profile-section {
+                padding: 30px 20px;
+                margin: 0 20px 40px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .btn-group {
+                flex-direction: column;
+                width: 100%;
+            }
+            
+            .btn {
+                width: 100%;
+            }
+            
+            .chart-container {
+                height: 300px;
+            }
+            
+            .stat-value {
+                font-size: 2rem;
+            }
+        }
     </style>
 </head>
 <body>
-    <h1>Beating Inflation: Why Investing Outperforms Traditional Savings</h1>
-    
-    <div class="intro-text">
-        <p>For many Singaporeans, the persistent rise in inflation has become a pressing concern, eroding their purchasing power and threatening long-term financial security. While interest rates have increased, returns on traditional savings accounts cannot outpace inflation.</p>
-    </div>
-    
-    <!-- Key Statistics Cards -->
-    <div class="stat-cards">
-        <div class="stat-card">
-            <div class="stat-label">Singapore Inflation</div>
-            <div class="stat-value" id="inflation-rate">1.8%</div>
-            <div class="stat-description">Core inflation (Dec 2024)</div>
+    <header>
+        <div class="header-content">
+            <h1>Smart Investing: <span class="highlight">Beat Inflation</span> & Grow Your Wealth</h1>
+            <p class="subtitle">See how strategic investments outperform traditional savings and protect your purchasing power</p>
         </div>
-        <div class="stat-card">
-            <div class="stat-label">Bank Interest</div>
-            <div class="stat-value" id="bank-interest">~0.5%</div>
-            <div class="stat-description">Typical savings interest</div>
+    </header>
+    
+    <div class="container">
+        <div class="intro-text">
+            <p>For many Singaporeans, the persistent rise in inflation has become a pressing concern, eroding their purchasing power and threatening long-term financial security. While interest rates have increased recently, the returns on traditional savings accounts <strong>still cannot outpace inflation</strong>, resulting in a loss of real value over time.</p>
         </div>
-        <div class="stat-card">
-            <div class="stat-label">SPY Returns</div>
-            <div class="stat-value" id="spy-returns">7-10%</div>
-            <div class="stat-description">Historical annual returns</div>
+        
+        <!-- Key Statistics Cards -->
+        <div class="section">
+            <h2 class="section-title">The Financial Reality</h2>
+            <div class="stat-cards">
+                <div class="stat-card">
+                    <div class="stat-label">Singapore Inflation</div>
+                    <div class="stat-value" id="inflation-rate">1.8%</div>
+                    <div class="stat-description">Core inflation (Dec 2024)</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Bank Interest</div>
+                    <div class="stat-value" id="bank-interest">~0.5%</div>
+                    <div class="stat-description">Typical savings interest</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">S&P 500 Returns</div>
+                    <div class="stat-value" id="spy-returns">7-10%</div>
+                    <div class="stat-description">Historical annual returns</div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Error message for API failures -->
+        <div class="error-message" id="errorMessage">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: middle; margin-right: 8px;">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+            </svg>
+            Could not connect to data service. Using sample data instead.
+        </div>
+        
+        <!-- Real vs Nominal Value Chart -->
+        <div class="section">
+            <h2 class="section-title">The Impact of Inflation on Your Money</h2>
+            <div class="chart-container" id="realVsNominalChart">
+                <div class="legend" id="realVsNominalLegend"></div>
+            </div>
+        </div>
+        
+        <!-- Bank vs SPY Chart -->
+        <div class="section">
+            <h2 class="section-title">Banks vs. Markets: The $10,000 Challenge</h2>
+            <div class="chart-container" id="bankVsSpyChart">
+                <div class="legend" id="bankVsSpyLegend"></div>
+            </div>
+        </div>
+        
+        <!-- Investment profile section -->
+        <div class="section">
+            <div class="profile-section">
+                <h2>Find Your Ideal Investment Strategy</h2>
+                <form id="profileForm">
+                    <div class="form-group">
+                        <label>How long do you plan to invest?</label>
+                        <div class="btn-group">
+                            <button type="button" class="btn" onclick="selectOption(this, 'investmentDuration', 'long')">Long Term (5+ years)</button>
+                            <button type="button" class="btn" onclick="selectOption(this, 'investmentDuration', 'short')">Short Term (1-5 years)</button>
+                        </div>
+                        <input type="hidden" id="investmentDuration" value="long">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>What's your risk tolerance?</label>
+                        <div class="btn-group">
+                            <button type="button" class="btn" onclick="selectOption(this, 'riskPreference', 'high')">Higher Risk, Higher Return</button>
+                            <button type="button" class="btn" onclick="selectOption(this, 'riskPreference', 'low')">Lower Risk, Stable Return</button>
+                        </div>
+                        <input type="hidden" id="riskPreference" value="high">
+                    </div>
+                    
+                    <button type="button" class="submit-btn" onclick="redirectUser()">Get My Investment Plan</button>
+                </form>
+            </div>
         </div>
     </div>
-    
-    <!-- Error message for API failures -->
-    <div class="error-message" id="errorMessage">
-        Could not connect to data service. Using sample data instead.
-    </div>
-    
-    <!-- Real vs Nominal Value Chart -->
-    <h2>Real vs. Nominal Value (Adjusted for Inflation)</h2>
-    <div class="chart-container">
-        <canvas id="realVsNominalChart"></canvas>
-    </div>
-    
-    <!-- Bank vs SPY Chart -->
-    <h2>Bank Savings vs. S&P 500 Investment ($10,000 Initial)</h2>
-    <div class="chart-container">
-        <canvas id="bankVsSpyChart"></canvas>
-    </div>
-    
-    <h2>Investment Profile Selection</h2>
-    <form id="profileForm">
-        <label>Investment Duration:</label><br>
-        <div class="btn-group">
-            <button type="button" class="btn" onclick="selectOption(this, 'investmentDuration', 'long')">Long Term</button>
-            <button type="button" class="btn" onclick="selectOption(this, 'investmentDuration', 'short')">Short Term</button>
-        </div>
-        <input type="hidden" id="investmentDuration" value="long">
-        <br>
-        <label>Risk Preference:</label><br>
-        <div class="btn-group">
-            <button type="button" class="btn" onclick="selectOption(this, 'riskPreference', 'high')">High Risk</button>
-            <button type="button" class="btn" onclick="selectOption(this, 'riskPreference', 'low')">Low Risk</button>
-        </div>
-        <input type="hidden" id="riskPreference" value="high">
-        <br>
-        <button type="button" onclick="redirectUser()">Submit</button>
-    </form>
     
     <div class="loading" id="loadingIndicator">
         <div class="spinner"></div>
-        <p>Loading data...</p>
+        <p>Loading market data...</p>
     </div>
 
     <script>
         // Configuration
-        const API_BASE_URL = 'http://localhost:5005'; // Adjust this to match your microservice URL
-        
-        // Original code from index.html
+        const API_BASE_URL = 'http://localhost:5005'; 
         function selectOption(button, group, value) {
             document.getElementById(group).value = value;
             let buttons = button.parentElement.getElementsByClassName("btn");
@@ -227,7 +585,12 @@
             }
         }
         
-        // New code for visualizations using microservice
+        // Enhanced D3.js visualizations
+        
+        // Create tooltip div
+        const tooltip = d3.select("body").append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0);
         
         // Load statistics from the microservice
         function loadStatistics() {
@@ -245,6 +608,10 @@
                         document.getElementById('bank-interest').textContent = '~' + stats.bank_interest + '%';
                         document.getElementById('spy-returns').textContent = 
                             `${stats.spy_return_range.min}-${stats.spy_return_range.max}%`;
+                        
+                        // Add animation to stats for emphasis
+                        animateValue('inflation-rate', 0, parseFloat(stats.singapore_inflation), 1500);
+                        animateValue('bank-interest', 0, parseFloat(stats.bank_interest), 1500);
                     }
                 })
                 .catch(error => {
@@ -253,9 +620,51 @@
                 });
         }
         
-        // Load Real vs Nominal Chart using microservice
+        // Animate value counting up for more engagement
+        function animateValue(id, start, end, duration) {
+            const obj = document.getElementById(id);
+            const suffix = obj.innerText.indexOf('%') > -1 ? '%' : '';
+            const prefix = obj.innerText.indexOf('~') > -1 ? '~' : '';
+            let startTimestamp = null;
+            
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const value = progress * (end - start) + start;
+                obj.innerHTML = prefix + value.toFixed(1) + suffix;
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            
+            window.requestAnimationFrame(step);
+        }
+        
+        // Create legend for chart with improved design
+        function createLegend(containerId, datasets) {
+            const legend = d3.select(`#${containerId}`);
+            legend.html(""); // Clear existing legend
+            
+            datasets.forEach(dataset => {
+                const legendItem = legend.append("div")
+                    .attr("class", "legend-item");
+                
+                legendItem.append("div")
+                    .attr("class", "legend-color")
+                    .style("background-color", dataset.color);
+                
+                legendItem.append("span")
+                    .text(dataset.label);
+            });
+        }
+        
+        // Format currency with improved formatting
+        function formatCurrency(value) {
+            return '$' + d3.format(",")(Math.round(value));
+        }
+        
+        // Load Real vs Nominal Chart using D3.js
         function loadRealVsNominalChart() {
-            const ctx = document.getElementById('realVsNominalChart').getContext('2d');
             document.getElementById('loadingIndicator').style.display = 'block';
             
             // Fetch data from microservice
@@ -272,87 +681,7 @@
                     }
                     
                     const data = result.data;
-                    
-                    // Prepare data arrays
-                    const dates = data.map(item => item.date);
-                    const nominalValues = data.map(item => item.nominal_inv_10k);
-                    const realValues = data.map(item => item.real_inv_10k);
-                    
-                    // Create chart
-                    new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels: dates,
-                            datasets: [
-                                {
-                                    label: 'Nominal Value (S&P 500)',
-                                    data: nominalValues,
-                                    borderColor: 'rgba(75, 192, 192, 1)',
-                                    backgroundColor: 'rgba(75, 192, 192, 0.1)',
-                                    fill: true,
-                                    tension: 0.3
-                                },
-                                {
-                                    label: 'Real Value (Inflation Adjusted)',
-                                    data: realValues,
-                                    borderColor: 'rgba(153, 102, 255, 1)',
-                                    backgroundColor: 'rgba(153, 102, 255, 0.1)',
-                                    fill: true,
-                                    tension: 0.3
-                                }
-                            ]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                title: {
-                                    display: true,
-                                    text: '$10,000 Investment in S&P 500 (Adjusted for Inflation)',
-                                    font: {
-                                        size: 16
-                                    }
-                                },
-                                tooltip: {
-                                    mode: 'index',
-                                    intersect: false,
-                                    callbacks: {
-                                        label: function(context) {
-                                            let label = context.dataset.label || '';
-                                            if (label) {
-                                                label += ': ';
-                                            }
-                                            label += '$' + context.raw.toLocaleString('en-US', { maximumFractionDigits: 0 });
-                                            return label;
-                                        }
-                                    }
-                                }
-                            },
-                            scales: {
-                                y: {
-                                    title: {
-                                        display: true,
-                                        text: 'Value ($)'
-                                    },
-                                    ticks: {
-                                        callback: function(value) {
-                                            return '$' + value.toLocaleString('en-US', { maximumFractionDigits: 0 });
-                                        }
-                                    }
-                                },
-                                x: {
-                                    title: {
-                                        display: true,
-                                        text: 'Date'
-                                    },
-                                    ticks: {
-                                        maxTicksLimit: 12,
-                                        autoSkip: true
-                                    }
-                                }
-                            }
-                        }
-                    });
+                    createRealVsNominalChart(data);
                     
                     document.getElementById('loadingIndicator').style.display = 'none';
                     document.getElementById('errorMessage').style.display = 'none';
@@ -362,321 +691,689 @@
                     document.getElementById('loadingIndicator').style.display = 'none';
                     document.getElementById('errorMessage').style.display = 'block';
                     
-                    // Create fallback chart with simulated data if actual data can't be loaded
-                    createFallbackRealVsNominalChart(ctx);
-                });
-        }
-        
-        // Create fallback real vs nominal chart with simulated data
-        function createFallbackRealVsNominalChart(ctx) {
-            // Generate 10 years of data
-            const years = Array.from({length: 10}, (_, i) => 2015 + i);
-            const initialInvestment = 10000;
-            const inflationRate = 0.018; // 1.8% inflation
-            const investmentReturn = 0.08; // 8% average return
-            
-            const nominalValues = years.map((_, i) => initialInvestment * Math.pow(1 + investmentReturn, i));
-            const realValues = years.map((_, i) => initialInvestment * Math.pow(1 + investmentReturn - inflationRate, i));
-            
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: years,
-                    datasets: [
-                        {
-                            label: 'Nominal Value (S&P 500)',
-                            data: nominalValues,
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            backgroundColor: 'rgba(75, 192, 192, 0.1)',
-                            fill: true,
-                            tension: 0.3
-                        },
-                        {
-                            label: 'Real Value (Inflation Adjusted)',
-                            data: realValues,
-                            borderColor: 'rgba(153, 102, 255, 1)',
-                            backgroundColor: 'rgba(153, 102, 255, 0.1)',
-                            fill: true,
-                            tension: 0.3
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: '$10,000 Investment in S&P 500 (Sample Data)',
-                            font: {
-                                size: 16
-                            }
-                        },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false,
-                            callbacks: {
-                                label: function(context) {
-                                    let label = context.dataset.label || '';
-                                    if (label) {
-                                        label += ': ';
-                                    }
-                                    label += '$' + context.raw.toLocaleString('en-US', { maximumFractionDigits: 0 });
-                                    return label;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            title: {
-                                display: true,
-                                text: 'Value ($)'
-                            },
-                            ticks: {
-                                callback: function(value) {
-                                    return '$' + value.toLocaleString('en-US', { maximumFractionDigits: 0 });
-                                }
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Year'
-                            }
-                        }
-                    }
-                }
-            });
-        }
-        
-        // Load Bank vs SPY Chart using microservice
-        function loadBankVsSpyChart() {
-            const ctx = document.getElementById('bankVsSpyChart').getContext('2d');
-            document.getElementById('loadingIndicator').style.display = 'block';
-            
-            // Fetch data from microservice
-            fetch(`${API_BASE_URL}/api/bank-vs-spy`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Network response was not ok: ' + response.statusText);
-                    }
-                    return response.json();
-                })
-                .then(result => {
-                    if (result.status !== 'success') {
-                        throw new Error('API returned error status');
-                    }
-                    
-                    const data = result.data;
-                    
-                    // Prepare data arrays
-                    const dates = data.map(item => item.date);
-                    const bankValues = data.map(item => item.bank_value);
-                    const spyValues = data.map(item => item.spy_value);
-                    
-                    // Create chart
-                    new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels: dates,
-                            datasets: [
-                                {
-                                    label: 'Bank Savings Account',
-                                    data: bankValues,
-                                    borderColor: 'rgba(75, 192, 192, 1)',
-                                    backgroundColor: 'rgba(75, 192, 192, 0.1)',
-                                    fill: true,
-                                    tension: 0.3
-                                },
-                                {
-                                    label: 'S&P 500 Investment',
-                                    data: spyValues,
-                                    borderColor: 'rgba(153, 102, 255, 1)',
-                                    backgroundColor: 'rgba(153, 102, 255, 0.1)',
-                                    fill: true,
-                                    tension: 0.3
-                                }
-                            ]
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                title: {
-                                    display: true,
-                                    text: '$10,000 Initial Investment Comparison',
-                                    font: {
-                                        size: 16
-                                    }
-                                },
-                                tooltip: {
-                                    mode: 'index',
-                                    intersect: false,
-                                    callbacks: {
-                                        label: function(context) {
-                                            let label = context.dataset.label || '';
-                                            if (label) {
-                                                label += ': ';
-                                            }
-                                            label += '$' + context.raw.toLocaleString('en-US', { maximumFractionDigits: 0 });
-                                            return label;
-                                        }
-                                    }
-                                }
-                            },
-                            scales: {
-                                y: {
-                                    title: {
-                                        display: true,
-                                        text: 'Value ($)'
-                                    },
-                                    ticks: {
-                                        callback: function(value) {
-                                            return '$' + value.toLocaleString('en-US', { maximumFractionDigits: 0 });
-                                        }
-                                    }
-                                },
-                                x: {
-                                    title: {
-                                        display: true,
-                                        text: 'Date'
-                                    },
-                                    ticks: {
-                                        maxTicksLimit: 12,
-                                        autoSkip: true
-                                    }
-                                }
-                            }
-                        }
-                    });
-                    
-                    document.getElementById('loadingIndicator').style.display = 'none';
-                    document.getElementById('errorMessage').style.display = 'none';
-                })
-                .catch(error => {
-                    console.error('Error loading bank vs SPY data:', error);
-                    document.getElementById('loadingIndicator').style.display = 'none';
-                    document.getElementById('errorMessage').style.display = 'block';
-                    
                     // Create fallback chart with simulated data
-                    createFallbackBankVsSpyChart(ctx);
+                    createFallbackRealVsNominalChart();
                 });
         }
         
-        // Create fallback bank vs SPY chart with simulated data
-        function createFallbackBankVsSpyChart(ctx) {
-            // Generate 10 years of data
-            const years = Array.from({length: 10}, (_, i) => 2015 + i);
-            const initialInvestment = 10000;
-            const bankInterestRate = 0.005; // 0.5% interest
-            const spyReturn = 0.08; // 8% average S&P 500 return
-            
-            const bankValues = years.map((_, i) => initialInvestment * Math.pow(1 + bankInterestRate, i));
-            const spyValues = years.map((_, i) => initialInvestment * Math.pow(1 + spyReturn, i));
-            
-            new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: years,
-                    datasets: [
-                        {
-                            label: 'Bank Savings Account',
-                            data: bankValues,
-                            borderColor: 'rgba(75, 192, 192, 1)',
-                            backgroundColor: 'rgba(75, 192, 192, 0.1)',
-                            fill: true,
-                            tension: 0.3
-                        },
-                        {
-                            label: 'S&P 500 Investment',
-                            data: spyValues,
-                            borderColor: 'rgba(153, 102, 255, 1)',
-                            backgroundColor: 'rgba(153, 102, 255, 0.1)',
-                            fill: true,
-                            tension: 0.3
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: '$10,000 Initial Investment Comparison (Sample Data)',
-                            font: {
-                                size: 16
-                            }
-                        },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false,
-                            callbacks: {
-                                label: function(context) {
-                                    let label = context.dataset.label || '';
-                                    if (label) {
-                                        label += ': ';
-                                    }
-                                    label += '$' + context.raw.toLocaleString('en-US', { maximumFractionDigits: 0 });
-                                    return label;
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        y: {
-                            title: {
-                                display: true,
-                                text: 'Value ($)'
-                            },
-                            ticks: {
-                                callback: function(value) {
-                                    return '$' + value.toLocaleString('en-US', { maximumFractionDigits: 0 });
-                                }
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Year'
-                            }
-                        }
-                    }
-                }
-            });
+// Create Real vs Nominal Chart with D3.js - enhanced version
+function createRealVsNominalChart(data) {
+    // Clear any existing chart
+    d3.select("#realVsNominalChart svg").remove();
+    
+    // Parse dates if needed
+    data.forEach(d => {
+        if (typeof d.date === 'string') {
+            d.date = new Date(d.date);
         }
-        
-        // Check if microservice is available
-        function checkMicroserviceAvailability() {
-            return fetch(`${API_BASE_URL}/health`)
-                .then(response => response.ok)
-                .catch(() => false);
-        }
-        
-        // Initialize charts when the page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            // Pre-select the first options in each group for better UX
-            const durationButtons = document.querySelector('.btn-group:nth-of-type(1)').querySelectorAll('.btn');
-            if (durationButtons.length > 0) durationButtons[0].classList.add('selected');
+    });
+    
+    // Create SVG
+    const margin = { top: 40, right: 30, bottom: 50, left: 60 };
+    const container = document.getElementById('realVsNominalChart');
+    const width = 950 - margin.left - margin.right;
+    const height = 350 - margin.top - margin.bottom;
+
+const svg = d3.select("#realVsNominalChart")
+    .append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", `translate(${margin.left},${margin.top})`);
             
-            const riskButtons = document.querySelector('.btn-group:nth-of-type(2)').querySelectorAll('.btn');
-            if (riskButtons.length > 0) riskButtons[0].classList.add('selected');
+    // Add title
+    svg.append("text")
+        .attr("x", width / 2)
+        .attr("y", -20)
+        .attr("text-anchor", "middle")
+        .style("font-size", "16px")
+        .style("font-weight", "bold")
+        .text("$10,000 Investment in S&P 500 (Adjusted for Inflation)");
+    
+    // Set up scales with improved padding
+    const x = d3.scaleTime()
+        .domain(d3.extent(data, d => d.date))
+        .range([0, width]);
             
-            // Check if microservice is available and load data
-            checkMicroserviceAvailability()
-                .then(available => {
-                    if (available) {
-                        // Load statistics and charts from microservice
-                        loadStatistics();
-                        loadRealVsNominalChart();
-                        loadBankVsSpyChart();
-                    } else {
-                        // Show error message and load fallback charts
-                        document.getElementById('errorMessage').style.display = 'block';
-                        createFallbackRealVsNominalChart(document.getElementById('realVsNominalChart').getContext('2d'));
-                        createFallbackBankVsSpyChart(document.getElementById('bankVsSpyChart').getContext('2d'));
-                    }
-                });
+    const y = d3.scaleLinear()
+        .domain([0, d3.max(data, d => Math.max(d.nominal_inv_10k, d.real_inv_10k)) * 1.1])
+        .range([height, 0]);
+            
+    // Add grid lines for better readability
+    svg.append("g")
+        .attr("class", "grid")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(x)
+            .ticks(width > 500 ? 10 : 5)
+            .tickSize(-height)
+            .tickFormat("")
+        )
+        .style("stroke-opacity", 0.1);
+            
+    svg.append("g")
+        .attr("class", "grid")
+        .call(d3.axisLeft(y)
+            .tickSize(-width)
+            .tickFormat("")
+        )
+        .style("stroke-opacity", 0.1);
+            
+    // Add X axis with improved style
+    svg.append("g")
+        .attr("class", "axis")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(x).ticks(width > 500 ? 10 : 5))
+        .append("text")
+        .attr("x", width / 2)
+        .attr("y", 40)
+        .attr("fill", "#666")
+        .style("text-anchor", "middle")
+        .text("Date");
+            
+    // Add Y axis with improved style
+    svg.append("g")
+        .attr("class", "axis")
+        .call(d3.axisLeft(y).tickFormat(d => `$${d3.format(",")(d)}`))
+        .append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", -60)
+        .attr("x", -height / 2)
+        .attr("fill", "#666")
+        .style("text-anchor", "middle")
+        .text("Value ($)");
+            
+    // Create line generators with smooth curves
+    const nominalLine = d3.line()
+        .x(d => x(d.date))
+        .y(d => y(d.nominal_inv_10k))
+        .curve(d3.curveMonotoneX);
+            
+    const realLine = d3.line()
+        .x(d => x(d.date))
+        .y(d => y(d.real_inv_10k))
+        .curve(d3.curveMonotoneX);
+            
+    // Create area generators for fills
+    const nominalArea = d3.area()
+        .x(d => x(d.date))
+        .y0(height)
+        .y1(d => y(d.nominal_inv_10k))
+        .curve(d3.curveMonotoneX);
+            
+    const realArea = d3.area()
+        .x(d => x(d.date))
+        .y0(height)
+        .y1(d => y(d.real_inv_10k))
+        .curve(d3.curveMonotoneX);
+            
+    // Add areas with attractive colors
+    svg.append("path")
+        .datum(data)
+        .attr("class", "area")
+        .attr("fill", "rgba(66, 153, 225, 0.2)")
+        .attr("d", nominalArea);
+            
+    svg.append("path")
+        .datum(data)
+        .attr("class", "area")
+        .attr("fill", "rgba(245, 158, 11, 0.15)")
+        .attr("d", realArea);
+            
+    // Add lines with improved styling
+    svg.append("path")
+        .datum(data)
+        .attr("class", "line")
+        .attr("stroke", "#3b82f6")
+        .attr("d", nominalLine)
+        .style("stroke-width", "3px");
+            
+    svg.append("path")
+        .datum(data)
+        .attr("class", "line")
+        .attr("stroke", "#f59e0b")
+        .attr("d", realLine)
+        .style("stroke-width", "3px");
+            
+    // Emphasize the gap between nominal and real values
+    if (data.length > 1) {
+        const lastPoint = data[data.length - 1];
+                
+        // Add value loss annotation
+        const midY = (y(lastPoint.nominal_inv_10k) + y(lastPoint.real_inv_10k)) / 2;
+        const valueLost = lastPoint.nominal_inv_10k - lastPoint.real_inv_10k;
+        const percentLost = (valueLost / lastPoint.nominal_inv_10k) * 100;
+            
+        svg.append("text")
+            .attr("x", x(lastPoint.date) + 10)
+            .attr("y", midY)
+            .attr("fill", "#ef4444")
+            .style("font-size", "12px")
+            .style("font-weight", "bold")
+    }
+            
+    // Add interactive elements
+    const focus = svg.append("g")
+        .style("display", "none");
+            
+    // Add vertical line for hover
+    focus.append("line")
+        .attr("class", "hover-line")
+        .attr("y1", 0)
+        .attr("y2", height)
+        .style("stroke", "#64748b")
+        .style("stroke-width", "1.5px")
+        .style("stroke-dasharray", "5,5");
+            
+    // Circles to highlight data points
+    focus.append("circle")
+        .attr("class", "nominal-circle")
+        .attr("r", 6)
+        .style("fill", "#3b82f6")
+        .style("stroke", "#fff")
+        .style("stroke-width", 2);
+            
+    focus.append("circle")
+        .attr("class", "real-circle")
+        .attr("r", 6)
+        .style("fill", "#f59e0b")
+        .style("stroke", "#fff")
+        .style("stroke-width", 2);
+            
+    // Create overlay for mouse events
+    svg.append("rect")
+        .attr("class", "overlay")
+        .attr("width", width)
+        .attr("height", height)
+        .style("opacity", 0)
+        .on("mouseover", () => focus.style("display", null))
+        .on("mouseout", () => {
+            focus.style("display", "none");
+            tooltip.style("opacity", 0);
+        })
+        .on("mousemove", mousemove);
+            
+    // Function to handle mouse movement with enhanced tooltip
+    function mousemove(event) {
+        const bisect = d3.bisector(d => d.date).left;
+        const x0 = x.invert(d3.pointer(event)[0]);
+        const i = bisect(data, x0, 1);
+        const d0 = data[i - 1];
+        const d1 = data[i];
+        const d = x0 - d0.date > d1.date - x0 ? d1 : d0;
+            
+        // Position the vertical line
+        focus.select(".hover-line")
+            .attr("x1", x(d.date))
+            .attr("x2", x(d.date));
+                
+        // Position the circles
+        focus.select(".nominal-circle")
+            .attr("cx", x(d.date))
+            .attr("cy", y(d.nominal_inv_10k));
+                
+        focus.select(".real-circle")
+            .attr("cx", x(d.date))
+            .attr("cy", y(d.real_inv_10k));
+                
+        // Calculate purchasing power loss
+        const valueLost = d.nominal_inv_10k - d.real_inv_10k;
+        const percentLost = (valueLost / d.nominal_inv_10k) * 100;
+            
+        // Update tooltip with enhanced content
+        tooltip.style("opacity", 1)
+            .style("left", (event.pageX + 15) + "px")
+            .style("top", (event.pageY - 28) + "px")
+            .html(`
+                <div class="tooltip-date">${d3.timeFormat("%b %Y")(d.date)}</div>
+                <div class="tooltip-value">
+                    <div class="tooltip-value-label">
+                        <div class="tooltip-color" style="background-color: #3b82f6;"></div>
+                        <span>Nominal Value:</span>
+                    </div>
+                    <strong>${formatCurrency(d.nominal_inv_10k)}</strong>
+                </div>
+                <div class="tooltip-value">
+                    <div class="tooltip-value-label">
+                        <div class="tooltip-color" style="background-color: #f59e0b;"></div>
+                        <span>Real Value:</span>
+                    </div>
+                    <strong>${formatCurrency(d.real_inv_10k)}</strong>
+                </div>
+                <div class="tooltip-value" style="margin-top: 5px; color: #ef4444; font-weight: bold;">
+                    <span>Lost to Inflation:</span>
+                    <span>${formatCurrency(valueLost)} (${percentLost.toFixed(1)}%)</span>
+                </div>
+            `);
+    }
+        
+    // Create legend with better styling
+    const datasets = [
+        { label: "Nominal Value (Market Returns)", color: "#3b82f6" },
+        { label: "Real Value (Inflation Adjusted)", color: "#f59e0b" }
+    ];
+        
+    createLegend("realVsNominalLegend", datasets);
+}
+
+// Create fallback real vs nominal chart with simulated data
+function createFallbackRealVsNominalChart() {
+    // Generate 10 years of data
+    const years = Array.from({length: 10}, (_, i) => i);
+    const initialInvestment = 10000;
+    const inflationRate = 0.018; // 1.8% inflation
+    const investmentReturn = 0.08; // 8% average return
+    
+    const data = years.map(i => {
+        const year = new Date(2015 + i, 0, 1);
+        const nominalValue = initialInvestment * Math.pow(1 + investmentReturn, i);
+        const realValue = initialInvestment * Math.pow(1 + investmentReturn - inflationRate, i);
+        
+        return {
+            date: year,
+            nominal_inv_10k: nominalValue,
+            real_inv_10k: realValue
+        };
+    });
+    
+    createRealVsNominalChart(data);
+    
+    // Update chart title to indicate sample data
+    d3.select("#realVsNominalChart svg g text")
+        .text("$10,000 Investment in S&P 500 (Sample Data)");
+}
+
+// Load Bank vs SPY Chart using D3.js
+function loadBankVsSpyChart() {
+    document.getElementById('loadingIndicator').style.display = 'block';
+    
+    // Fetch data from microservice
+    fetch(`${API_BASE_URL}/api/bank-vs-spy`)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok: ' + response.statusText);
+            }
+            return response.json();
+        })
+        .then(result => {
+            if (result.status !== 'success') {
+                throw new Error('API returned error status');
+            }
+            
+            const data = result.data;
+            createBankVsSpyChart(data);
+            
+            document.getElementById('loadingIndicator').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+        })
+        .catch(error => {
+            console.error('Error loading bank vs SPY data:', error);
+            document.getElementById('loadingIndicator').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'block';
+            
+            // Create fallback chart with simulated data
+            createFallbackBankVsSpyChart();
         });
+}
+
+// Create Bank vs SPY Chart with D3.js
+function createBankVsSpyChart(data) {
+    // Clear any existing chart
+    d3.select("#bankVsSpyChart svg").remove();
+    
+    // Parse dates if needed
+    data.forEach(d => {
+        if (typeof d.date === 'string') {
+            d.date = new Date(d.date);
+        }
+    });
+    
+    // Chart dimensions
+    const margin = {top: 50, right: 30, bottom: 50, left: 80};
+    const container = document.getElementById('bankVsSpyChart');
+    const width = container.clientWidth - margin.left - margin.right - 60;
+    const height = container.clientHeight - margin.top - margin.bottom - 100; // Adjust for legend
+    
+    // Create SVG
+    const svg = d3.select("#bankVsSpyChart")
+        .append("svg")
+        .attr("width", width + margin.left + margin.right)
+        .attr("height", height + margin.top + margin.bottom)
+        .append("g")
+        .attr("transform", `translate(${margin.left},${margin.top})`);
+        
+    // Add title
+    svg.append("text")
+        .attr("x", width / 2)
+        .attr("y", -20)
+        .attr("text-anchor", "middle")
+        .style("font-size", "16px")
+        .style("font-weight", "bold")
+        .text("$10,000 Initial Investment: Bank vs Market Growth");
+    
+    // Set up scales
+    const x = d3.scaleTime()
+        .domain(d3.extent(data, d => d.date))
+        .range([0, width]);
+        
+    const y = d3.scaleLinear()
+        .domain([0, d3.max(data, d => Math.max(d.bank_value, d.spy_value)) * 1.1])
+        .range([height, 0]);
+    
+    // Add grid lines for better readability
+    svg.append("g")
+        .attr("class", "grid")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(x)
+            .ticks(width > 500 ? 10 : 5)
+            .tickSize(-height)
+            .tickFormat("")
+        )
+        .style("stroke-opacity", 0.1);
+        
+    svg.append("g")
+        .attr("class", "grid")
+        .call(d3.axisLeft(y)
+            .tickSize(-width)
+            .tickFormat("")
+        )
+        .style("stroke-opacity", 0.1);
+        
+    // Add X axis
+    svg.append("g")
+        .attr("class", "axis")
+        .attr("transform", `translate(0,${height})`)
+        .call(d3.axisBottom(x).ticks(width > 500 ? 10 : 5))
+        .append("text")
+        .attr("x", width / 2)
+        .attr("y", 40)
+        .attr("fill", "#666")
+        .style("text-anchor", "middle")
+        .text("Date");
+        
+    // Add Y axis
+    svg.append("g")
+        .attr("class", "axis")
+        .call(d3.axisLeft(y).tickFormat(d => `$${d3.format(",")(d)}`))
+        .append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", -60)
+        .attr("x", -height / 2)
+        .attr("fill", "#666")
+        .style("text-anchor", "middle")
+        .text("Value ($)");
+        
+    // Create line generators with smooth curves
+    const bankLine = d3.line()
+        .x(d => x(d.date))
+        .y(d => y(d.bank_value))
+        .curve(d3.curveMonotoneX);
+        
+    const spyLine = d3.line()
+        .x(d => x(d.date))
+        .y(d => y(d.spy_value))
+        .curve(d3.curveMonotoneX);
+        
+    // Create area generators for fills
+    const bankArea = d3.area()
+        .x(d => x(d.date))
+        .y0(height)
+        .y1(d => y(d.bank_value))
+        .curve(d3.curveMonotoneX);
+        
+    const spyArea = d3.area()
+        .x(d => x(d.date))
+        .y0(height)
+        .y1(d => y(d.spy_value))
+        .curve(d3.curveMonotoneX);
+        
+    // Add areas with better colors for contrast
+    svg.append("path")
+        .datum(data)
+        .attr("class", "area")
+        .attr("fill", "rgba(203, 213, 225, 0.3)")
+        .attr("d", bankArea);
+        
+    svg.append("path")
+        .datum(data)
+        .attr("class", "area")
+        .attr("fill", "rgba(16, 185, 129, 0.2)")
+        .attr("d", spyArea);
+        
+    // Add lines
+    svg.append("path")
+        .datum(data)
+        .attr("class", "line")
+        .attr("stroke", "#64748b")
+        .attr("d", bankLine)
+        .style("stroke-width", "3px");
+        
+    svg.append("path")
+        .datum(data)
+        .attr("class", "line")
+        .attr("stroke", "#10b981")
+        .attr("d", spyLine)
+        .style("stroke-width", "3px");
+    
+    // Add the "opportunity cost" area between lines
+    const opportunityCostArea = d3.area()
+        .x(d => x(d.date))
+        .y0(d => y(d.bank_value))
+        .y1(d => y(d.spy_value))
+        .curve(d3.curveMonotoneX);
+        
+    svg.append("path")
+        .datum(data)
+        .attr("class", "area")
+        .attr("fill", "rgba(16, 185, 129, 0.3)")
+        .attr("d", opportunityCostArea)
+        .style("stroke", "none")
+        .style("pointer-events", "none");
+    
+    // Highlight the difference at the end point
+    if (data.length > 1) {
+        const lastPoint = data[data.length - 1];
+        
+            
+        // Add value difference annotation
+        const midY = (y(lastPoint.bank_value) + y(lastPoint.spy_value)) / 2;
+        const valueDiff = lastPoint.spy_value - lastPoint.bank_value;
+        const percentMore = (valueDiff / lastPoint.bank_value) * 100;
+        
+        // Only add annotation if there's enough space
+        if (percentMore > 20) {
+            svg.append("text")
+                .attr("x", x(lastPoint.date) + 10)
+                .attr("y", midY)
+                .attr("fill", "#ef4444")
+                .style("font-size", "12px")
+                .style("font-weight", "bold")
+        }
+        
+        // Add return highlight
+        svg.append("text")
+            .attr("x", x(lastPoint.date) - 5)
+            .attr("y", y(lastPoint.spy_value) - 10)
+            .attr("text-anchor", "end")
+            .attr("fill", "#10b981")
+            .style("font-size", "14px")
+            .style("font-weight", "bold")
+            .text(`${formatCurrency(lastPoint.spy_value)}`);
+            
+        svg.append("text")
+            .attr("x", x(lastPoint.date) - 5)
+            .attr("y", y(lastPoint.bank_value) - 10)
+            .attr("text-anchor", "end")
+            .attr("fill", "#64748b")
+            .style("font-size", "14px")
+            .style("font-weight", "bold")
+            .text(`${formatCurrency(lastPoint.bank_value)}`);
+    }
+        
+    // Add interactive elements
+    const focus = svg.append("g")
+        .style("display", "none");
+        
+    // Add vertical line for hover
+    focus.append("line")
+        .attr("class", "hover-line")
+        .attr("y1", 0)
+        .attr("y2", height)
+        .style("stroke", "#64748b")
+        .style("stroke-width", "1.5px")
+        .style("stroke-dasharray", "5,5");
+        
+    // Circles to highlight data points
+    focus.append("circle")
+        .attr("class", "bank-circle")
+        .attr("r", 6)
+        .style("fill", "#64748b")
+        .style("stroke", "#fff")
+        .style("stroke-width", 2);
+        
+    focus.append("circle")
+        .attr("class", "spy-circle")
+        .attr("r", 6)
+        .style("fill", "#10b981")
+        .style("stroke", "#fff")
+        .style("stroke-width", 2);
+        
+    // Create overlay for mouse events
+    svg.append("rect")
+        .attr("class", "overlay")
+        .attr("width", width)
+        .attr("height", height)
+        .style("opacity", 0)
+        .on("mouseover", () => focus.style("display", null))
+        .on("mouseout", () => {
+            focus.style("display", "none");
+            tooltip.style("opacity", 0);
+        })
+        .on("mousemove", mousemove);
+        
+    // Function to handle mouse movement with enhanced tooltip
+    function mousemove(event) {
+        const bisect = d3.bisector(d => d.date).left;
+        const x0 = x.invert(d3.pointer(event)[0]);
+        const i = bisect(data, x0, 1);
+        const d0 = data[i - 1];
+        const d1 = data[i];
+        const d = x0 - d0.date > d1.date - x0 ? d1 : d0;
+        
+        // Position the vertical line
+        focus.select(".hover-line")
+            .attr("x1", x(d.date))
+            .attr("x2", x(d.date));
+            
+        // Position the circles
+        focus.select(".bank-circle")
+            .attr("cx", x(d.date))
+            .attr("cy", y(d.bank_value));
+            
+        focus.select(".spy-circle")
+            .attr("cx", x(d.date))
+            .attr("cy", y(d.spy_value));
+            
+        // Calculate difference
+        const valueDiff = d.spy_value - d.bank_value;
+        const percentMore = (valueDiff / d.bank_value) * 100;
+        
+        // Update tooltip with enhanced content
+        tooltip.style("opacity", 1)
+            .style("left", (event.pageX + 15) + "px")
+            .style("top", (event.pageY - 28) + "px")
+            .html(`
+                <div class="tooltip-date">${d3.timeFormat("%b %Y")(d.date)}</div>
+                <div class="tooltip-value">
+                    <div class="tooltip-value-label">
+                        <div class="tooltip-color" style="background-color: #64748b;"></div>
+                        <span>Bank Savings:</span>
+                    </div>
+                    <strong>${formatCurrency(d.bank_value)}</strong>
+                </div>
+                <div class="tooltip-value">
+                    <div class="tooltip-value-label">
+                        <div class="tooltip-color" style="background-color: #10b981;"></div>
+                        <span>S&P 500:</span>
+                    </div>
+                    <strong>${formatCurrency(d.spy_value)}</strong>
+                </div>
+                <div class="tooltip-value" style="margin-top: 5px; color: #10b981; font-weight: bold;">
+                    <span>Investing Advantage:</span>
+                    <span>+${formatCurrency(valueDiff)} (+${percentMore.toFixed(1)}%)</span>
+                </div>
+            `);
+    }
+    
+    // Create legend with better styling
+    const datasets = [
+        { label: "Bank Savings Account", color: "#64748b" },
+        { label: "S&P 500 Investment", color: "#10b981" }
+    ];
+    
+    createLegend("bankVsSpyLegend", datasets);
+}
+
+// Create fallback bank vs SPY chart with simulated data
+function createFallbackBankVsSpyChart() {
+    // Generate 10 years of data
+    const years = Array.from({length: 10}, (_, i) => i);
+    const initialInvestment = 10000;
+    const bankInterestRate = 0.005; // 0.5% interest
+    const spyReturn = 0.08; // 8% average S&P 500 return
+    
+    const data = years.map(i => {
+        const year = new Date(2015 + i, 0, 1);
+        const bankValue = initialInvestment * Math.pow(1 + bankInterestRate, i);
+        const spyValue = initialInvestment * Math.pow(1 + spyReturn, i);
+        
+        return {
+            date: year,
+            bank_value: bankValue,
+            spy_value: spyValue
+        };
+    });
+    
+    createBankVsSpyChart(data);
+    
+    // Update chart title to indicate sample data
+    d3.select("#bankVsSpyChart svg g text")
+        .text("$10,000 Initial Investment Comparison (Sample Data)");
+}
+
+// Check if microservice is available
+function checkMicroserviceAvailability() {
+    return fetch(`${API_BASE_URL}/health`)
+        .then(response => response.ok)
+        .catch(() => false);
+}
+
+// Initialize charts when the page loads
+document.addEventListener('DOMContentLoaded', function () {
+    const btnGroups = document.querySelectorAll('.btn-group');
+    
+    if (btnGroups.length >= 2) {
+        const durationButtons = btnGroups[0].querySelectorAll('.btn');
+        if (durationButtons.length > 0) durationButtons[0].classList.add('selected');
+        
+        const riskButtons = btnGroups[1].querySelectorAll('.btn');
+        if (riskButtons.length > 0) riskButtons[0].classList.add('selected');
+    }
+
+    // Continue with microservice check...
+    checkMicroserviceAvailability()
+        .then(available => {
+            if (available) {
+                loadStatistics();
+                loadRealVsNominalChart();
+                loadBankVsSpyChart();
+            } else {
+                document.getElementById('errorMessage').style.display = 'block';
+                createFallbackRealVsNominalChart();
+                createFallbackBankVsSpyChart();
+            }
+        });
+});
+
     </script>
+</body>
+</html>
