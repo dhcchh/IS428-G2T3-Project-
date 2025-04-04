@@ -466,7 +466,7 @@
                             </span>
                         </h4>
                         <h3 id="volatility">Low (0.0%)</h3>
-                        <p>Annualized Portfolio volatility</p>
+                        <p>Portfolio volatility</p>
                     </div>   
                 </div>
                 
@@ -521,9 +521,9 @@
                     </div>
 
                     <!-- Mavis -->
-                    <div id="company" class="tab-content"> 
+                    <div id="company" class="tab-content">
                         <div class="chart-container">
-                            <h3>Company Weightage</h3>
+                            <h3>ETF Company Weightage</h3>
                             <div id="company-weightage-chart">
                                 <div class="loading">Loading data</div>
                             </div>
@@ -2389,8 +2389,166 @@ function createPortfolioAgainstSpyChart(portfolioData, spyData) {
         }
 
         function createCompanyWeightageChart() {
-            // Mavis
+    // Ensure the chart container is cleared
+    const chartContainer = document.getElementById('company-weightage-chart');
+    chartContainer.innerHTML = ''; // Clear previous chart
+
+    // Get current allocations dynamically from sliders
+    const allocations = {
+    'SPY': parseInt(document.getElementById('spy-allocation').value) / 100,
+    'GBTC': parseInt(document.getElementById('gbtc-allocation').value) / 100,
+    'BRK-B': parseInt(document.getElementById('brkb-allocation').value) / 100,
+    'VUG': parseInt(document.getElementById('vug-allocation').value) / 100
+};
+
+const payload = {
+    tickers: {
+        'SPY': allocations['SPY'] * 100,
+        'GBTC': allocations['GBTC'] * 100,
+        'BRK-B': allocations['BRK-B'] * 100,
+        'VUG': allocations['VUG'] * 100
+    }
+};
+
+    // Fetch company weightage data from dedicated microservice
+    fetch('http://localhost:5004/portfolio-company-weightage', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to fetch company weightage data');
         }
+        return response.json();
+    })
+    .then(data => {
+        const companyData = data.portfolio_company_allocation || [];
+
+        // Merge duplicate companies by summing their weights
+        const mergedData = [];
+        const companyMap = new Map();
+
+        companyData.forEach(d => {
+            const companyName = d.Company;
+
+            // Check if the company name contains "U.S. Treasury" and merge them
+            if (companyName.includes('U.S. Treasury')) {
+                if (companyMap.has('U.S. Treasury Note')) {
+                    companyMap.set('U.S. Treasury Note', companyMap.get('U.S. Treasury Note') + d.Weight);
+                } else {
+                    companyMap.set('U.S. Treasury Note', d.Weight);
+                }
+            } else {
+                if (companyMap.has(companyName)) {
+                    companyMap.set(companyName, companyMap.get(companyName) + d.Weight);
+                } else {
+                    companyMap.set(companyName, d.Weight);
+                }
+            }
+        });
+
+        // Convert map to an array for D3 processing
+        companyMap.forEach((weight, company) => {
+            mergedData.push({ Company: company, Weight: weight });
+        });
+
+        // Sort by weight in descending order
+        mergedData.sort((a, b) => b.Weight - a.Weight);
+
+        // Dimensions for the tree map
+        const width = chartContainer.clientWidth;
+        const height = 500;
+        const radius = Math.min(width, height) / 2;
+
+        // Create SVG
+        const svg = d3.select(chartContainer)
+            .append('svg')
+            .attr('width', width)
+            .attr('height', height)
+            .append('g')
+
+        // Set color scale for the tree map
+        const color = d3.scaleSequential(d3.interpolateBlues)
+            .domain([mergedData.length, 0]);
+
+        // Create treemap layout
+        const treemap = d3.treemap()
+            .size([width, height])
+            .padding(1)
+            .round(true);
+
+        // Prepare hierarchical data for D3 processing
+        const root = d3.hierarchy({
+            name: 'Portfolio',
+            children: mergedData.map(d => ({
+                name: d.Company,
+                value: d.Weight
+            }))
+        }).sum(d => d.value);
+
+        // Generate treemap layout
+        treemap(root);
+
+        // Create rectangles for each company in the treemap
+        const cell = svg.selectAll('g')
+            .data(root.leaves())
+            .enter().append('g')
+            .attr('transform', d => `translate(${d.x0},${d.y0})`);
+
+        cell.append('rect')
+            .attr('width', d => d.x1 - d.x0)
+            .attr('height', d => d.y1 - d.y0)
+            .attr('fill', (d, i) => color(i)) // Color by index
+            .attr('stroke', 'white')
+            .attr('stroke-width', 1);
+
+        // Add text labels for company names (truncate if too long)
+        cell.append('text')
+            .attr('x', 5)
+            .attr('y', 15)
+            .text(d => {
+                const maxLength = 20;
+                const name = d.data.name;
+                return name.length > maxLength
+                    ? name.substring(0, maxLength) + '...'
+                    : name;
+            })
+            .attr('font-size', '12px')
+            .attr('fill', 'white')
+            .attr('font-weight', 'bold');
+
+        // Add percentage labels for weight
+        cell.append('text')
+            .attr('x', 5)
+            .attr('y', 30)
+            .text(d => `${d.data.value.toFixed(1)}%`)
+            .attr('font-size', '10px')
+            .attr('fill', 'white');
+
+        // Create a tooltip for hover interactions
+        const tooltip = d3.select('#tooltip');
+        cell.on('mouseover', function (event, d) {
+            tooltip.style('opacity', 1)
+                .style('left', (event.pageX + 15) + 'px')
+                .style('top', (event.pageY - 28) + 'px')
+                .html(`
+                    <strong>${d.data.name}</strong><br>
+                    Weight: ${d.data.value.toFixed(2)}%
+                `);
+        })
+            .on('mouseout', function () {
+                tooltip.style('opacity', 0);
+            });
+    })
+    .catch(error => {
+        console.error('Error fetching company weightage:', error);
+        chartContainer.innerHTML = `<p>Error loading company weightage: ${error.message}</p>`;
+    });
+}
+
 
         function createIndustryWeightageChart() {
             // Angela

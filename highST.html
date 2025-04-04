@@ -466,7 +466,7 @@
                             </span>
                         </h4>
                         <h3 id="volatility">Low (0.0%)</h3>
-                        <p>Annualized Portfolio volatility</p>
+                        <p>Portfolio volatility</p>
                     </div>   
                 </div>
                 
@@ -1359,14 +1359,167 @@ function addAllocationInfo(svg, width, arkkData, iwfData, qqqData, uproData, all
 }
 
         // Function to create company weightage chart
-        function createCompanyWeightageChart(data) {
+        function createCompanyWeightageChart() {
+            // Ensure the chart container is cleared
             const chartContainer = document.getElementById('company-weightage-chart');
-            chartContainer.innerHTML = '';
+            chartContainer.innerHTML = ''; // Clear previous chart
+
+            // Get current allocations
+            const allocations = {
+                'UPRO': parseInt(document.getElementById('upro-allocation').value) / 100,
+                'QQQ': parseInt(document.getElementById('qqq-allocation').value) / 100,
+                'IWF': parseInt(document.getElementById('iwf-allocation').value) / 100,
+                'ARKK': parseInt(document.getElementById('arkk-allocation').value) / 100
+            };
+        
+            // Fetch company weightage data from dedicated microservice
+            fetch('http://localhost:5004/portfolio-company-weightage', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    tickers: {
+                        'UPRO': allocations['UPRO'] * 100,
+                        'QQQ': allocations['QQQ'] * 100,
+                        'IWF': allocations['IWF'] * 100,
+                        'ARKK': allocations['ARKK'] * 100
+                    }
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch company weightage data');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const companyData = data.portfolio_company_allocation || [];
             
-            // YOUR CODE HERE: Implement company weightage chart (e.g., treemap or pie chart) using D3.js
-            // Use data parameter which should contain company weightage information
+                // Merge duplicate companies by summing their weights
+                const mergedData = [];
+                const companyMap = new Map();
             
-            console.log("Creating company weightage chart with data:", Object.keys(data || {}).length, "companies");
+                companyData.forEach(d => {
+                    const companyName = d.Company;
+
+                    // Check if the company name contains "U.S. Treasury" and merge them
+                    if (companyName.includes('U.S. Treasury')) {
+                        if (companyMap.has('U.S. Treasury Note')) {
+                            companyMap.set('U.S. Treasury Note', companyMap.get('U.S. Treasury Note') + d.Weight);
+                        } else {
+                            companyMap.set('U.S. Treasury Note', d.Weight);
+                        }
+                    } else {
+                        if (companyMap.has(companyName)) {
+                            companyMap.set(companyName, companyMap.get(companyName) + d.Weight);
+                        } else {
+                            companyMap.set(companyName, d.Weight);
+                        }
+                    }
+                });
+            
+                // Convert map to an array for D3 processing
+                companyMap.forEach((weight, company) => {
+                    mergedData.push({ Company: company, Weight: weight });
+                });
+            
+                // Sort by weight in descending order
+                mergedData.sort((a, b) => b.Weight - a.Weight);
+            
+                // Dimensions
+                const width = chartContainer.clientWidth;
+                const height = 500;
+            
+                // Create SVG
+                const svg = d3.select(chartContainer)
+                    .append('svg')
+                    .attr('width', width)
+                    .attr('height', height);
+            
+                // Set a minimum light shade for the least significant value
+                const minColor = "#b5d4e9"; // Light blue (can adjust to your desired light shade)
+            
+                // Color scale: Invert the color scale so the highest weight is the darkest
+                const color = d3.scaleSequential(d3.interpolateBlues)
+                    .domain([mergedData.length, 0]); // Inverted color scale (largest value is darkest)
+            
+                // Treemap layout
+                const treemap = d3.treemap()
+                    .size([width, height])
+                    .padding(1)
+                    .round(true);
+            
+                // Prepare hierarchical data
+                const root = d3.hierarchy({
+                    name: 'Portfolio',
+                    children: mergedData.map(d => ({
+                        name: d.Company,
+                        value: d.Weight
+                    }))
+                }).sum(d => d.value);
+            
+                // Generate treemap
+                treemap(root);
+            
+                // Create rectangles for each company
+                const cell = svg.selectAll('g')
+                    .data(root.leaves())
+                    .enter().append('g')
+                    .attr('transform', d => `translate(${d.x0},${d.y0})`);
+            
+                cell.append('rect')
+                    .attr('width', d => d.x1 - d.x0)
+                    .attr('height', d => d.y1 - d.y0)
+                    .attr('fill', (d, i) => {
+                        // Apply the minimum light shade for companies with weight below a threshold
+                        return d.data.value < 0.001 ? minColor : color(i); // Use minColor for values below 1%
+                    })
+                    .attr('stroke', 'white')
+                    .attr('stroke-width', 1);
+                
+                // Add text labels for company names (truncate if too long)
+                cell.append('text')
+                    .attr('x', 5)
+                    .attr('y', 15)
+                    .text(d => {
+                        const maxLength = 20;
+                        const name = d.data.name;
+                        return name.length > maxLength
+                            ? name.substring(0, maxLength) + '...'
+                            : name;
+                    })
+                    .attr('font-size', '12px')
+                    .attr('fill', 'white')
+                    .attr('font-weight', 'bold');
+                
+                // Add percentage labels for weight
+                cell.append('text')
+                    .attr('x', 5)
+                    .attr('y', 30)
+                    .text(d => `${d.data.value.toFixed(1)}%`)
+                    .attr('font-size', '10px')
+                    .attr('fill', 'white');
+                
+                // Create a tooltip for hover interactions
+                const tooltip = d3.select('#tooltip');
+                cell.on('mouseover', function(event, d) {
+                    tooltip.style('opacity', 1)
+                        .style('left', (event.pageX + 15) + 'px')
+                        .style('top', (event.pageY - 28) + 'px')
+                        .html(`
+                            <strong>${d.data.name}</strong><br>
+                            Weight: ${d.data.value.toFixed(2)}%
+                        `);
+                })
+                .on('mouseout', function() {
+                    tooltip.style('opacity', 0);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching company weightage:', error);
+                chartContainer.innerHTML = `<p>Error loading company weightage: ${error.message}</p>`;
+            });
         }
 
         // Function to create industry weightage chart
