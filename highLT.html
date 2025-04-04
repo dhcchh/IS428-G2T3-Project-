@@ -833,115 +833,148 @@ window.addEventListener('load', function() {
         /////
         
         // Function to fetch date range from API
-        function fetchDateRange() {
-            fetch(API_DATE_RANGE)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! Status: ${response.status}`);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    minDate = new Date(data.min_date);
-                    maxDate = new Date(data.max_date);
-                    
-                    // Set default selected dates to max range
-                    selectedStartDate = minDate;
-                    selectedEndDate = maxDate;
-                    
-                    // Display date range text initially
-                    updateDateRangeDisplay();
-                    
-                    // Display ETF returns if needed
-                    const etfReturns = data.etf_returns;
-                    for (const etf in etfReturns) {
-                        const returnEl = document.getElementById(`${etf.toLowerCase()}-return`);
-                        if (returnEl) {
-                            returnEl.textContent = `${etfReturns[etf].toFixed(2)}%`;
-                        }
-                    }
-                    
-                    // Now that we have the date range, trigger the initial calculation
-                    calculateAndFetchResults();
-                })
-                .catch(error => {
-                    showApiError(`Failed to fetch date range: ${error.message}`);
-                });
-        }
-
-        // Function to initialize time period buttons
-        function initializeTimePeriodButtons() {
-            const buttons = document.querySelectorAll('.time-btn');
+function fetchDateRange() {
+    fetch(API_DATE_RANGE)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Parse dates explicitly to avoid format confusion
+            minDate = parseISODate(data.min_date);
+            maxDate = parseISODate(data.max_date);
             
-            buttons.forEach(button => {
-                button.addEventListener('click', function() {
-                    // Remove active class from all buttons
-                    buttons.forEach(btn => btn.classList.remove('active'));
-                    
-                    // Add active class to clicked button
-                    this.classList.add('active');
-                    
-                    // Get the selected period
-                    const period = this.getAttribute('data-period');
-                    
-                    // Calculate start and end dates based on the period
-                    if (period === 'MAX') {
-                        selectedStartDate = minDate;
-                        selectedEndDate = maxDate;
-                    } else {
-                        selectedEndDate = new Date(maxDate); // Use a copy of maxDate
-                        selectedStartDate = calculateStartDate(period);
-                    }
-                    
-                    // Update the date range display
-                    updateDateRangeDisplay();
-                    
-                    // If allocations are valid, trigger calculation
-                    if (checkAllocation()) {
-                        calculateAndFetchResults();
-                    }
-                });
+            console.log("Parsed date range:", {
+                minDate: minDate.toISOString(),
+                maxDate: maxDate.toISOString()
             });
-        }
+            
+            // Set default selected dates to max range
+            selectedStartDate = minDate;
+            selectedEndDate = maxDate;
+            
+            // Display date range text initially
+            updateDateRangeDisplay();
+            
+            // Display ETF returns if needed
+            const etfReturns = data.etf_returns;
+            for (const etf in etfReturns) {
+                const returnEl = document.getElementById(`${etf.toLowerCase()}-return`);
+                if (returnEl) {
+                    returnEl.textContent = `${etfReturns[etf].toFixed(2)}%`;
+                }
+            }
+            
+            // Now that we have the date range, trigger the initial calculation
+            calculateAndFetchResults();
+        })
+        .catch(error => {
+            showApiError(`Failed to fetch date range: ${error.message}`);
+        });
+}
+function parseISODate(dateString) {
+    // Check if the date is in ISO format (YYYY-MM-DD)
+    if (!dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        console.error("Date string is not in ISO format (YYYY-MM-DD):", dateString);
+        // Return current date as fallback
+        return new Date();
+    }
+    
+    // Split the date string into components
+    const [year, month, day] = dateString.split('-').map(Number);
+    
+    // Create a new date - JavaScript months are 0-indexed
+    const date = new Date(year, month - 1, day);
+    
+    // Verify the date is valid
+    if (isNaN(date.getTime())) {
+        console.error("Invalid date created from:", dateString);
+        return new Date(); // Fallback to current date
+    }
+    
+    return date;
+}
 
-        // Function to calculate start date based on period
-        function calculateStartDate(period) {
-        const endDate = new Date(selectedEndDate);
-        const startDate = new Date(endDate);
-        
-        switch (period) {
-            case '1M':
-                startDate.setMonth(endDate.getMonth() - 1);
-                break;
-            case '6M':
-                startDate.setMonth(endDate.getMonth() - 6);
-                break;
-            case '1Y':
-                startDate.setFullYear(endDate.getFullYear() - 1);
-                break;
-            case '3Y':
-                startDate.setFullYear(endDate.getFullYear() - 3);
-                break;
-            case '5Y':
-                startDate.setFullYear(endDate.getFullYear() - 5);
-                break;
-            default:
-                startDate = new Date(minDate);
-        }
-        
-        // Ensure the start date is not earlier than the minimum available date
-        if (startDate < minDate) {
+ // Function to initialize time period buttons
+function initializeTimePeriodButtons() {
+    const buttons = document.querySelectorAll('.time-btn');
+    
+    buttons.forEach(button => {
+        button.addEventListener('click', function() {
+            // Remove active class from all buttons
+            buttons.forEach(btn => btn.classList.remove('active'));
+            
+            // Add active class to clicked button
+            this.classList.add('active');
+            
+            // Get the selected period
+            const period = this.getAttribute('data-period');
+            
+            // Always use the last available date from the dataset as the end date
+            selectedEndDate = new Date(maxDate);
+            
+            // Calculate start date based on period
+            if (period === 'MAX') {
+                selectedStartDate = new Date(minDate);
+            } else {
+                selectedStartDate = calculateStartDate(period);
+            }
+            
+            // Update the date range display
+            updateDateRangeDisplay();
+            
+            // Show date range display
+            document.getElementById('date-range-display').style.display = 'block';
+            
+            // If allocations are valid, trigger calculation
+            if (checkAllocation()) {
+                calculateAndFetchResults();
+            }
+        });
+    });
+}
+
+// Function to calculate start date based on period
+function calculateStartDate(period) {
+    const endDate = new Date(maxDate);
+    const startDate = new Date(endDate);
+    
+    switch (period) {
+        case '1M':
+            startDate.setMonth(endDate.getMonth() - 1);
+            break;
+        case '6M':
+            startDate.setMonth(endDate.getMonth() - 6);
+            break;
+        case '1Y':
+            startDate.setFullYear(endDate.getFullYear() - 1);
+            break;
+        case '3Y':
+            startDate.setFullYear(endDate.getFullYear() - 3);
+            break;
+        case '5Y':
+            startDate.setFullYear(endDate.getFullYear() - 5);
+            break;
+        default:
             startDate = new Date(minDate);
-        }
-        
-        return startDate;
-        }
+    }
+    
+    // Ensure the start date is not earlier than the minimum available date
+    if (startDate < minDate) {
+        startDate = new Date(minDate);
+    }
+    
+    return startDate;
+}
 
-        // Function to update the date range display
-        function updateDateRangeDisplay() {
+    // Function to update the date range display
+    function updateDateRangeDisplay() {
         const dateDisplay = document.getElementById('date-range-display');
         dateDisplay.textContent = `From ${formatDate(selectedStartDate)} to ${formatDate(selectedEndDate)}`;
-        }
+        dateDisplay.style.display = 'none';
+    }
 
         // Function to initialize allocation sliders ['SPY', 'GBTC', 'BRK-B', 'VUG']
         function initializeAllocationSliders() {
@@ -1086,20 +1119,32 @@ window.addEventListener('load', function() {
             fetchAllData(payload);
         }
 
-        // Helper function to format dates for API (YYYY-MM-DD)
-        function formatDateForAPI(date) {
-            if (!date) return null;
-            
-            const d = new Date(date);
-            const year = d.getFullYear();
-            const month = String(d.getMonth() + 1).padStart(2, '0');
-            const day = String(d.getDate()).padStart(2, '0');
-            
-            return `${year}-${month}-${day}`;
+// Helper function to format dates for API (YYYY-MM-DD)
+function formatDateForAPI(date) {
+    if (!date) return null;
+    
+    try {
+        const d = new Date(date);
+        if (isNaN(d.getTime())) {
+            console.error("Invalid date for API formatting:", date);
+            return null;
         }
+        
+        const year = d.getFullYear();
+        // JavaScript months are 0-indexed, so add 1
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        
+        return `${year}-${month}-${day}`;
+    } catch (error) {
+        console.error("Error formatting date for API:", error);
+        return null;
+    }
+}
         
         // Function to fetch all data from the API
         function fetchAllData(payload) {
+            updateDateRangeDisplay();
             // Use the calculate-all endpoint
             fetch(API_CALCULATE_ALL, {
                 method: 'POST',
@@ -1181,11 +1226,23 @@ window.addEventListener('load', function() {
             errorEl.style.display = 'none';
         }
 
-        // Helper function to format date
-        function formatDate(date) {
-            const options = { year: 'numeric', month: 'short', day: 'numeric' };
-            return date.toLocaleDateString('en-US', options);
+// Helper function to format date for display
+function formatDate(date) {
+    if (!date) return "Invalid Date";
+    
+    try {
+        const d = new Date(date);
+        if (isNaN(d.getTime())) {
+            return "Invalid Date";
         }
+        
+        const options = { year: 'numeric', month: 'short', day: 'numeric' };
+        return d.toLocaleDateString('en-US', options);
+    } catch (error) {
+        console.error("Error formatting date for display:", error);
+        return "Error";
+    }
+}
         
         // Function to update metrics display
         function updateMetricsDisplay(metrics, initialInvestment) {
@@ -1217,347 +1274,353 @@ window.addEventListener('load', function() {
         }
 
 
-        // Function to create portfolio vs SPY comparison chart
-        function createPortfolioAgainstSpyChart(portfolioData, spyData) {
-            const chartContainer = document.getElementById('portfolio-growth-chart');
-            chartContainer.innerHTML = '';
+// Enhanced portfolio vs SPY chart function with improved hover behavior
+function createPortfolioAgainstSpyChart(portfolioData, spyData) {
+    const chartContainer = document.getElementById('portfolio-growth-chart');
+    chartContainer.innerHTML = '';
+    
+    // Check if we have data
+    if (!portfolioData || portfolioData.length === 0 || !spyData || spyData.length === 0) {
+        chartContainer.innerHTML = '<div class="error">No data available for comparison</div>';
+        return;
+    }
+    
+    const margin = {top: 20, right: 80, bottom: 50, left: 80};
+    const width = chartContainer.clientWidth - margin.left - margin.right;
+    const height = 400 - margin.top - margin.bottom;
+    
+    const svg = d3.select(chartContainer)
+        .append('svg')
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom)
+        .append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+    
+    // Make sure dates are Date objects and sort chronologically
+    const processedPortfolioData = portfolioData.map(d => ({
+        ...d,
+        Date: d.Date instanceof Date ? d.Date : new Date(d.Date)
+    })).sort((a, b) => a.Date - b.Date);
+    
+    const processedSpyData = spyData.map(d => ({
+        ...d,
+        Date: d.Date instanceof Date ? d.Date : new Date(d.Date)
+    })).sort((a, b) => a.Date - b.Date);
+    
+    // For comparison, we need to normalize both portfolio and SPY to start at 1
+    // Make sure the first value is valid, or default to 1 if not
+    const firstPortfolioValue = processedPortfolioData[0]?.total_value || 1;
+    const firstSpyValue = processedSpyData[0]?.SPY || 1;
+    
+    // Create normalized data for comparison with validation
+    const normalizedPortfolioData = processedPortfolioData
+        .map(d => {
+            if (!d.total_value || !firstPortfolioValue || isNaN(d.total_value)) {
+                return { Date: d.Date, value: null };
+            }
+            return {
+                Date: d.Date,
+                value: d.total_value / firstPortfolioValue
+            };
+        })
+        .filter(d => d.value !== null && !isNaN(d.value));
+    
+    const normalizedSpyData = processedSpyData
+        .map(d => {
+            if (!d.SPY || !firstSpyValue || isNaN(d.SPY)) {
+                return { Date: d.Date, value: null };
+            }
+            return {
+                Date: d.Date,
+                value: d.SPY / firstSpyValue
+            };
+        })
+        .filter(d => d.value !== null && !isNaN(d.value));
+    
+    // Check if we have any valid data points
+    if (normalizedPortfolioData.length === 0 || normalizedSpyData.length === 0) {
+        chartContainer.innerHTML = '<div class="error">No valid data points for the selected period</div>';
+        return;
+    }
+    
+    // Get date range for x-axis (use the portfolio data range)
+    const dateExtent = d3.extent(normalizedPortfolioData, d => d.Date);
+    
+    // Find max value for y-axis scaling with validation
+    const maxPortfolioValue = d3.max(normalizedPortfolioData, d => d.value) || 1;
+    const maxSpyValue = d3.max(normalizedSpyData, d => d.value) || 1;
+    const maxValue = Math.max(maxPortfolioValue, maxSpyValue);
+    
+    // X scale
+    const x = d3.scaleTime()
+        .domain(dateExtent)
+        .range([0, width]);
+    
+    // Y scale with 10% padding
+    const y = d3.scaleLinear()
+        .domain([0, maxValue * 1.1])
+        .range([height, 0]);
+    
+    // X axis
+    svg.append('g')
+        .attr('class', 'axis')
+        .attr('transform', `translate(0,${height})`)
+        .call(d3.axisBottom(x)
+            .ticks(width > 500 ? 10 : 5)
+            .tickFormat(d3.timeFormat('%b %Y')))
+        .selectAll('text')
+        .style('text-anchor', 'end')
+        .attr('dx', '-.8em')
+        .attr('dy', '.15em')
+        .attr('transform', 'rotate(-45)');
+    
+    // Y axis
+    svg.append('g')
+        .attr('class', 'axis')
+        .call(d3.axisLeft(y)
+            .tickFormat(d => d3.format('.1f')(d)));
+    
+    // Grid lines to improve readability
+    svg.append('g')
+        .attr('class', 'grid')
+        .call(d3.axisLeft(y)
+            .ticks(10)
+            .tickSize(-width)
+            .tickFormat(''))
+        .style('stroke', '#e0e0e0')
+        .style('stroke-opacity', 0.7)
+        .style('shape-rendering', 'crispEdges');
+    
+    // Add Y axis label
+    svg.append('text')
+        .attr('transform', 'rotate(-90)')
+        .attr('y', -60)
+        .attr('x', -height / 2)
+        .attr('text-anchor', 'middle')
+        .text('Value (Normalized)')
+        .style('fill', '#666');
+    
+    // Add chart title
+    svg.append('text')
+        .attr('text-anchor', 'middle')
+        .attr('x', width / 2)
+        .attr('y', -margin.top / 2 + 10)
+        .text('Portfolio vs. S&P 500 Performance')
+        .style('font-size', '16px')
+        .style('font-weight', 'bold')
+        .style('fill', '#2c3e50');
+    
+    // Colors for lines
+    const portfolioColor = '#2c3e50';  // Portfolio in dark blue
+    const spyColor = '#1f77b4';        // SPY in lighter blue
+    
+    // Line generator that handles missing data
+    const line = d3.line()
+        .x(d => x(d.Date))
+        .y(d => y(d.value))
+        .defined(d => d.value !== null && !isNaN(d.value)) // Skip missing/invalid values
+        .curve(d3.curveMonotoneX);
+    
+    // Draw portfolio line
+    svg.append('path')
+        .datum(normalizedPortfolioData)
+        .attr('class', 'portfolio-line')
+        .attr('fill', 'none')
+        .attr('stroke', portfolioColor)
+        .attr('stroke-width', 3)
+        .attr('d', line);
+    
+    // Draw SPY line
+    svg.append('path')
+        .datum(normalizedSpyData)
+        .attr('class', 'spy-line')
+        .attr('fill', 'none')
+        .attr('stroke', spyColor)
+        .attr('stroke-width', 1.5)
+        .attr('stroke-dasharray', '5,5')  // Make SPY line dashed
+        .attr('d', line);
+    
+    // Add tooltip circles to highlight points
+    const portfolioCircle = svg.append('circle')
+        .attr('r', 5)
+        .attr('fill', portfolioColor)
+        .attr('stroke', 'white')
+        .attr('stroke-width', 2)
+        .style('opacity', 0)
+        .style('pointer-events', 'none');
+        
+    const spyCircle = svg.append('circle')
+        .attr('r', 5)
+        .attr('fill', spyColor)
+        .attr('stroke', 'white')
+        .attr('stroke-width', 2)
+        .style('opacity', 0)
+        .style('pointer-events', 'none');
+    
+    // Add vertical tracker line
+    const verticalLine = svg.append('line')
+        .attr('stroke', '#888')
+        .attr('stroke-width', 1)
+        .attr('stroke-dasharray', '3,3')
+        .style('opacity', 0)
+        .style('pointer-events', 'none');
+    
+    // Create tooltip
+    const tooltip = d3.select('#tooltip');
+    
+    // Create a bisector for finding closest data point
+    const bisect = d3.bisector(d => d.Date).left;
+    
+    // Add transparent overlay for mouse interaction
+    svg.append('rect')
+        .attr('width', width)
+        .attr('height', height)
+        .style('fill', 'none')
+        .style('pointer-events', 'all')
+        .on('mouseover', () => {
+            tooltip.style('opacity', 1);
+            portfolioCircle.style('opacity', 1);
+            spyCircle.style('opacity', 1);
+            verticalLine.style('opacity', 1);
+        })
+        .on('mouseout', () => {
+            tooltip.style('opacity', 0);
+            portfolioCircle.style('opacity', 0);
+            spyCircle.style('opacity', 0);
+            verticalLine.style('opacity', 0);
+        })
+        .on('mousemove', function(event) {
+            // Get mouse x-position in data space
+            const mouseX = d3.pointer(event)[0];
+            const x0 = x.invert(mouseX);
             
-            // Check if we have data
-            if (!portfolioData || portfolioData.length === 0 || !spyData || spyData.length === 0) {
-                chartContainer.innerHTML = '<div class="error">No data available for comparison</div>';
-                return;
+            // Find closest portfolio data point
+            let i = bisect(normalizedPortfolioData, x0, 1);
+            if (i >= normalizedPortfolioData.length) {
+                i = normalizedPortfolioData.length - 1;
             }
             
-            const margin = {top: 20, right: 80, bottom: 50, left: 80};
-            const width = chartContainer.clientWidth - margin.left - margin.right;
-            const height = 400 - margin.top - margin.bottom;
-            
-            const svg = d3.select(chartContainer)
-                .append('svg')
-                .attr('width', width + margin.left + margin.right)
-                .attr('height', height + margin.top + margin.bottom)
-                .append('g')
-                .attr('transform', `translate(${margin.left},${margin.top})`);
-            
-            // Make sure dates are Date objects and sort chronologically
-            portfolioData = portfolioData.map(d => ({
-                ...d,
-                Date: d.Date instanceof Date ? d.Date : new Date(d.Date)
-            })).sort((a, b) => a.Date - b.Date);
-            
-            spyData = spyData.map(d => ({
-                ...d,
-                Date: d.Date instanceof Date ? d.Date : new Date(d.Date)
-            })).sort((a, b) => a.Date - b.Date);
-            
-            // Ensure we have enough data points
-            if (portfolioData.length < 2 || spyData.length < 2) {
-                chartContainer.innerHTML = '<div class="error">Not enough data points for comparison</div>';
-                return;
+            // Get closest portfolio point
+            let portfolioPoint = null;
+            if (i > 0) {
+                const d0 = normalizedPortfolioData[i - 1];
+                const d1 = normalizedPortfolioData[i];
+                if (d0 && d1) {
+                    portfolioPoint = x0 - d0.Date > d1.Date - x0 ? d1 : d0;
+                } else if (d0) {
+                    portfolioPoint = d0;
+                } else if (d1) {
+                    portfolioPoint = d1;
+                }
+            } else if (i === 0 && normalizedPortfolioData.length > 0) {
+                portfolioPoint = normalizedPortfolioData[0];
             }
             
-            // For comparison, we need to normalize both portfolio and SPY to start at 1
-            const portfolioStartValue = portfolioData[0].total_value;
-            const spyStartValue = spyData[0].SPY;
+            if (!portfolioPoint) return;
             
-            // Create normalized data for comparison, filtering out invalid values
-            const normalizedPortfolioData = portfolioData
-                .filter(d => typeof d.total_value === 'number' && !isNaN(d.total_value) && portfolioStartValue > 0)
-                .map(d => ({
-                    Date: d.Date,
-                    value: d.total_value / portfolioStartValue
-                }));
-            
-            const normalizedSpyData = spyData
-                .filter(d => typeof d.SPY === 'number' && !isNaN(d.SPY) && spyStartValue > 0)
-                .map(d => ({
-                    Date: d.Date,
-                    value: d.SPY / spyStartValue
-                }));
-            
-            // Check if we still have enough data after filtering
-            if (normalizedPortfolioData.length < 2 || normalizedSpyData.length < 2) {
-                chartContainer.innerHTML = '<div class="error">Not enough valid data points after normalization</div>';
-                return;
-            }
-            
-            // Determine a common date range for both datasets
-            let dateExtent = [
-                Math.max(normalizedPortfolioData[0].Date, normalizedSpyData[0].Date),
-                Math.min(
-                    normalizedPortfolioData[normalizedPortfolioData.length-1].Date,
-                    normalizedSpyData[normalizedSpyData.length-1].Date
-                )
-            ];
-            
-            // Verify the date range is valid
-            if (dateExtent[0] >= dateExtent[1]) {
-                // If date ranges don't overlap enough, use the full range
-                dateExtent = d3.extent([
-                    ...normalizedPortfolioData.map(d => d.Date),
-                    ...normalizedSpyData.map(d => d.Date)
-                ]);
-            }
-            
-            // Find max value for y-axis scaling
-            const maxPortfolioValue = d3.max(normalizedPortfolioData, d => d.value);
-            const maxSpyValue = d3.max(normalizedSpyData, d => d.value);
-            const maxValue = Math.max(maxPortfolioValue, maxSpyValue);
-            
-            // X scale
-            const x = d3.scaleTime()
-                .domain(dateExtent)
-                .range([0, width]);
-            
-            // Y scale with 10% padding
-            const y = d3.scaleLinear()
-                .domain([0, maxValue * 1.1])
-                .range([height, 0]);
-            
-            // X axis
-            svg.append('g')
-                .attr('class', 'axis')
-                .attr('transform', `translate(0,${height})`)
-                .call(d3.axisBottom(x)
-                    .ticks(width > 500 ? 10 : 5)
-                    .tickFormat(d3.timeFormat('%b %Y')))
-                .selectAll('text')
-                .style('text-anchor', 'end')
-                .attr('dx', '-.8em')
-                .attr('dy', '.15em')
-                .attr('transform', 'rotate(-45)');
-            
-            // Y axis
-            svg.append('g')
-                .attr('class', 'axis')
-                .call(d3.axisLeft(y)
-                    .tickFormat(d => d3.format('.1f')(d)));
-            
-            // Grid lines to improve readability
-            svg.append('g')
-                .attr('class', 'grid')
-                .call(d3.axisLeft(y)
-                    .ticks(10)
-                    .tickSize(-width)
-                    .tickFormat(''))
-                .style('stroke', '#e0e0e0')
-                .style('stroke-opacity', 0.7)
-                .style('shape-rendering', 'crispEdges');
-            
-            // Add Y axis label
-            svg.append('text')
-                .attr('transform', 'rotate(-90)')
-                .attr('y', -60)
-                .attr('x', -height / 2)
-                .attr('text-anchor', 'middle')
-                .text('Value (Normalized)')
-                .style('fill', '#666');
-            
-            // Add chart title
-            svg.append('text')
-                .attr('text-anchor', 'middle')
-                .attr('x', width / 2)
-                .attr('y', -margin.top / 2 + 10)
-                .text('Portfolio vs. S&P 500 Performance')
-                .style('font-size', '16px')
-                .style('font-weight', 'bold')
-                .style('fill', '#2c3e50');
-            
-            // Colors for lines
-            const portfolioColor = '#2c3e50';  // Portfolio in dark blue
-            const spyColor = '#1f77b4';        // SPY in lighter blue
-            
-            // Line generator with smooth curve
-            const line = d3.line()
-                .x(d => x(d.Date))
-                .y(d => y(d.value))
-                .defined(d => !isNaN(d.value))
-                .curve(d3.curveMonotoneX);
-            
-            // Draw portfolio line
-            svg.append('path')
-                .datum(normalizedPortfolioData)
-                .attr('class', 'portfolio-line')
-                .attr('fill', 'none')
-                .attr('stroke', portfolioColor)
-                .attr('stroke-width', 3)
-                .attr('d', line);
-            
-            // Draw SPY line
-            svg.append('path')
-                .datum(normalizedSpyData)
-                .attr('class', 'spy-line')
-                .attr('fill', 'none')
-                .attr('stroke', spyColor)
-                .attr('stroke-width', 1.5)
-                .attr('stroke-dasharray', '5,5')  // Make SPY line dashed
-                .attr('d', line);
-            
-            // Create tooltip
-            const tooltip = d3.select('#tooltip');
-            
-            // Create a bisector for finding closest data point
-            const bisect = d3.bisector(d => d.Date).left;
-            
-            // Add tooltip vertical line
-            const tooltipLine = svg.append("line")
-                .attr("stroke", "#ddd")
-                .attr("stroke-width", 1)
-                .attr("stroke-dasharray", "3,3")
-                .attr("y1", 0)
-                .attr("y2", height)
-                .style("opacity", 0);
-            
-            // Add dots for highlighting points
-            const portfolioDot = svg.append("circle")
-                .attr("r", 5)
-                .attr("fill", portfolioColor)
-                .attr("stroke", "white")
-                .attr("stroke-width", 2)
-                .style("opacity", 0);
+            // Update portfolio circle
+            portfolioCircle
+                .attr('cx', x(portfolioPoint.Date))
+                .attr('cy', y(portfolioPoint.value));
                 
-            const spyDot = svg.append("circle")
-                .attr("r", 4)
-                .attr("fill", spyColor)
-                .attr("stroke", "white")
-                .attr("stroke-width", 2)
-                .style("opacity", 0);
+            // Update vertical line
+            verticalLine
+                .attr('x1', x(portfolioPoint.Date))
+                .attr('x2', x(portfolioPoint.Date))
+                .attr('y1', 0)
+                .attr('y2', height);
             
-            // Add transparent overlay for mouse interaction
-            svg.append('rect')
-                .attr('width', width)
-                .attr('height', height)
-                .style('fill', 'none')
-                .style('pointer-events', 'all')
-                .on('mouseover', () => {
-                    tooltip.style('opacity', 1);
-                    tooltipLine.style('opacity', 1);
-                    portfolioDot.style('opacity', 1);
-                    spyDot.style('opacity', 1);
-                })
-                .on('mouseout', () => {
-                    tooltip.style('opacity', 0);
-                    tooltipLine.style('opacity', 0);
-                    portfolioDot.style('opacity', 0);
-                    spyDot.style('opacity', 0);
-                })
-                .on('mousemove', function(event) {
-                    // Get mouse x-position in data space
-                    const mouseX = d3.pointer(event)[0];
-                    const x0 = x.invert(mouseX);
-                    
-                    // Find closest portfolio data point
-                    const i = bisect(normalizedPortfolioData, x0, 1);
-                    if (i >= normalizedPortfolioData.length) return;
-                    
-                    const d0 = normalizedPortfolioData[i - 1];
-                    const d1 = normalizedPortfolioData[i];
-                    if (!d0 || !d1) return;
-                    
-                    const d = x0 - d0.Date > d1.Date - x0 ? d1 : d0;
-                    
-                    // Find closest SPY data point
-                    const j = bisect(normalizedSpyData, x0, 1);
-                    let spyPoint = null;
-                    if (j < normalizedSpyData.length && j > 0) {
-                        const s0 = normalizedSpyData[j - 1];
-                        const s1 = normalizedSpyData[j];
-                        if (s0 && s1) {
-                            spyPoint = x0 - s0.Date > s1.Date - x0 ? s1 : s0;
-                        }
-                    }
-                    
-                    // Update vertical line
-                    tooltipLine
-                        .attr("x1", x(d.Date))
-                        .attr("x2", x(d.Date));
-                    
-                    // Update dots
-                    portfolioDot
-                        .attr("cx", x(d.Date))
-                        .attr("cy", y(d.value));
-                        
-                    if (spyPoint) {
-                        spyDot
-                            .attr("cx", x(spyPoint.Date))
-                            .attr("cy", y(spyPoint.value))
-                            .style("opacity", 1);
-                    } else {
-                        spyDot.style("opacity", 0);
-                    }
-                    
-                    // Format date for tooltip
-                    const formattedDate = formatDate(d.Date);
-                    
-                    // Calculate outperformance
-                    let outperformanceHTML = '';
-                    if (spyPoint) {
-                        const diff = d.value - spyPoint.value;
-                        const percentDiff = (diff / spyPoint.value) * 100;
-                        const diffColor = diff >= 0 ? '#28a745' : '#dc3545';
-                        
-                        outperformanceHTML = `
-                            <div style="margin-top: 8px; padding-top: 5px; border-top: 1px solid #eee;">
-                                <span style="color: ${diffColor}; font-weight: bold;">
-                                    ${diff >= 0 ? 'Outperforming' : 'Underperforming'} by 
-                                    ${Math.abs(percentDiff).toFixed(2)}%
-                                </span>
-                            </div>
-                        `;
-                    }
-                    
-                    // Create tooltip content
-                    tooltip.html(`
-                        <div style="font-weight: bold; margin-bottom: 5px;">${formattedDate}</div>
-                        <div>
-                            <span style="display: inline-block; width: 12px; height: 12px; background: ${portfolioColor}; margin-right: 5px;"></span>
-                            Portfolio: ${d.value.toFixed(2)}x
-                        </div>
-                        ${spyPoint ? `
-                        <div style="margin-top: 5px;">
-                            <span style="display: inline-block; width: 12px; height: 12px; background: ${spyColor}; margin-right: 5px;"></span>
-                            S&P 500: ${spyPoint.value.toFixed(2)}x
-                        </div>` : ''}
-                        ${outperformanceHTML}
-                    `)
-                    .style('left', (event.pageX + 15) + 'px')
-                    .style('top', (event.pageY - 28) + 'px');
-                });
+            // Find closest SPY data point to the same date
+            let spyPoint = null;
+            for (let j = 0; j < normalizedSpyData.length; j++) {
+                const s = normalizedSpyData[j];
+                if (!spyPoint || Math.abs(s.Date - portfolioPoint.Date) < Math.abs(spyPoint.Date - portfolioPoint.Date)) {
+                    spyPoint = s;
+                }
+            }
             
-            // Create legend
-            const legend = document.getElementById('growth-legend');
-            legend.innerHTML = '';
+            // Update SPY circle if we found a point
+            if (spyPoint) {
+                spyCircle
+                    .attr('cx', x(spyPoint.Date))
+                    .attr('cy', y(spyPoint.value))
+                    .style('opacity', 1);
+            } else {
+                spyCircle.style('opacity', 0);
+            }
             
-            // Portfolio legend item
-            const portfolioLegend = document.createElement('div');
-            portfolioLegend.className = 'legend-item';
+            // Format date for tooltip
+            const formattedDate = formatDate(portfolioPoint.Date);
             
-            const portfolioColor1 = document.createElement('div');
-            portfolioColor1.className = 'legend-color';
-            portfolioColor1.style.backgroundColor = portfolioColor;
+            // Calculate outperformance
+            let outperformanceHTML = '';
+            if (spyPoint && portfolioPoint.Date.getTime() === spyPoint.Date.getTime()) {
+                const diff = portfolioPoint.value - spyPoint.value;
+                const percentDiff = (diff / spyPoint.value) * 100;
+                const diffColor = diff >= 0 ? '#28a745' : '#dc3545';
+                
+                outperformanceHTML = `
+                    <div style="margin-top: 8px; padding-top: 5px; border-top: 1px solid #eee;">
+                        <span style="color: ${diffColor}; font-weight: bold;">
+                            ${diff >= 0 ? 'Outperforming' : 'Underperforming'} by 
+                            ${Math.abs(percentDiff).toFixed(2)}%
+                        </span>
+                    </div>
+                `;
+            }
             
-            const portfolioText = document.createElement('span');
-            portfolioText.textContent = 'Your Portfolio';
-            
-            portfolioLegend.appendChild(portfolioColor1);
-            portfolioLegend.appendChild(portfolioText);
-            legend.appendChild(portfolioLegend);
-            
-            // SPY legend item
-            const spyLegend = document.createElement('div');
-            spyLegend.className = 'legend-item';
-            
-            const spyColor1 = document.createElement('div');
-            spyColor1.className = 'legend-color';
-            spyColor1.style.backgroundColor = spyColor;
-            
-            const spyText = document.createElement('span');
-            spyText.textContent = 'S&P 500 (SPY)';
-            
-            spyLegend.appendChild(spyColor1);
-            spyLegend.appendChild(spyText);
-            legend.appendChild(spyLegend);
-        }
+            // Create tooltip content
+            tooltip.html(`
+                <div style="font-weight: bold; margin-bottom: 5px;">${formattedDate}</div>
+                <div>
+                    <span style="display: inline-block; width: 12px; height: 12px; background: ${portfolioColor}; margin-right: 5px;"></span>
+                    Portfolio: ${portfolioPoint.value.toFixed(2)}x
+                </div>
+                ${spyPoint ? `
+                <div style="margin-top: 5px;">
+                    <span style="display: inline-block; width: 12px; height: 12px; background: ${spyColor}; margin-right: 5px;"></span>
+                    S&P 500: ${spyPoint.value.toFixed(2)}x
+                </div>` : ''}
+                ${outperformanceHTML}
+            `)
+            .style('left', (event.pageX + 15) + 'px')
+            .style('top', (event.pageY - 28) + 'px');
+        });
+    
+    // Create legend
+    const legend = document.getElementById('growth-legend');
+    legend.innerHTML = '';
+    
+    // Portfolio legend item
+    const portfolioLegend = document.createElement('div');
+    portfolioLegend.className = 'legend-item';
+    
+    const portfolioColor1 = document.createElement('div');
+    portfolioColor1.className = 'legend-color';
+    portfolioColor1.style.backgroundColor = portfolioColor;
+    
+    const portfolioText = document.createElement('span');
+    portfolioText.textContent = 'Your Portfolio';
+    
+    portfolioLegend.appendChild(portfolioColor1);
+    portfolioLegend.appendChild(portfolioText);
+    legend.appendChild(portfolioLegend);
+    
+    // SPY legend item
+    const spyLegend = document.createElement('div');
+    spyLegend.className = 'legend-item';
+    
+    const spyColor1 = document.createElement('div');
+    spyColor1.className = 'legend-color';
+    spyColor1.style.backgroundColor = spyColor;
+    
+    const spyText = document.createElement('span');
+    spyText.textContent = 'S&P 500 (SPY)';
+    
+    spyLegend.appendChild(spyColor1);
+    spyLegend.appendChild(spyText);
+    legend.appendChild(spyLegend);
+}
 
         function createDrawdownChart(portfolioData) {
             const chartContainer = document.getElementById('drawdown-chart');
