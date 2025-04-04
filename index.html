@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Investment Profile Selection</title>
+    <!-- Include Chart.js for visualizations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -36,9 +38,142 @@
             border-radius: 5px;
             cursor: pointer;
         }
+        
+        /* Added styles for charts */
+        .chart-container {
+            width: 90%;
+            max-width: 800px;
+            height: 400px;
+            margin: 30px auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+        
+        h1 {
+            color: #007BFF;
+        }
+        
+        h2 {
+            color: #333;
+            margin-top: 40px;
+        }
+        
+        .intro-text {
+            max-width: 800px;
+            margin: 0 auto 30px auto;
+            line-height: 1.6;
+            color: #555;
+        }
+        
+        .stat-cards {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 30px auto;
+            max-width: 800px;
+        }
+        
+        .stat-card {
+            background-color: white;
+            border-radius: 8px;
+            padding: 20px;
+            flex: 1;
+            min-width: 150px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #007BFF;
+        }
+        
+        .stat-description {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid #007BFF;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        .error-message {
+            color: #dc3545;
+            background-color: #f8d7da;
+            border: 1px solid #f5c2c7;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 20px auto;
+            max-width: 80%;
+            display: none;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
+    <h1>Beating Inflation: Why Investing Outperforms Traditional Savings</h1>
+    
+    <div class="intro-text">
+        <p>For many Singaporeans, the persistent rise in inflation has become a pressing concern, eroding their purchasing power and threatening long-term financial security. While interest rates have increased, returns on traditional savings accounts cannot outpace inflation.</p>
+    </div>
+    
+    <!-- Key Statistics Cards -->
+    <div class="stat-cards">
+        <div class="stat-card">
+            <div class="stat-label">Singapore Inflation</div>
+            <div class="stat-value" id="inflation-rate">1.8%</div>
+            <div class="stat-description">Core inflation (Dec 2024)</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Bank Interest</div>
+            <div class="stat-value" id="bank-interest">~0.5%</div>
+            <div class="stat-description">Typical savings interest</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">SPY Returns</div>
+            <div class="stat-value" id="spy-returns">7-10%</div>
+            <div class="stat-description">Historical annual returns</div>
+        </div>
+    </div>
+    
+    <!-- Error message for API failures -->
+    <div class="error-message" id="errorMessage">
+        Could not connect to data service. Using sample data instead.
+    </div>
+    
+    <!-- Real vs Nominal Value Chart -->
+    <h2>Real vs. Nominal Value (Adjusted for Inflation)</h2>
+    <div class="chart-container">
+        <canvas id="realVsNominalChart"></canvas>
+    </div>
+    
+    <!-- Bank vs SPY Chart -->
+    <h2>Bank Savings vs. S&P 500 Investment ($10,000 Initial)</h2>
+    <div class="chart-container">
+        <canvas id="bankVsSpyChart"></canvas>
+    </div>
+    
     <h2>Investment Profile Selection</h2>
     <form id="profileForm">
         <label>Investment Duration:</label><br>
@@ -57,8 +192,17 @@
         <br>
         <button type="button" onclick="redirectUser()">Submit</button>
     </form>
+    
+    <div class="loading" id="loadingIndicator">
+        <div class="spinner"></div>
+        <p>Loading data...</p>
+    </div>
 
     <script>
+        // Configuration
+        const API_BASE_URL = 'http://localhost:5005'; // Adjust this to match your microservice URL
+        
+        // Original code from index.html
         function selectOption(button, group, value) {
             document.getElementById(group).value = value;
             let buttons = button.parentElement.getElementsByClassName("btn");
@@ -67,7 +211,7 @@
             }
             button.classList.add("selected");
         }
-
+    
         function redirectUser() {
             var longTerm = document.getElementById("investmentDuration").value;
             var lowRisk = document.getElementById("riskPreference").value;
@@ -82,6 +226,457 @@
                 window.location.href = "lowST.html";
             }
         }
+        
+        // New code for visualizations using microservice
+        
+        // Load statistics from the microservice
+        function loadStatistics() {
+            fetch(`${API_BASE_URL}/api/inflation-stats`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.status === 'success') {
+                        const stats = data.data;
+                        document.getElementById('inflation-rate').textContent = stats.singapore_inflation + '%';
+                        document.getElementById('bank-interest').textContent = '~' + stats.bank_interest + '%';
+                        document.getElementById('spy-returns').textContent = 
+                            `${stats.spy_return_range.min}-${stats.spy_return_range.max}%`;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading statistics:', error);
+                    // Keep default values in case of failure
+                });
+        }
+        
+        // Load Real vs Nominal Chart using microservice
+        function loadRealVsNominalChart() {
+            const ctx = document.getElementById('realVsNominalChart').getContext('2d');
+            document.getElementById('loadingIndicator').style.display = 'block';
+            
+            // Fetch data from microservice
+            fetch(`${API_BASE_URL}/api/real-vs-nominal`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok: ' + response.statusText);
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    if (result.status !== 'success') {
+                        throw new Error('API returned error status');
+                    }
+                    
+                    const data = result.data;
+                    
+                    // Prepare data arrays
+                    const dates = data.map(item => item.date);
+                    const nominalValues = data.map(item => item.nominal_inv_10k);
+                    const realValues = data.map(item => item.real_inv_10k);
+                    
+                    // Create chart
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: dates,
+                            datasets: [
+                                {
+                                    label: 'Nominal Value (S&P 500)',
+                                    data: nominalValues,
+                                    borderColor: 'rgba(75, 192, 192, 1)',
+                                    backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                                    fill: true,
+                                    tension: 0.3
+                                },
+                                {
+                                    label: 'Real Value (Inflation Adjusted)',
+                                    data: realValues,
+                                    borderColor: 'rgba(153, 102, 255, 1)',
+                                    backgroundColor: 'rgba(153, 102, 255, 0.1)',
+                                    fill: true,
+                                    tension: 0.3
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: '$10,000 Investment in S&P 500 (Adjusted for Inflation)',
+                                    font: {
+                                        size: 16
+                                    }
+                                },
+                                tooltip: {
+                                    mode: 'index',
+                                    intersect: false,
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.dataset.label || '';
+                                            if (label) {
+                                                label += ': ';
+                                            }
+                                            label += '$' + context.raw.toLocaleString('en-US', { maximumFractionDigits: 0 });
+                                            return label;
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    title: {
+                                        display: true,
+                                        text: 'Value ($)'
+                                    },
+                                    ticks: {
+                                        callback: function(value) {
+                                            return '$' + value.toLocaleString('en-US', { maximumFractionDigits: 0 });
+                                        }
+                                    }
+                                },
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: 'Date'
+                                    },
+                                    ticks: {
+                                        maxTicksLimit: 12,
+                                        autoSkip: true
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    
+                    document.getElementById('loadingIndicator').style.display = 'none';
+                    document.getElementById('errorMessage').style.display = 'none';
+                })
+                .catch(error => {
+                    console.error('Error loading real vs nominal data:', error);
+                    document.getElementById('loadingIndicator').style.display = 'none';
+                    document.getElementById('errorMessage').style.display = 'block';
+                    
+                    // Create fallback chart with simulated data if actual data can't be loaded
+                    createFallbackRealVsNominalChart(ctx);
+                });
+        }
+        
+        // Create fallback real vs nominal chart with simulated data
+        function createFallbackRealVsNominalChart(ctx) {
+            // Generate 10 years of data
+            const years = Array.from({length: 10}, (_, i) => 2015 + i);
+            const initialInvestment = 10000;
+            const inflationRate = 0.018; // 1.8% inflation
+            const investmentReturn = 0.08; // 8% average return
+            
+            const nominalValues = years.map((_, i) => initialInvestment * Math.pow(1 + investmentReturn, i));
+            const realValues = years.map((_, i) => initialInvestment * Math.pow(1 + investmentReturn - inflationRate, i));
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: years,
+                    datasets: [
+                        {
+                            label: 'Nominal Value (S&P 500)',
+                            data: nominalValues,
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                            fill: true,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'Real Value (Inflation Adjusted)',
+                            data: realValues,
+                            borderColor: 'rgba(153, 102, 255, 1)',
+                            backgroundColor: 'rgba(153, 102, 255, 0.1)',
+                            fill: true,
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '$10,000 Investment in S&P 500 (Sample Data)',
+                            font: {
+                                size: 16
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += '$' + context.raw.toLocaleString('en-US', { maximumFractionDigits: 0 });
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Value ($)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString('en-US', { maximumFractionDigits: 0 });
+                                }
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Year'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Load Bank vs SPY Chart using microservice
+        function loadBankVsSpyChart() {
+            const ctx = document.getElementById('bankVsSpyChart').getContext('2d');
+            document.getElementById('loadingIndicator').style.display = 'block';
+            
+            // Fetch data from microservice
+            fetch(`${API_BASE_URL}/api/bank-vs-spy`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Network response was not ok: ' + response.statusText);
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    if (result.status !== 'success') {
+                        throw new Error('API returned error status');
+                    }
+                    
+                    const data = result.data;
+                    
+                    // Prepare data arrays
+                    const dates = data.map(item => item.date);
+                    const bankValues = data.map(item => item.bank_value);
+                    const spyValues = data.map(item => item.spy_value);
+                    
+                    // Create chart
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: dates,
+                            datasets: [
+                                {
+                                    label: 'Bank Savings Account',
+                                    data: bankValues,
+                                    borderColor: 'rgba(75, 192, 192, 1)',
+                                    backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                                    fill: true,
+                                    tension: 0.3
+                                },
+                                {
+                                    label: 'S&P 500 Investment',
+                                    data: spyValues,
+                                    borderColor: 'rgba(153, 102, 255, 1)',
+                                    backgroundColor: 'rgba(153, 102, 255, 0.1)',
+                                    fill: true,
+                                    tension: 0.3
+                                }
+                            ]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: '$10,000 Initial Investment Comparison',
+                                    font: {
+                                        size: 16
+                                    }
+                                },
+                                tooltip: {
+                                    mode: 'index',
+                                    intersect: false,
+                                    callbacks: {
+                                        label: function(context) {
+                                            let label = context.dataset.label || '';
+                                            if (label) {
+                                                label += ': ';
+                                            }
+                                            label += '$' + context.raw.toLocaleString('en-US', { maximumFractionDigits: 0 });
+                                            return label;
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    title: {
+                                        display: true,
+                                        text: 'Value ($)'
+                                    },
+                                    ticks: {
+                                        callback: function(value) {
+                                            return '$' + value.toLocaleString('en-US', { maximumFractionDigits: 0 });
+                                        }
+                                    }
+                                },
+                                x: {
+                                    title: {
+                                        display: true,
+                                        text: 'Date'
+                                    },
+                                    ticks: {
+                                        maxTicksLimit: 12,
+                                        autoSkip: true
+                                    }
+                                }
+                            }
+                        }
+                    });
+                    
+                    document.getElementById('loadingIndicator').style.display = 'none';
+                    document.getElementById('errorMessage').style.display = 'none';
+                })
+                .catch(error => {
+                    console.error('Error loading bank vs SPY data:', error);
+                    document.getElementById('loadingIndicator').style.display = 'none';
+                    document.getElementById('errorMessage').style.display = 'block';
+                    
+                    // Create fallback chart with simulated data
+                    createFallbackBankVsSpyChart(ctx);
+                });
+        }
+        
+        // Create fallback bank vs SPY chart with simulated data
+        function createFallbackBankVsSpyChart(ctx) {
+            // Generate 10 years of data
+            const years = Array.from({length: 10}, (_, i) => 2015 + i);
+            const initialInvestment = 10000;
+            const bankInterestRate = 0.005; // 0.5% interest
+            const spyReturn = 0.08; // 8% average S&P 500 return
+            
+            const bankValues = years.map((_, i) => initialInvestment * Math.pow(1 + bankInterestRate, i));
+            const spyValues = years.map((_, i) => initialInvestment * Math.pow(1 + spyReturn, i));
+            
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: years,
+                    datasets: [
+                        {
+                            label: 'Bank Savings Account',
+                            data: bankValues,
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.1)',
+                            fill: true,
+                            tension: 0.3
+                        },
+                        {
+                            label: 'S&P 500 Investment',
+                            data: spyValues,
+                            borderColor: 'rgba(153, 102, 255, 1)',
+                            backgroundColor: 'rgba(153, 102, 255, 0.1)',
+                            fill: true,
+                            tension: 0.3
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: '$10,000 Initial Investment Comparison (Sample Data)',
+                            font: {
+                                size: 16
+                            }
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    label += '$' + context.raw.toLocaleString('en-US', { maximumFractionDigits: 0 });
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Value ($)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString('en-US', { maximumFractionDigits: 0 });
+                                }
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Year'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Check if microservice is available
+        function checkMicroserviceAvailability() {
+            return fetch(`${API_BASE_URL}/health`)
+                .then(response => response.ok)
+                .catch(() => false);
+        }
+        
+        // Initialize charts when the page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Pre-select the first options in each group for better UX
+            const durationButtons = document.querySelector('.btn-group:nth-of-type(1)').querySelectorAll('.btn');
+            if (durationButtons.length > 0) durationButtons[0].classList.add('selected');
+            
+            const riskButtons = document.querySelector('.btn-group:nth-of-type(2)').querySelectorAll('.btn');
+            if (riskButtons.length > 0) riskButtons[0].classList.add('selected');
+            
+            // Check if microservice is available and load data
+            checkMicroserviceAvailability()
+                .then(available => {
+                    if (available) {
+                        // Load statistics and charts from microservice
+                        loadStatistics();
+                        loadRealVsNominalChart();
+                        loadBankVsSpyChart();
+                    } else {
+                        // Show error message and load fallback charts
+                        document.getElementById('errorMessage').style.display = 'block';
+                        createFallbackRealVsNominalChart(document.getElementById('realVsNominalChart').getContext('2d'));
+                        createFallbackBankVsSpyChart(document.getElementById('bankVsSpyChart').getContext('2d'));
+                    }
+                });
+        });
     </script>
-</body>
-</html>
