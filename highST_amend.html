@@ -1225,10 +1225,10 @@ function createCandlestickChart(startDate, endDate) {
     
     // Load allocation data files
     Promise.all([
-        d3.csv("../angela_datasets/arkk.csv"),
-        d3.csv("../angela_datasets/iwf.csv"),
-        d3.csv("../angela_datasets/qqq.csv"),
-        d3.csv("../angela_datasets/upro.csv")
+        d3.csv("./angela_datasets/arkk.csv"),
+        d3.csv("./angela_datasets/iwf.csv"),
+        d3.csv("./angela_datasets/qqq.csv"),
+        d3.csv("./angela_datasets/upro.csv")
     ]).then(function(files) {
         const [arkkData, iwfData, qqqData, uproData] = files;
 
