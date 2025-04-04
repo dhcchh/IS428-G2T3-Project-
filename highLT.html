@@ -466,7 +466,7 @@
                             </span>
                         </h4>
                         <h3 id="volatility">Low (0.0%)</h3>
-                        <p>Portfolio volatility</p>
+                        <p>Annualized Portfolio volatility</p>
                     </div>   
                 </div>
                 
@@ -995,42 +995,42 @@ window.addEventListener('load', function() {
             }
         }
         
-// Function to initialize tabs
-function initializeTabs() {
-            const tabs = document.querySelectorAll('.tab');
-            
-            tabs.forEach(tab => {
-                tab.addEventListener('click', function() {
-                    const tabId = this.getAttribute('data-tab');
+        // Function to initialize tabs
+        function initializeTabs() {
+                    const tabs = document.querySelectorAll('.tab');
                     
-                    // Remove active class from all tabs and tab content
-                    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-                    
-                    // Add active class to clicked tab and corresponding content
-                    this.classList.add('active');
-                    document.getElementById(tabId).classList.add('active');
-                    
-                    // Re-render charts when tab becomes visible to fix layout issues
-                    setTimeout(() => {
-                        if (tabId === 'growth' && portfolioData) {
-                            // Use the new comparison chart instead of the old growth chart
-                            createPortfolioAgainstSpyChart(portfolioData, portfolioData);
-                        } else if (tabId === 'drawdown' && portfolioData) {
-                            createDrawdownChart(portfolioData);
-                        } else if (tabId === 'comparison' && portfolioData) {
-                            createComparisonChart(portfolioData, etfPerformance);
-                        } else if (tabId === 'yearly' && yearlyReturns) {
-                            createYearlyReturnsChart(yearlyReturns);
-                        } else if (tabId === 'company-weightage') {
-                            createCompanyWeightageChart(); // Mavis
-                        } else if (tabId === 'industry-weightage') {
-                            createIndustryWeightageChart(); // Angela
-                        }
-                    }, 50);
-                });
-            });
-        }
+                    tabs.forEach(tab => {
+                        tab.addEventListener('click', function() {
+                            const tabId = this.getAttribute('data-tab');
+                            
+                            // Remove active class from all tabs and tab content
+                            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                            
+                            // Add active class to clicked tab and corresponding content
+                            this.classList.add('active');
+                            document.getElementById(tabId).classList.add('active');
+                            
+                            // Re-render charts when tab becomes visible to fix layout issues
+                            setTimeout(() => {
+                                if (tabId === 'growth' && portfolioData) {
+                                    // Use the new comparison chart instead of the old growth chart
+                                    createPortfolioAgainstSpyChart(portfolioData, portfolioData);
+                                } else if (tabId === 'drawdown' && portfolioData) {
+                                    createDrawdownChart(portfolioData);
+                                } else if (tabId === 'comparison' && portfolioData) {
+                                    createComparisonChart(portfolioData, etfPerformance);
+                                } else if (tabId === 'yearly' && yearlyReturns) {
+                                    createYearlyReturnsChart(yearlyReturns);
+                                } else if (tabId === 'company-weightage') {
+                                    createCompanyWeightageChart(); // Mavis
+                                } else if (tabId === 'industry-weightage') {
+                                    createIndustryWeightageChart(); // Angela
+                                }
+                            }, 50);
+                        });
+                    });
+                }
 
         // Helper function to get current allocations
         function getCurrentAllocations() {
