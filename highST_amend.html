@@ -7,6 +7,10 @@
 6. function fetchAllData(payload) - removed createVolumeChart();
 7. <div class="time-period-buttons"> - removed 3Y, 5Y and MAX buttons
 8. function calculateStartDate(period) - removed CASE 3Y and 5Y
+
+9. function fetchAllData(payload) - removed createIndustryWeightageChart(industryWeightageData); 
+10. function initializeTabs() -  else if (tabId === 'industry-weightage') createIndustryWeightageChart();
+
 -->
 
 <!DOCTYPE html>
@@ -605,7 +609,7 @@
         
         // Add new API endpoints for the new charts
         const API_COMPANY_WEIGHTAGE = `${API_BASE_URL}/api/company-weightage`;
-        const API_INDUSTRY_WEIGHTAGE = `${API_BASE_URL}/api/industry-weightage`;
+        // const API_INDUSTRY_WEIGHTAGE = `${API_BASE_URL}/api/industry-weightage`;
         const API_VOLUME_ANALYSIS = `${API_BASE_URL}/api/volume-analysis`;
         const API_CORRELATION_MATRIX = `${API_BASE_URL}/api/correlation-matrix`;
         //const API_CANDLESTICK_DATA = `${API_BASE_URL}/api/candlestick-data`;
@@ -1093,8 +1097,8 @@
                             createCandlestickChart(candlestickData);
                         } else if (tabId === 'company-weightage' && companyWeightageData) {
                             createCompanyWeightageChart(companyWeightageData);
-                        } else if (tabId === 'industry-weightage' && industryWeightageData) {
-                            createIndustryWeightageChart(industryWeightageData);
+                        } else if (tabId === 'industry-weightage') {
+                            createIndustryWeightageChart();
                         } else if (tabId === 'volume') {
                             createVolumeChart();
                         //} else if (tabId === 'correlation' && correlationData) {
@@ -1230,7 +1234,7 @@
                 // Create charts
                 createCandlestickChart(candlestickData);
                 createCompanyWeightageChart(companyWeightageData);
-                createIndustryWeightageChart(industryWeightageData);
+                // createIndustryWeightageChart(industryWeightageData);
                 // createVolumeChart(volumeData);
                 //createCorrelationMatrix(correlationData);
                 createCorrelationMatrix();
@@ -1705,15 +1709,167 @@ function addAllocationInfo(svg, width, arkkData, iwfData, qqqData, uproData, all
             });
         }
 
-        // Function to create industry weightage chart
-        function createIndustryWeightageChart(data) {
-            const chartContainer = document.getElementById('industry-weightage-chart');
-            chartContainer.innerHTML = '';
+        // // Function to create industry weightage chart
+        // function createIndustryWeightageChart(data) {
+        //     const chartContainer = document.getElementById('industry-weightage-chart');
+        //     chartContainer.innerHTML = '';
             
-            // YOUR CODE HERE: Implement industry weightage chart (e.g., treemap or pie chart) using D3.js
-            // Use data parameter which should contain industry weightage information
+        //     // YOUR CODE HERE: Implement industry weightage chart (e.g., treemap or pie chart) using D3.js
+        //     // Use data parameter which should contain industry weightage information
             
-            console.log("Creating industry weightage chart with data:", Object.keys(data || {}).length, "industries");
+        //     console.log("Creating industry weightage chart with data:", Object.keys(data || {}).length, "industries");
+        // }
+
+        function createIndustryWeightageChart() {
+            // Check if allocations are valid
+            if (!checkAllocation()) {
+                const chartContainer = document.getElementById('industry-weightage');
+                chartContainer.innerHTML = '<div class="error">Please ensure allocations sum to 100%</div>';
+                return;
+            }
+
+            const chartContainer = document.getElementById('industry-weightage');
+            chartContainer.innerHTML = ''; // Clear previous chart
+
+            // Get current allocations
+            const allocations = {
+                'UPRO': parseInt(document.getElementById('upro-allocation').value) / 100,
+                'QQQ': parseInt(document.getElementById('qqq-allocation').value) / 100,
+                'IWF': parseInt(document.getElementById('iwf-allocation').value) / 100,
+                'ARKK': parseInt(document.getElementById('arkk-allocation').value) / 100
+            };
+
+            // Fetch industry weightage data
+            fetch('http://localhost:5006/portfolio-industry-weightage', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    tickers: {
+                        'UPRO': allocations['UPRO'] * 100,  // Convert to percentage
+                        'QQQ': allocations['QQQ'] * 100,
+                        'IWF': allocations['IWF'] * 100,
+                        'ARKK': allocations['ARKK'] * 100
+                    }
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const industryData = data.portfolio_industry_allocation;
+                console.log("Industry data received:", industryData);
+                
+                // Set up dimensions
+                const width = chartContainer.clientWidth;
+                const height = 400;
+                const margin = { top: 40, right: 100, bottom: 60, left: 150 };
+
+                // Create SVG
+                const svg = d3.select(chartContainer)
+                    .append('svg')
+                    .attr('width', width)
+                    .attr('height', height);
+
+                // Create color scale
+                const colorScale = d3.scaleSequential(d3.interpolateBlues)
+                    .domain([0, d3.max(industryData, d => d.Weight)]);
+
+                // Sort industries by weight
+                industryData.sort((a, b) => b.Weight - a.Weight);
+
+                // Create scales
+                const xScale = d3.scaleBand()
+                    .domain(['Portfolio'])
+                    .range([margin.left, width - margin.right])
+                    .padding(0.1);
+
+                const yScale = d3.scaleBand()
+                    .domain(industryData.map(d => d.Industry))
+                    .range([margin.top, height - margin.bottom])
+                    .padding(0.1);
+
+                // Add rectangles
+                svg.selectAll('rect')
+                    .data(industryData)
+                    .enter()
+                    .append('rect')
+                    .attr('x', xScale('Portfolio'))
+                    .attr('y', d => yScale(d.Industry))
+                    .attr('width', xScale.bandwidth())
+                    .attr('height', yScale.bandwidth())
+                    .attr('fill', d => colorScale(d.Weight))
+                    .on('mouseover', function(event, d) {
+                        // Show tooltip
+                        d3.select('#tooltip')
+                            .style('opacity', 1)
+                            .style('left', (event.pageX + 10) + 'px')
+                            .style('top', (event.pageY - 10) + 'px')
+                            .html(`
+                                <strong>${d.Industry}</strong><br>
+                                Weight: ${d.Weight.toFixed(2)}%
+                            `);
+                    })
+                    .on('mouseout', function() {
+                        d3.select('#tooltip').style('opacity', 0);
+                    });
+
+                // Add y-axis
+                svg.append('g')
+                    .attr('transform', `translate(${margin.left},0)`)
+                    .call(d3.axisLeft(yScale));
+
+                // Add title
+                svg.append('text')
+                    .attr('x', width / 2)
+                    .attr('y', margin.top / 2)
+                    .attr('text-anchor', 'middle')
+                    .style('font-size', '16px')
+                    .text('Industry Allocation Heatmap');
+
+                // Add legend
+                const legendWidth = 20;
+                const legendHeight = height - margin.top - margin.bottom;
+                
+                const legend = svg.append('g')
+                    .attr('transform', `translate(${width - margin.right + 40}, ${margin.top})`);
+
+                const legendScale = d3.scaleLinear()
+                    .domain([0, d3.max(industryData, d => d.Weight)])
+                    .range([legendHeight, 0]);
+
+                const legendAxis = d3.axisRight(legendScale)
+                    .tickFormat(d => d.toFixed(1) + '%');
+
+                legend.append('g')
+                    .call(legendAxis);
+
+                const legendGradient = legend.append('linearGradient')
+                    .attr('id', 'legend-gradient')
+                    .attr('x1', '0%')
+                    .attr('x2', '0%')
+                    .attr('y1', '100%')
+                    .attr('y2', '0%');
+
+                legendGradient.selectAll('stop')
+                    .data(colorScale.ticks().map((t, i, n) => ({ 
+                        offset: `${100 * i / n.length}%`,
+                        color: colorScale(t) 
+                    })))
+                    .enter()
+                    .append('stop')
+                    .attr('offset', d => d.offset)
+                    .attr('stop-color', d => d.color);
+
+                legend.append('rect')
+                    .attr('width', legendWidth)
+                    .attr('height', legendHeight)
+                    .style('fill', 'url(#legend-gradient)')
+                    .attr('transform', `translate(-${legendWidth}, 0)`);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                chartContainer.innerHTML = `<div class="error">Error loading industry data: ${error.message}</div>`;
+            });
         }
 
 
