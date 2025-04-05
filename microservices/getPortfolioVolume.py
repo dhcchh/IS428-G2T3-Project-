@@ -51,7 +51,7 @@ CORS(app)  # Enable CORS for all routes
 
 ## 2. Receive data from FrontEnd
 @app.route('/api/volume-analysis', methods=['POST'])
-def get_volume():
+def get_volume1():
     try:
         # Get date range from request
         data = request.get_json()
@@ -63,8 +63,10 @@ def get_volume():
         if not start_date or not end_date:
             return jsonify({'error': 'Missing date parameters'}), 400
 
-        # Create a volume dictionary
-        etf_volume = {}
+        # Create a combined dataframe
+        combined_df = pd.DataFrame()
+
+        # Process each ETF
         for etf in etfs:
             try:
                 volume = load_volume_data_from_csv(etf)
@@ -73,30 +75,40 @@ def get_volume():
                 mask = (volume.index >= start_date) & (volume.index <= end_date)
                 filtered_volume = volume[mask]
 
-                # Create dictionary with dates and volumes
-                etf_volume[etf] = {
-                    'dates': filtered_volume.index.strftime('%Y-%m-%d').tolist(),
-                    'volumes': filtered_volume.values.tolist()
-                }
+                # Multiply volume by allocation
+                allocation = allocations.get(etf, 0)
+                weighted_volume = filtered_volume * allocation
+
+                # Add to combined DataFrame
+                if combined_df.empty:
+                    combined_df['Volume'] = weighted_volume
+                else:
+                    combined_df['Volume'] += weighted_volume
+
                 
         
             except Exception as e:
                 return jsonify({'error': f'Error processing {etf}: {str(e)}'}), 500
 
         
-        
+        # Prepare response with combined volume data
         return jsonify({
-            'volume': etf_volume,
+            'volume': {
+                'dates': combined_df.index.strftime('%Y-%m-%d').tolist(),
+                'volumes': combined_df['Volume'].tolist()
+            },
             'start_date': start_date.strftime('%Y-%m-%d'),
             'end_date': end_date.strftime('%Y-%m-%d'),
-            'allocations' : allocations
+            'allocations': allocations
         })
+
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
 
-# def get_volume1():
+##  WORKING CODE
+# def get_volume():
 #     try:
 #         # Get date range from request
 #         data = request.get_json()
@@ -107,11 +119,9 @@ def get_volume():
 
 #         if not start_date or not end_date:
 #             return jsonify({'error': 'Missing date parameters'}), 400
-        
 
-#         # Initialize empty DataFrame for combined data
+#         # Create a volume dictionary
 #         etf_volume = {}
-#         # combined_df = pd.DataFrame()
 #         for etf in etfs:
 #             try:
 #                 volume = load_volume_data_from_csv(etf)
@@ -120,19 +130,13 @@ def get_volume():
 #                 mask = (volume.index >= start_date) & (volume.index <= end_date)
 #                 filtered_volume = volume[mask]
 
-
-#                 # # Multiply volume by allocation (convert percentage to decimal)
-#                 # allocation = allocations.get(etf, 0) / 100
-#                 # weighted_volume = filtered_volume * allocation
-                
-
-
 #                 # Create dictionary with dates and volumes
 #                 etf_volume[etf] = {
 #                     'dates': filtered_volume.index.strftime('%Y-%m-%d').tolist(),
 #                     'volumes': filtered_volume.values.tolist()
 #                 }
                 
+        
 #             except Exception as e:
 #                 return jsonify({'error': f'Error processing {etf}: {str(e)}'}), 500
 
@@ -142,12 +146,11 @@ def get_volume():
 #             'volume': etf_volume,
 #             'start_date': start_date.strftime('%Y-%m-%d'),
 #             'end_date': end_date.strftime('%Y-%m-%d'),
-#             'allocations': allocations
+#             'allocations' : allocations
 #         })
 
 #     except Exception as e:
 #         return jsonify({'error': str(e)}), 500
-
 
 
 
