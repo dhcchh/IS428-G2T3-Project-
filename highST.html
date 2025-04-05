@@ -2174,30 +2174,12 @@ function createCorrelationMatrix() {
         };
 
         // Log the extracted ETF prices inside the .then block
-        console.log("ETF Prices:", {
-            ARKK: {
-                length: etfPrices.ARKK?.length || 0,
-                sample: etfPrices.ARKK?.slice(0, 3) // First 3 values
-            },
-            IWF: {
-                length: etfPrices.IWF?.length || 0,
-                sample: etfPrices.IWF?.slice(0, 3)
-            },
-            QQQ: {
-                length: etfPrices.QQQ?.length || 0,
-                sample: etfPrices.QQQ?.slice(0, 3)
-            },
-            UPRO: {
-                length: etfPrices.UPRO?.length || 0,
-                sample: etfPrices.UPRO?.slice(0, 3)
-            }
-        });
 
-        // Continue with processing the data...
-        // Calculate correlations and create visualization
-        const etfs = ['ARKK', 'IWF', 'QQQ', 'UPRO'];
-        const matrix = calculateCorrelations(etfPrices, etfs);
-        createHeatmap(matrix, etfs, chartContainer);
+        console.log("ARKK prices:", etfPrices['ARKK']);
+        console.log("IWF prices:", etfPrices['IWF']);
+        console.log("QQQ prices:", etfPrices['QQQ']);
+        console.log("UPRO prices:", etfPrices['UPRO']);
+
     })
     .catch(error => {
         console.error('Error:', error);
