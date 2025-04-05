@@ -2125,6 +2125,7 @@ function addAllocationInfo(svg, width, arkkData, iwfData, qqqData, uproData, all
 //     });
 // }
 function createCorrelationMatrix() {
+    
     console.log("Starting correlation matrix creation...");
     const chartContainer = document.getElementById('correlation-chart');
     if (!chartContainer) {
@@ -2145,6 +2146,41 @@ function createCorrelationMatrix() {
     });
 
     chartContainer.innerHTML = '<div class="loading">Loading correlation data...</div>';
+
+    fetch('http://localhost:5009/api/get-close-price', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            start_date: formatDateForAPI(selectedStartDate),
+            end_date: formatDateForAPI(selectedEndDate),
+            tickers: ['ARKK', 'IWF', 'QQQ', 'UPRO']
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Extract price data for each ETF
+        const etfPrices = {
+            ARKK: data.prices['ARKK'],
+            IWF: data.prices['IWF'],
+            QQQ: data.prices['QQQ'],
+            UPRO: data.prices['UPRO']
+        };
+       
+    })
+     
+    console.log("Data loaded:", {
+        ARKK: arkkData.length,
+        IWF: iwfData.length,
+        QQQ: qqqData.length,
+        UPRO: uproData.length
+    });
 
     // Load ETF data
     Promise.all([
