@@ -337,6 +337,34 @@
             border-top-color: #333;
             pointer-events: none;
         }
+
+        /* addition code SH */
+        /* Add these new styles before .grid line */
+    #correlation-chart {
+        min-height: 500px;
+        position: relative;
+    }
+
+    .loading {
+        text-align: center;
+        padding: 20px;
+        color: #666;
+    }
+
+    .error {
+        color: #721c24;
+        background-color: #f8d7da;
+        border: 1px solid #f5c6cb;
+        padding: 1rem;
+        margin: 1rem 0;
+        border-radius: 0.25rem;
+    }
+
+    .grid line {
+        stroke: #e0e0e0;
+        stroke-opacity: 0.7;
+        shape-rendering: crispEdges;
+    }
     </style>
 </head>
 <body>
@@ -521,13 +549,19 @@
                         </div>
                     </div>
                     
-                    <div id="correlation" class="tab-content">
+                    <!-- <div id="correlation" class="tab-content">
                         <div class="chart-container">
                             <h3>Correlation Matrix</h3>
                             <div id="correlation-chart">
                                 <div class="loading">Loading data</div>
                             </div>
                             <div class="legend" id="correlation-legend"></div>
+                        </div>
+                    </div> -->
+                    <div id="correlation" class="tab-content">
+                        <div class="chart-container">
+                            <h3>Correlation Matrix</h3>
+                            <div id="correlation-chart"></div>
                         </div>
                     </div>
                     
@@ -576,7 +610,7 @@
         let companyWeightageData = null;
         let industryWeightageData = null;
         let volumeData = null;
-        let correlationData = null;
+        //let correlationData = null;
         let drawdownData = null;
         let etfPerformance = null;
         let yearlyReturns = null;
@@ -1051,8 +1085,10 @@
                             createIndustryWeightageChart(industryWeightageData);
                         } else if (tabId === 'volume' && volumeData) {
                             createVolumeChart(volumeData);
-                        } else if (tabId === 'correlation' && correlationData) {
-                            createCorrelationMatrix(correlationData);
+                        //} else if (tabId === 'correlation' && correlationData) {
+                        //    createCorrelationMatrix(correlationData);
+                        } else if (tabId === 'correlation') {
+                        createCorrelationMatrix(); // Remove correlationData parameter
                         } else if (tabId === 'drawdown' && drawdownData) {
                             createDrawdownChart(drawdownData);
                         }
@@ -1164,7 +1200,7 @@
                 companyWeightageData = data.company_weightage || [];
                 industryWeightageData = data.industry_weightage || [];
                 volumeData = data.volume_data || [];
-                correlationData = data.correlation_data || [];
+                //correlationData = data.correlation_data || [];
                 drawdownData = data.drawdown_data || portfolioData; // Use portfolio data if no specific drawdown data
                 
                 console.log("Data received:", {
@@ -1184,7 +1220,8 @@
                 createCompanyWeightageChart(companyWeightageData);
                 createIndustryWeightageChart(industryWeightageData);
                 createVolumeChart(volumeData);
-                createCorrelationMatrix(correlationData);
+                //createCorrelationMatrix(correlationData);
+                createCorrelationMatrix();
                 createDrawdownChart(drawdownData);
                 
                 // Hide loading indicators
@@ -1690,188 +1727,210 @@ function addAllocationInfo(svg, width, arkkData, iwfData, qqqData, uproData, all
             
          //   console.log("Creating correlation matrix with data:", data?.length || 0, "correlations");
         //}
-
-
-        // Function to create correlation matrix
         function createCorrelationMatrix() {
-            const chartContainer = document.getElementById('correlation-chart');
-            chartContainer.innerHTML = '';
-            
-            function createCorrelationMatrix() {
+    console.log("Starting correlation matrix creation...");
     const chartContainer = document.getElementById('correlation-chart');
-    chartContainer.innerHTML = ''; // Clear previous chart
+    if (!chartContainer) {
+        console.error("Correlation chart container not found");
+        return;
+    }
+    chartContainer.innerHTML = '<div class="loading">Loading correlation data...</div>';
 
-    // Load data from CSV files
+    // Log the paths being accessed
+    console.log("Attempting to load CSV files from:", [
+        "./angela_datasets/arkk.csv",
+        "./angela_datasets/iwf.csv",
+        "./angela_datasets/qqq.csv",
+        "./angela_datasets/upro.csv"
+    ]);
+
+    // Load ETF data from CSV files with error handling
     Promise.all([
-        d3.csv("../angela_datasets/arkk_share_allocation.csv"),
-        d3.csv("../angela_datasets/IWF_share_allocation.csv"),
-        d3.csv("../angela_datasets/qqq_share_allocation.csv"),
-        d3.csv("../angela_datasets/upro_share_allocation.csv")
-    ]).then(function (files) {
+        d3.csv("./angela_datasets/arkk.csv").catch(error => {
+            console.error("Error loading ARKK data:", error);
+            return [];
+        }),
+        d3.csv("./angela_datasets/iwf.csv").catch(error => {
+            console.error("Error loading IWF data:", error);
+            return [];
+        }),
+        d3.csv("./angela_datasets/qqq.csv").catch(error => {
+            console.error("Error loading QQQ data:", error);
+            return [];
+        }),
+        d3.csv("./angela_datasets/upro.csv").catch(error => {
+            console.error("Error loading UPRO data:", error);
+            return [];
+        })
+    ]).then(function(files) {
         const [arkkData, iwfData, qqqData, uproData] = files;
+        
+        console.log("Data loaded:", {
+            ARKK: arkkData.length,
+            IWF: iwfData.length,
+            QQQ: qqqData.length,
+            UPRO: uproData.length
+        });
 
-        // Combine all datasets into an object for easier processing
-        const datasets = {
-            ARKK: arkkData,
-            IWF: iwfData,
-            QQQ: qqqData,
-            UPRO: uproData
+        // Process and filter data
+        const processData = (data) => {
+            return data
+                .map(d => ({
+                    date: new Date(d.Date),
+                    close: parseFloat(d.Close || d.Price) // Try both Close and Price columns
+                }))
+                .filter(d => !isNaN(d.close) && d.date instanceof Date && !isNaN(d.date))
+                .sort((a, b) => a.date - b.date);
         };
 
-        // Filter data based on the selected start and end dates
-        const filteredData = {};
-        Object.keys(datasets).forEach(etf => {
-            filteredData[etf] = datasets[etf].filter(d => {
-                const date = new Date(d.Date);
-                return date >= selectedStartDate && date <= selectedEndDate;
-            });
+        const filteredData = {
+            ARKK: processData(arkkData),
+            IWF: processData(iwfData),
+            QQQ: processData(qqqData),
+            UPRO: processData(uproData)
+        };
+
+        console.log("Processed data points:", {
+            ARKK: filteredData.ARKK.length,
+            IWF: filteredData.IWF.length,
+            QQQ: filteredData.QQQ.length,
+            UPRO: filteredData.UPRO.length
         });
 
-        // Extract `Close` prices for each ETF
-        const closePrices = {};
-        Object.keys(filteredData).forEach(etf => {
-            closePrices[etf] = filteredData[etf].map(d => ({
-                date: new Date(d.Date),
-                close: parseFloat(d.Close)
-            })).filter(d => !isNaN(d.close)); // Remove invalid data
-        });
+        // Calculate correlations
+        const etfs = ['ARKK', 'IWF', 'QQQ', 'UPRO'];
+        const matrix = calculateCorrelationMatrix(filteredData, etfs);
 
-        // Ensure all ETFs have the same dates for correlation calculation
-        const commonDates = closePrices[Object.keys(closePrices)[0]].map(d => d.date);
-        Object.keys(closePrices).forEach(etf => {
-            closePrices[etf] = closePrices[etf].filter(d => commonDates.includes(d.date));
-        });
-
-        // Calculate daily returns for each ETF
-        const dailyReturns = {};
-        Object.keys(closePrices).forEach(etf => {
-            dailyReturns[etf] = [];
-            for (let i = 1; i < closePrices[etf].length; i++) {
-                const prev = closePrices[etf][i - 1].close;
-                const curr = closePrices[etf][i].close;
-                dailyReturns[etf].push((curr - prev) / prev); // Calculate return
-            }
-        });
-
-        // Calculate the correlation matrix
-        const etfs = Object.keys(dailyReturns);
-        const correlationMatrix = etfs.map(etf1 => {
-            return etfs.map(etf2 => {
-                const returns1 = dailyReturns[etf1];
-                const returns2 = dailyReturns[etf2];
-                return {
-                    etf1,
-                    etf2,
-                    correlation: calculateCorrelation(returns1, returns2)
-                };
-            });
-        });
-
-        // Render the correlation heatmap
-        renderCorrelationHeatmap(correlationMatrix, etfs, chartContainer);
-    }).catch(function (error) {
+        // Create visualization
+        createVisualization(matrix, etfs, chartContainer);
+    }).catch(error => {
+        console.error("Error loading CSV files:", error);
         chartContainer.innerHTML = `<div class="error">Error loading data: ${error.message}</div>`;
     });
 }
 
-// Helper function to calculate correlation
-function calculateCorrelation(array1, array2) {
-    const n = array1.length;
-    const mean1 = d3.mean(array1);
-    const mean2 = d3.mean(array2);
-    const numerator = d3.sum(array1.map((x, i) => (x - mean1) * (array2[i] - mean2)));
-    const denominator = Math.sqrt(
-        d3.sum(array1.map(x => Math.pow(x - mean1, 2))) *
-        d3.sum(array2.map(x => Math.pow(x - mean2, 2)))
+function calculateCorrelationMatrix(data, etfs) {
+    return etfs.map(etf1 => 
+        etfs.map(etf2 => {
+            try {
+                const correlation = calculatePearsonCorrelation(
+                    data[etf1].map(d => d.close),
+                    data[etf2].map(d => d.close)
+                );
+                return {
+                    source: etf1,
+                    target: etf2,
+                    correlation: isNaN(correlation) ? 0 : correlation
+                };
+            } catch (error) {
+                console.error(`Error calculating correlation between ${etf1} and ${etf2}:`, error);
+                return {
+                    source: etf1,
+                    target: etf2,
+                    correlation: 0
+                };
+            }
+        })
     );
-    return numerator / denominator;
 }
 
-// Helper function to render the heatmap
-function renderCorrelationHeatmap(correlationMatrix, etfs, chartContainer) {
-    const margin = { top: 50, right: 50, bottom: 50, left: 50 };
-    const width = chartContainer.clientWidth - margin.left - margin.right;
-    const height = width; // Make it square
-    const cellSize = width / etfs.length;
+function calculatePearsonCorrelation(x, y) {
+    if (!Array.isArray(x) || !Array.isArray(y) || x.length === 0 || y.length === 0) {
+        console.warn("Invalid input arrays");
+        return 0;
+    }
 
-    const svg = d3.select(chartContainer)
+    const n = Math.min(x.length, y.length);
+    const sum_x = x.reduce((a, b) => a + (isNaN(b) ? 0 : b), 0);
+    const sum_y = y.reduce((a, b) => a + (isNaN(b) ? 0 : b), 0);
+    
+    const mean_x = sum_x / n;
+    const mean_y = sum_y / n;
+    
+    let numerator = 0;
+    let denominator_x = 0;
+    let denominator_y = 0;
+    
+    for (let i = 0; i < n; i++) {
+        if (isNaN(x[i]) || isNaN(y[i])) continue;
+        const dx = x[i] - mean_x;
+        const dy = y[i] - mean_y;
+        numerator += dx * dy;
+        denominator_x += dx * dx;
+        denominator_y += dy * dy;
+    }
+    
+    if (denominator_x === 0 || denominator_y === 0) return 0;
+    return numerator / Math.sqrt(denominator_x * denominator_y);
+}
+
+function createVisualization(matrix, etfs, container) {
+    // Clear container
+    container.innerHTML = '';
+
+    const margin = { top: 50, right: 50, bottom: 50, left: 50 };
+    const width = Math.min(500, container.clientWidth - margin.left - margin.right);
+    const height = width;
+    const cellSize = Math.floor(width / etfs.length);
+
+    // Create SVG
+    const svg = d3.select(container)
         .append('svg')
         .attr('width', width + margin.left + margin.right)
         .attr('height', height + margin.top + margin.bottom)
         .append('g')
         .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    const colorScale = d3.scaleSequential(d3.interpolateRdBu).domain([-1, 1]);
+    // Color scale
+    const color = d3.scaleLinear()
+        .domain([-1, 0, 1])
+        .range(['#ff4444', '#ffffff', '#4444ff']);
 
-    svg.selectAll('.cell')
-        .data(correlationMatrix.flat())
+    // Create cells
+    svg.selectAll('rect')
+        .data(matrix.flat())
         .enter()
         .append('rect')
-        .attr('x', d => etfs.indexOf(d.etf2) * cellSize)
-        .attr('y', d => etfs.indexOf(d.etf1) * cellSize)
+        .attr('x', d => etfs.indexOf(d.target) * cellSize)
+        .attr('y', d => etfs.indexOf(d.source) * cellSize)
         .attr('width', cellSize)
         .attr('height', cellSize)
-        .attr('fill', d => colorScale(d.correlation))
-        .attr('stroke', 'white');
+        .attr('fill', d => color(d.correlation))
+        .attr('stroke', '#fff');
 
-    svg.selectAll('.cell-text')
-        .data(correlationMatrix.flat())
+    // Add correlation values
+    svg.selectAll('text.value')
+        .data(matrix.flat())
         .enter()
         .append('text')
-        .attr('x', d => etfs.indexOf(d.etf2) * cellSize + cellSize / 2)
-        .attr('y', d => etfs.indexOf(d.etf1) * cellSize + cellSize / 2)
+        .attr('class', 'value')
+        .attr('x', d => etfs.indexOf(d.target) * cellSize + cellSize/2)
+        .attr('y', d => etfs.indexOf(d.source) * cellSize + cellSize/2)
+        .attr('dy', '.35em')
         .attr('text-anchor', 'middle')
-        .attr('alignment-baseline', 'middle')
-        .attr('font-size', '10px')
+        .style('font-size', '12px')
+        .style('fill', d => Math.abs(d.correlation) > 0.5 ? '#fff' : '#000')
         .text(d => d.correlation.toFixed(2));
 
-    svg.selectAll('.x-label')
-        .data(etfs)
-        .enter()
-        .append('text')
-        .attr('class', 'x-label')
-        .attr('x', (d, i) => i * cellSize + cellSize / 2)
-        .attr('y', -5)
-        .attr('text-anchor', 'middle')
-        .attr('font-size', '12px')
-        .attr('font-weight', 'bold')
-        .text(d => d)
-        .attr('transform', `translate(0, ${-margin.top / 2}) rotate(-45)`);
+    // Add labels
+    etfs.forEach((etf, i) => {
+        // X axis labels
+        svg.append('text')
+            .attr('x', i * cellSize + cellSize/2)
+            .attr('y', -10)
+            .attr('text-anchor', 'middle')
+            .text(etf);
 
-    svg.selectAll('.y-label')
-        .data(etfs)
-        .enter()
-        .append('text')
-        .attr('class', 'y-label')
-        .attr('x', -5)
-        .attr('y', (d, i) => i * cellSize + cellSize / 2)
-        .attr('text-anchor', 'end')
-        .attr('alignment-baseline', 'middle')
-        .attr('font-size', '12px')
-        .attr('font-weight', 'bold')
-        .text(d => d);
+        // Y axis labels
+        svg.append('text')
+            .attr('x', -10)
+            .attr('y', i * cellSize + cellSize/2)
+            .attr('text-anchor', 'end')
+            .attr('alignment-baseline', 'middle')
+            .text(etf);
+    });
 }
-            // YOUR CODE HERE: Implement correlation matrix heatmap using D3.js
-            // Use data parameter which should contain correlation coefficients between different assets
-
-
-
-
-            
-            console.log("Creating correlation matrix with data:", data?.length || 0, "correlations");
-        }
-
-        
-
-
-        
-
-
-
-
-
-
-        // Function to create drawdown chart
+      // Function to create drawdown chart
         function createDrawdownChart(portfolioData) {
             const chartContainer = document.getElementById('drawdown-chart');
             chartContainer.innerHTML = '';
