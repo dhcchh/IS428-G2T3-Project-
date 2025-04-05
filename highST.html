@@ -1678,16 +1678,198 @@ function addAllocationInfo(svg, width, arkkData, iwfData, qqqData, uproData, all
             console.log("Creating volume chart with data:", data?.length || 0, "data points");
         }
 
-        // Function to create correlation matrix
-        function createCorrelationMatrix(data) {
-            const chartContainer = document.getElementById('correlation-chart');
-            chartContainer.innerHTML = '';
+
+                // Function to create correlation matrix
+        //function createCorrelationMatrix(data) {
+         //   const chartContainer = document.getElementById('correlation-chart');
+          //  chartContainer.innerHTML = '';
+            
             
             // YOUR CODE HERE: Implement correlation matrix heatmap using D3.js
             // Use data parameter which should contain correlation coefficients between different assets
             
+         //   console.log("Creating correlation matrix with data:", data?.length || 0, "correlations");
+        //}
+
+
+        // Function to create correlation matrix
+        function createCorrelationMatrix() {
+            const chartContainer = document.getElementById('correlation-chart');
+            chartContainer.innerHTML = '';
+            
+            function createCorrelationMatrix() {
+    const chartContainer = document.getElementById('correlation-chart');
+    chartContainer.innerHTML = ''; // Clear previous chart
+
+    // Load data from CSV files
+    Promise.all([
+        d3.csv("../angela_datasets/arkk_share_allocation.csv"),
+        d3.csv("../angela_datasets/IWF_share_allocation.csv"),
+        d3.csv("../angela_datasets/qqq_share_allocation.csv"),
+        d3.csv("../angela_datasets/upro_share_allocation.csv")
+    ]).then(function (files) {
+        const [arkkData, iwfData, qqqData, uproData] = files;
+
+        // Combine all datasets into an object for easier processing
+        const datasets = {
+            ARKK: arkkData,
+            IWF: iwfData,
+            QQQ: qqqData,
+            UPRO: uproData
+        };
+
+        // Filter data based on the selected start and end dates
+        const filteredData = {};
+        Object.keys(datasets).forEach(etf => {
+            filteredData[etf] = datasets[etf].filter(d => {
+                const date = new Date(d.Date);
+                return date >= selectedStartDate && date <= selectedEndDate;
+            });
+        });
+
+        // Extract `Close` prices for each ETF
+        const closePrices = {};
+        Object.keys(filteredData).forEach(etf => {
+            closePrices[etf] = filteredData[etf].map(d => ({
+                date: new Date(d.Date),
+                close: parseFloat(d.Close)
+            })).filter(d => !isNaN(d.close)); // Remove invalid data
+        });
+
+        // Ensure all ETFs have the same dates for correlation calculation
+        const commonDates = closePrices[Object.keys(closePrices)[0]].map(d => d.date);
+        Object.keys(closePrices).forEach(etf => {
+            closePrices[etf] = closePrices[etf].filter(d => commonDates.includes(d.date));
+        });
+
+        // Calculate daily returns for each ETF
+        const dailyReturns = {};
+        Object.keys(closePrices).forEach(etf => {
+            dailyReturns[etf] = [];
+            for (let i = 1; i < closePrices[etf].length; i++) {
+                const prev = closePrices[etf][i - 1].close;
+                const curr = closePrices[etf][i].close;
+                dailyReturns[etf].push((curr - prev) / prev); // Calculate return
+            }
+        });
+
+        // Calculate the correlation matrix
+        const etfs = Object.keys(dailyReturns);
+        const correlationMatrix = etfs.map(etf1 => {
+            return etfs.map(etf2 => {
+                const returns1 = dailyReturns[etf1];
+                const returns2 = dailyReturns[etf2];
+                return {
+                    etf1,
+                    etf2,
+                    correlation: calculateCorrelation(returns1, returns2)
+                };
+            });
+        });
+
+        // Render the correlation heatmap
+        renderCorrelationHeatmap(correlationMatrix, etfs, chartContainer);
+    }).catch(function (error) {
+        chartContainer.innerHTML = `<div class="error">Error loading data: ${error.message}</div>`;
+    });
+}
+
+// Helper function to calculate correlation
+function calculateCorrelation(array1, array2) {
+    const n = array1.length;
+    const mean1 = d3.mean(array1);
+    const mean2 = d3.mean(array2);
+    const numerator = d3.sum(array1.map((x, i) => (x - mean1) * (array2[i] - mean2)));
+    const denominator = Math.sqrt(
+        d3.sum(array1.map(x => Math.pow(x - mean1, 2))) *
+        d3.sum(array2.map(x => Math.pow(x - mean2, 2)))
+    );
+    return numerator / denominator;
+}
+
+// Helper function to render the heatmap
+function renderCorrelationHeatmap(correlationMatrix, etfs, chartContainer) {
+    const margin = { top: 50, right: 50, bottom: 50, left: 50 };
+    const width = chartContainer.clientWidth - margin.left - margin.right;
+    const height = width; // Make it square
+    const cellSize = width / etfs.length;
+
+    const svg = d3.select(chartContainer)
+        .append('svg')
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom)
+        .append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    const colorScale = d3.scaleSequential(d3.interpolateRdBu).domain([-1, 1]);
+
+    svg.selectAll('.cell')
+        .data(correlationMatrix.flat())
+        .enter()
+        .append('rect')
+        .attr('x', d => etfs.indexOf(d.etf2) * cellSize)
+        .attr('y', d => etfs.indexOf(d.etf1) * cellSize)
+        .attr('width', cellSize)
+        .attr('height', cellSize)
+        .attr('fill', d => colorScale(d.correlation))
+        .attr('stroke', 'white');
+
+    svg.selectAll('.cell-text')
+        .data(correlationMatrix.flat())
+        .enter()
+        .append('text')
+        .attr('x', d => etfs.indexOf(d.etf2) * cellSize + cellSize / 2)
+        .attr('y', d => etfs.indexOf(d.etf1) * cellSize + cellSize / 2)
+        .attr('text-anchor', 'middle')
+        .attr('alignment-baseline', 'middle')
+        .attr('font-size', '10px')
+        .text(d => d.correlation.toFixed(2));
+
+    svg.selectAll('.x-label')
+        .data(etfs)
+        .enter()
+        .append('text')
+        .attr('class', 'x-label')
+        .attr('x', (d, i) => i * cellSize + cellSize / 2)
+        .attr('y', -5)
+        .attr('text-anchor', 'middle')
+        .attr('font-size', '12px')
+        .attr('font-weight', 'bold')
+        .text(d => d)
+        .attr('transform', `translate(0, ${-margin.top / 2}) rotate(-45)`);
+
+    svg.selectAll('.y-label')
+        .data(etfs)
+        .enter()
+        .append('text')
+        .attr('class', 'y-label')
+        .attr('x', -5)
+        .attr('y', (d, i) => i * cellSize + cellSize / 2)
+        .attr('text-anchor', 'end')
+        .attr('alignment-baseline', 'middle')
+        .attr('font-size', '12px')
+        .attr('font-weight', 'bold')
+        .text(d => d);
+}
+            // YOUR CODE HERE: Implement correlation matrix heatmap using D3.js
+            // Use data parameter which should contain correlation coefficients between different assets
+
+
+
+
+            
             console.log("Creating correlation matrix with data:", data?.length || 0, "correlations");
         }
+
+        
+
+
+        
+
+
+
+
+
 
         // Function to create drawdown chart
         function createDrawdownChart(portfolioData) {
