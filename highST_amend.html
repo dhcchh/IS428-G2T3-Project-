@@ -2,7 +2,13 @@
 1. function initializeTimePeriodButtons() - call createVolumeChart();
 2. function initializeTabs() -  else if (tabId === 'volume') {createVolumeChart();
 3. function createVolumeChart() - added code to create volume chart
+4. document.getElementById('calculate-button') - updateVolumeChart(); added code to call update volume chart
+5. function updateVolumeChart() - added code to update volume chart
+6. function fetchAllData(payload) - removed createVolumeChart();
+7. <div class="time-period-buttons"> - removed 3Y, 5Y and MAX buttons
+8. function calculateStartDate(period) - removed CASE 3Y and 5Y
 -->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -342,6 +348,34 @@
             border-top-color: #333;
             pointer-events: none;
         }
+
+        /* addition code SH */
+        /* Add these new styles before .grid line */
+    #correlation-chart {
+        min-height: 500px;
+        position: relative;
+    }
+
+    .loading {
+        text-align: center;
+        padding: 20px;
+        color: #666;
+    }
+
+    .error {
+        color: #721c24;
+        background-color: #f8d7da;
+        border: 1px solid #f5c6cb;
+        padding: 1rem;
+        margin: 1rem 0;
+        border-radius: 0.25rem;
+    }
+
+    .grid line {
+        stroke: #e0e0e0;
+        stroke-opacity: 0.7;
+        shape-rendering: crispEdges;
+    }
     </style>
 </head>
 <body>
@@ -366,9 +400,6 @@
                         <button class="time-btn" data-period="1M">1M</button>
                         <button class="time-btn" data-period="6M">6M</button>
                         <button class="time-btn" data-period="1Y">1Y</button>
-                        <button class="time-btn" data-period="3Y">3Y</button>
-                        <button class="time-btn" data-period="5Y">5Y</button>
-                        <button class="time-btn active" data-period="MAX">Max</button>
                     </div>
                     <div id="date-range-display" style="text-align: center; margin-top: 10px; display: none;">Loading date range...</div>
                 </div>
@@ -526,13 +557,19 @@
                         </div>
                     </div>
                     
-                    <div id="correlation" class="tab-content">
+                    <!-- <div id="correlation" class="tab-content">
                         <div class="chart-container">
                             <h3>Correlation Matrix</h3>
                             <div id="correlation-chart">
                                 <div class="loading">Loading data</div>
                             </div>
                             <div class="legend" id="correlation-legend"></div>
+                        </div>
+                    </div> -->
+                    <div id="correlation" class="tab-content">
+                        <div class="chart-container">
+                            <h3>Correlation Matrix</h3>
+                            <div id="correlation-chart"></div>
                         </div>
                     </div>
                     
@@ -571,7 +608,7 @@
         const API_INDUSTRY_WEIGHTAGE = `${API_BASE_URL}/api/industry-weightage`;
         const API_VOLUME_ANALYSIS = `${API_BASE_URL}/api/volume-analysis`;
         const API_CORRELATION_MATRIX = `${API_BASE_URL}/api/correlation-matrix`;
-        // const API_CANDLESTICK_DATA = `${API_BASE_URL}/api/candlestick-data`;
+        //const API_CANDLESTICK_DATA = `${API_BASE_URL}/api/candlestick-data`;
 
         // Global variables
         let minDate, maxDate;
@@ -581,7 +618,7 @@
         let companyWeightageData = null;
         let industryWeightageData = null;
         let volumeData = null;
-        let correlationData = null;
+        //let correlationData = null;
         let drawdownData = null;
         let etfPerformance = null;
         let yearlyReturns = null;
@@ -606,6 +643,7 @@
             // Set up calculate button
             document.getElementById('calculate-button').addEventListener('click', function() {
                 calculateAndFetchResults();
+                updateVolumeChart(); 
             });
             
             // Initial calculation will be triggered after date range is fetched
@@ -931,9 +969,17 @@
                     updateDateRangeDisplay();
                     
                     // If allocations are valid, trigger calculation
+                    // if (checkAllocation()) {
+                    //     calculateAndFetchResults();
+                    // }
+
                     if (checkAllocation()) {
                         calculateAndFetchResults();
                         createVolumeChart();
+                        // Update correlation matrix if correlation tab is active
+                        if (document.querySelector('#correlation').classList.contains('active')) {
+                            createCorrelationMatrix();
+                        }
                     }
                 });
             });
@@ -953,12 +999,6 @@
                     break;
                 case '1Y':
                     startDate.setFullYear(endDate.getFullYear() - 1);
-                    break;
-                case '3Y':
-                    startDate.setFullYear(endDate.getFullYear() - 3);
-                    break;
-                case '5Y':
-                    startDate.setFullYear(endDate.getFullYear() - 5);
                     break;
                 default:
                     startDate = new Date(minDate);
@@ -1057,8 +1097,10 @@
                             createIndustryWeightageChart(industryWeightageData);
                         } else if (tabId === 'volume') {
                             createVolumeChart();
-                        } else if (tabId === 'correlation' && correlationData) {
-                            createCorrelationMatrix(correlationData);
+                        //} else if (tabId === 'correlation' && correlationData) {
+                        //    createCorrelationMatrix(correlationData);
+                        } else if (tabId === 'correlation') {
+                        createCorrelationMatrix(); // Remove correlationData parameter
                         } else if (tabId === 'drawdown' && drawdownData) {
                             createDrawdownChart(drawdownData);
                         }
@@ -1166,18 +1208,18 @@
                 portfolioData = data.portfolio_data;
                 etfPerformance = data.etf_performance;
                 yearlyReturns = data.yearly_returns;
-                // candlestickData = data.candlestick_data || [];
+                candlestickData = data.candlestick_data || [];
                 companyWeightageData = data.company_weightage || [];
                 industryWeightageData = data.industry_weightage || [];
                 volumeData = data.volume_data || [];
-                correlationData = data.correlation_data || [];
+                //correlationData = data.correlation_data || [];
                 drawdownData = data.drawdown_data || portfolioData; // Use portfolio data if no specific drawdown data
                 
                 console.log("Data received:", {
                     portfolioDataPoints: portfolioData?.length || 0,
                     etfPerformanceEntries: Object.keys(etfPerformance || {}).length,
                     yearlyReturnsPoints: yearlyReturns?.length || 0,
-                    // candlestickDataPoints: candlestickData?.length || 0,
+                    candlestickDataPoints: candlestickData?.length || 0,
                     companyWeightage: Object.keys(companyWeightageData || {}).length,
                     industryWeightage: Object.keys(industryWeightageData || {}).length
                 });
@@ -1186,11 +1228,12 @@
                 updateMetricsDisplay(metrics, payload.initial_investment);
                 
                 // Create charts
-                createCandlestickChart(selectedStartDate, selectedEndDate);
+                createCandlestickChart(candlestickData);
                 createCompanyWeightageChart(companyWeightageData);
                 createIndustryWeightageChart(industryWeightageData);
-                // createVolumeChart();
-                createCorrelationMatrix(correlationData);
+                // createVolumeChart(volumeData);
+                //createCorrelationMatrix(correlationData);
+                createCorrelationMatrix();
                 createDrawdownChart(drawdownData);
                 
                 // Hide loading indicators
@@ -1224,58 +1267,191 @@
 // and extract the relevant data dates based on the time period defined
 // logic to check if open is higher than close the open will the line higher than close, if close price is higher than open vice versa when plotting candlestick
 
+//function createCandlestickChart(stockData) 
+function createCandlestickChart(stockData, startDate, endDate) {
+    const chartContainer = document.getElementById('candlestick-chart');
+    chartContainer.innerHTML = '';
 
-// function createCandlestickChart(startDate, endDate) {
+    // Check if we have data
+    if (!stockData || stockData.length === 0) {
+        chartContainer.innerHTML = '<div class="error">No data available for candlestick analysis</div>';
+        return;
+    }
+
+    // Check container width first
+    const containerWidth = chartContainer.clientWidth;
+
+    if (containerWidth <= 0) {
+        // Wait for the layout to stabilize (e.g., tab becoming visible)
+        setTimeout(() => createCandlestickChart(stockData, startDate, endDate), 100);
+        return;
+    }
+
+    // Filter data by date range
+    const filteredData = stockData.filter(d => {
+        const date = new Date(d.Date);
+        return date >= startDate && date <= endDate;
+    });
+
+    if (filteredData.length === 0) {
+        chartContainer.innerHTML = '<div class="error">No data available for the selected date range</div>';
+        return;
+    }
+
+    // Group data into monthly periods
+    const groupedData = [];
+    let currentDate = new Date(endDate);
+
+    while (currentDate >= startDate) {
+        const nextDate = new Date(currentDate);
+        nextDate.setMonth(currentDate.getMonth() - 1);
+
+        const monthlyData = filteredData.filter(d => {
+            const date = new Date(d.Date);
+            return date >= nextDate && date < currentDate;
+        });
+
+        if (monthlyData.length > 0) {
+            const avgOpen = d3.mean(monthlyData, d => parseFloat(d.Open));
+            const avgHigh = d3.mean(monthlyData, d => parseFloat(d.High));
+            const avgLow = d3.mean(monthlyData, d => parseFloat(d.Low));
+            const avgClose = d3.mean(monthlyData, d => parseFloat(d.Close));
+
+            groupedData.push({
+                Date: new Date(nextDate),
+                Open: avgOpen,
+                High: avgHigh,
+                Low: avgLow,
+                Close: avgClose
+            });
+        }
+
+        currentDate = nextDate;
+    }
+
+    // Sort grouped data by date
+    groupedData.sort((a, b) => a.Date - b.Date);
+
+    // Continue with the original candlestick chart code
+    const margin = containerWidth < 400
+        ? { top: 20, right: 30, bottom: 50, left: 40 }
+        : { top: 20, right: 80, bottom: 50, left: 80 };
+
+    const width = Math.max(containerWidth - margin.left - margin.right, 100);
+    const height = 500 - margin.top - margin.bottom;
+
+    const svg = d3.select(chartContainer)
+        .append('svg')
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom)
+        .append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    // X scale
+    const x = d3.scaleBand()
+        .domain(groupedData.map(d => d.Date))
+        .range([0, width])
+        .padding(0.2);
+
+    // Y scale
+    const y = d3.scaleLinear()
+        .domain([
+            d3.min(groupedData, d => d.Low),
+            d3.max(groupedData, d => d.High)
+        ])
+        .range([height, 0]);
+
+    // X axis
+    svg.append('g')
+        .attr('transform', `translate(0,${height})`)
+        .call(d3.axisBottom(x).tickFormat(d3.timeFormat('%b %Y')))
+        .selectAll('text')
+        .attr('transform', 'rotate(-45)')
+        .style('text-anchor', 'end');
+
+    // Y axis
+    svg.append('g')
+        .call(d3.axisLeft(y));
+
+    // Draw candlesticks
+    svg.selectAll('.candlestick')
+        .data(groupedData)
+        .enter()
+        .append('line')
+        .attr('class', 'candlestick')
+        .attr('x1', d => x(d.Date) + x.bandwidth() / 2)
+        .attr('x2', d => x(d.Date) + x.bandwidth() / 2)
+        .attr('y1', d => y(d.High))
+        .attr('y2', d => y(d.Low))
+        .attr('stroke', 'black');
+
+    svg.selectAll('.candlestick-rect')
+        .data(groupedData)
+        .enter()
+        .append('rect')
+        .attr('class', 'candlestick-rect')
+        .attr('x', d => x(d.Date))
+        .attr('y', d => y(Math.max(d.Open, d.Close)))
+        .attr('width', x.bandwidth())
+        .attr('height', d => Math.abs(y(d.Open) - y(d.Close)))
+        .attr('fill', d => d.Open > d.Close ? 'red' : 'green');
+}
+//{
 //     const chartContainer = document.getElementById('candlestick-chart');
 //     chartContainer.innerHTML = '';
     
-//     // Load allocation data files
-//     Promise.all([
-//         d3.csv("./angela_datasets/arkk.csv"),
-//         d3.csv("./angela_datasets/iwf.csv"),
-//         d3.csv("./angela_datasets/qqq.csv"),
-//         d3.csv("./angela_datasets/upro.csv")
-//     ]).then(function(files) {
-//         const [arkkData, iwfData, qqqData, uproData] = files;
-
-//         // Combine all datasets into one array
-//         const combinedData = [...arkkData, ...iwfData, ...qqqData, ...uproData];
-
-//         // Filter data by date range
-//             const filteredData = combinedData.filter(d => {
-//             const date = new Date(d.Date); // Ensure Date is parsed correctly
-//             return date >= startDate && date <= endDate;
-//         });
-//         console.log(combinedData)
-//         console.log(filteredData);
-        
-//         // Log to verify files are loaded
-//         console.log("Files loaded successfully!");
-//         console.log("ARKK data length:", arkkData.length);
-//         console.log("IWF last record:", arkkData[arkkData.length - 1]);
-        
-//         console.log("IWF data length:", iwfData.length);
-     
-//         console.log("QQQ data length:", qqqData.length);
-//         console.log("IWF last record:", qqqData[qqqData.length - 1]);
-        
-//         console.log("UPRO data length:", uproData.length);
-//         console.log("IWF last record:", uproData[uproData.length - 1]);
-
-
+//     // Check if we have data
+//     if (!stockData || stockData.length === 0) {
+//         chartContainer.innerHTML = '<div class="error">No data available for candlestick analysis</div>';
+//         return;
+//     }
+    
 //     // Check container width first
 //     const containerWidth = chartContainer.clientWidth;
     
 //     if (containerWidth <= 0) {
 //         // Wait for the layout to stabilize (e.g., tab becoming visible)
-//         setTimeout(() => createCandlestickChart(arkkData), 100);
+//         setTimeout(() => createCandlestickChart(stockData), 100);
 //         return;
 //     }
+    
+// // First, let's fetch and process the allocation data
+// Promise.all([
+//     d3.csv("../angela_datasets/arkk_share_allocation.csv"),
+//     d3.csv("../angela_datasets/IWF_share_allocation.csv"),
+//     d3.csv("../angela_datasets/qqq_share_allocation.csv"),
+//     d3.csv("../angela_datasets/upro_share_allocation.csv")
+// ]).then(function(files) {
+//     const [arkkData, iwfData, qqqData, uproData] = files;
+    
+//     // Log to verify files are loaded
+//     console.log("Files loaded successfully!");
+//     console.log("ARKK data length:", arkkData.length);
+//     console.log("ARKK first record:", arkkData[0]);
+    
+//     console.log("IWF data length:", iwfData.length);
+//     console.log("IWF first record:", iwfData[0]);
+    
+//     console.log("QQQ data length:", qqqData.length);
+//     console.log("QQQ first record:", qqqData[0]);
+    
+//     console.log("UPRO data length:", uproData.length);
+//     console.log("UPRO first record:", uproData[0]);
+    
+//     // Continue with your code...
+// }).catch(function(error) {
+//     // Log any errors in loading the files
+//     console.error("Error loading files:", error);
 
+        
 //         // Get the current allocations
 //         const allocations = getCurrentAllocations();
         
-//         // Set up chart dimensions
+//         // Process data for candlestick chart based on allocations
+//         // For this example, we'll use the stockData passed to the function,
+//         // but apply weightings based on the allocation data
+        
+//         // Continue with the original candlestick chart code
 //         const margin = containerWidth < 400 
 //             ? {top: 20, right: 30, bottom: 50, left: 40}
 //             : {top: 20, right: 80, bottom: 50, left: 80};
@@ -1283,7 +1459,6 @@
 //         const width = Math.max(containerWidth - margin.left - margin.right, 100);
 //         const height = 500 - margin.top - margin.bottom;
         
-//         // Create SVG container
 //         const svg = d3.select(chartContainer)
 //             .append('svg')
 //             .attr('width', width + margin.left + margin.right)
@@ -1292,7 +1467,7 @@
 //             .attr('transform', `translate(${margin.left},${margin.top})`);
         
 //         // Process date and numeric values
-//         const processedData = arkkData
+//         const processedData = stockData
 //             .map(d => ({
 //                 ...d,
 //                 Date: d.Date instanceof Date ? d.Date : new Date(d.Date),
@@ -1304,70 +1479,14 @@
 //             .filter(d => !isNaN(d.Open) && !isNaN(d.High) && !isNaN(d.Low) && !isNaN(d.Close))
 //             .sort((a, b) => a.Date - b.Date);
         
-//         // Create X scale (time)
-//         const xScale = d3.scaleTime()
-//             .domain(d3.extent(processedData, d => d.Date))
-//             .range([0, width]);
-            
-//         // Create Y scale (price)
-//         const yScale = d3.scaleLinear()
-//             .domain([
-//                 d3.min(processedData, d => d.Low) * 0.95, 
-//                 d3.max(processedData, d => d.High) * 1.05
-//             ])
-//             .range([height, 0]);
+//         // Rest of your existing candlestick chart code...
+//         // Implement X and Y scales, axes, candlesticks, etc.
         
-//         // Add X axis
-//         svg.append("g")
-//             .attr("transform", `translate(0, ${height})`)
-//             .call(d3.axisBottom(xScale))
-//             .selectAll("text")
-//             .style("text-anchor", "end")
-//             .attr("dx", "-.8em")
-//             .attr("dy", ".15em")
-//             .attr("transform", "rotate(-45)");
+//         // Add information from allocation data to the chart
+//         // For example, add a legend showing top holdings from each ETF
+//         addAllocationInfo(svg, width, arkkData, iwfData, qqqData, uproData, allocations);
         
-//         // Add Y axis
-//         svg.append("g")
-//             .call(d3.axisLeft(yScale));
-        
-//         // Add candlesticks
-//         svg.selectAll("candlestick")
-//             .data(processedData)
-//             .enter()
-//             .append("g")
-//             .each(function(d) {
-//                 const g = d3.select(this);
-                
-//                 // Determine if this is an up or down day
-//                 const isUp = d.Close > d.Open;
-//                 const color = isUp ? "green" : "red";
-                
-//                 // Draw the high-low line (wick)
-//                 g.append("line")
-//                     .attr("x1", xScale(d.Date))
-//                     .attr("x2", xScale(d.Date))
-//                     .attr("y1", yScale(d.Low))
-//                     .attr("y2", yScale(d.High))
-//                     .attr("stroke", color)
-//                     .attr("stroke-width", 1);
-                
-//                 // Draw the body (rectangle)
-//                 const rectHeight = Math.abs(yScale(d.Open) - yScale(d.Close));
-//                 g.append("rect")
-//                     .attr("x", xScale(d.Date) - 5)
-//                     .attr("y", yScale(Math.max(d.Open, d.Close)))
-//                     .attr("width", 10)
-//                     .attr("height", rectHeight > 0 ? rectHeight : 1) // Ensure at least 1px height
-//                     .attr("fill", color);
-//             });
-        
-//         // // Add information from allocation data to the chart
-//         // addAllocationInfo(svg, width, arkkData, iwfData, qqqData, uproData, allocations);
-        
-//     }).catch(function(error) {
-//         // Log any errors in loading the files
-//         console.error("Error loading files:", error);
+//     }).catch(error => {
 //         chartContainer.innerHTML = `<div class="error">Error loading allocation data: ${error.message}</div>`;
 //     });
 // }
@@ -1597,19 +1716,24 @@ function addAllocationInfo(svg, width, arkkData, iwfData, qqqData, uproData, all
             console.log("Creating industry weightage chart with data:", Object.keys(data || {}).length, "industries");
         }
 
-        // // Function to create volume chart
-        // function createVolumeChart(data) {
-        //     const chartContainer = document.getElementById('volume-chart');
-        //     chartContainer.innerHTML = '';
-            
-        //     // YOUR CODE HERE: Implement volume chart using D3.js
-        //     // Use data parameter which should contain volume data over time
-            
-        //     console.log("Creating volume chart with data:", data?.length || 0, "data points");
-        // }
 
-////////////////      VOLUME CHART CODE       /////////////////////////////////////
-        
+        // Function to update volume chart based on allocations - alled when "Calculate Returns" button is clicked
+        function updateVolumeChart() {
+            // Check if allocations are valid
+            if (!checkAllocation()) {
+                alert('Total allocation must be 100%. Please adjust your allocations.');
+                return;
+            }
+
+            // Get input values
+            const initialInvestment = parseFloat(document.getElementById('initial-investment').value);
+            const uproAllocation = parseInt(document.getElementById('upro-allocation').value);
+            const qqqAllocation = parseInt(document.getElementById('qqq-allocation').value);
+            const iwfAllocation = parseInt(document.getElementById('iwf-allocation').value);
+            const arkkAllocation = parseInt(document.getElementById('arkk-allocation').value);
+            
+            createVolumeChart();
+        }
 
         // Function to create volume chart
         function createVolumeChart() {
@@ -1655,14 +1779,11 @@ function addAllocationInfo(svg, width, arkkData, iwfData, qqqData, uproData, all
                 return response.json();
             })
             .then(data => {
-                const etfVolume = data.volume;
+                const etfVolume = data.volume; // {dates: [date1, date2], volumes: [combinedvol1, combinedvol2]}
                 const allocations = data.allocations || {};
-                console.log("etd Volume:", etfVolume);
-                console.log("etf allocations:", allocations);
-
-
-                // Process the received data
-                const volumeData = data.volume_data || [];
+                console.log("Volume data received::", etfVolume);
+                console.log("Etf allocations received:", allocations);
+                console.log("Volume data received:", etfVolume);
 
                 // Set up chart dimensions
                 const width = chartContainer.clientWidth;
@@ -1675,18 +1796,41 @@ function addAllocationInfo(svg, width, arkkData, iwfData, qqqData, uproData, all
                     .attr('width', width)
                     .attr('height', height);
 
-                // Create scales
+                // Convert dates to Date objects
+                const volumeData = etfVolume.dates.map((date, i) => ({
+                    date: new Date(date),
+                    volume: etfVolume.volumes[i]
+                }));
+
+                // Calculate time difference in months
+                const timeSpan = (selectedEndDate - selectedStartDate) / (1000 * 60 * 60 * 24 * 30);
+
+                // Create x-axis scale and format based on time period
                 const x = d3.scaleTime()
-                    .domain(d3.extent(volumeData, d => new Date(d.date)))
+                    .domain(d3.extent(volumeData, d => d.date))
                     .range([margin.left, width - margin.right]);
 
+                let xAxis;
+                if (timeSpan <= 1) {
+                    // For 1 month, show dates
+                    xAxis = d3.axisBottom(x)
+                        .ticks(d3.timeDay.every(2))
+                        .tickFormat(d3.timeFormat("%d %b"));
+                } else {
+                    // For 6 months or 1 year, show months
+                    xAxis = d3.axisBottom(x)
+                        .ticks(d3.timeMonth.every(1))
+                        .tickFormat(d3.timeFormat("%b %Y"));
+                }
+
+                // Create y scale
                 const y = d3.scaleLinear()
                     .domain([0, d3.max(volumeData, d => d.volume)])
                     .range([height - margin.bottom, margin.top]);
 
                 // Create line generator
                 const line = d3.line()
-                    .x(d => x(new Date(d.date)))
+                    .x(d => x(d.date))
                     .y(d => y(d.volume));
 
                 // Add line path
@@ -1697,14 +1841,21 @@ function addAllocationInfo(svg, width, arkkData, iwfData, qqqData, uproData, all
                     .attr('stroke-width', 1.5)
                     .attr('d', line);
 
-                // Add axes
+                // Add X axis
                 svg.append('g')
                     .attr('transform', `translate(0,${height - margin.bottom})`)
-                    .call(d3.axisBottom(x));
+                    .call(xAxis)
+                    .selectAll('text')
+                    .style('text-anchor', 'end')
+                    .attr('dx', '-.8em')
+                    .attr('dy', '.15em')
+                    .attr('transform', 'rotate(-45)');
 
+                // Add Y axis
                 svg.append('g')
                     .attr('transform', `translate(${margin.left},0)`)
-                    .call(d3.axisLeft(y));
+                    .call(d3.axisLeft(y)
+                        .tickFormat(d3.format(".2s"))); // Use SI prefix format for large numbers
 
                 // Add labels
                 svg.append('text')
@@ -1722,47 +1873,700 @@ function addAllocationInfo(svg, width, arkkData, iwfData, qqqData, uproData, all
 
                 // Add tooltip
                 const tooltip = d3.select('#tooltip');
-                const bisect = d3.bisector(d => new Date(d.date)).left;
+                const bisect = d3.bisector(d => d.date).left;
 
-                // Add tooltip interaction
+                // Add tooltip vertical line and dot
+                const tooltipLine = svg.append("line")
+                    .attr("stroke", "#666")
+                    .attr("stroke-width", 1)
+                    .attr("stroke-dasharray", "3,3")
+                    .attr("y1", 0)
+                    .attr("y2", height - margin.bottom)
+                    .style("opacity", 0);
+
+                const tooltipDot = svg.append("circle")
+                    .attr("r", 5)
+                    .attr("fill", "steelblue")
+                    .attr("stroke", "white")
+                    .attr("stroke-width", 2)
+                    .style("opacity", 0);
+
+                // Add transparent overlay for mouse interaction
                 svg.append('rect')
                     .attr('width', width)
-                    .attr('height', height)
+                    .attr('height', height - margin.bottom)
                     .style('fill', 'none')
                     .style('pointer-events', 'all')
+                    .on('mouseover', function() {
+                        tooltip.style('opacity', 1);
+                        tooltipLine.style('opacity', 1);
+                        tooltipDot.style('opacity', 1);
+                    })
+                    .on('mouseout', function() {
+                        tooltip.style('opacity', 0);
+                        tooltipLine.style('opacity', 0);
+                        tooltipDot.style('opacity', 0);
+                    })
                     .on('mousemove', function(event) {
-                        const x0 = x.invert(d3.pointer(event)[0]);
+                        const mouseX = d3.pointer(event)[0];
+                        const x0 = x.invert(mouseX);
                         const i = bisect(volumeData, x0, 1);
+                        
+                        if (i >= volumeData.length) return;
+                        
                         const d = volumeData[i];
-
-                        tooltip.style('opacity', 1)
-                            .style('left', (event.pageX + 15) + 'px')
+                        const prevDay = i > 0 ? volumeData[i - 1] : volumeData[i];  // Get previous day's data
+                        
+                        // Update tooltip line position
+                        tooltipLine
+                            .attr("x1", x(d.date))
+                            .attr("x2", x(d.date));
+                            
+                        // Update tooltip dot position
+                        tooltipDot
+                            .attr("cx", x(d.date))
+                            .attr("cy", y(d.volume));
+                        
+                        // Calculate volume change from previous day
+                        const volumeChange = d.volume - prevDay.volume;
+                        const percentChange = (volumeChange / prevDay.volume);
+                        
+                        
+                        // Format tooltip content
+                        tooltip.style('left', (event.pageX + 15) + 'px')
                             .style('top', (event.pageY - 28) + 'px')
                             .html(`
-                                Date: ${formatDate(new Date(d.date))}<br>
-                                Volume: ${d3.format(',')(d.volume)}
+                                <div style="font-weight: bold; margin-bottom: 5px;">
+                                    ${formatDate(d.date)}
+                                </div>
+                                <div>
+                                    <strong>Current Volume:</strong> ${d3.format(",")(Math.round(d.volume))}
+                                </div>
+                                <div style="color: ${volumeChange >= 0 ? '#28a745' : '#dc3545'}">
+                                    <strong>Volume Change:</strong> ${d3.format(",")(Math.round(volumeChange))}
+                                    (${volumeChange >= 0 ? '↑' : '↓'})
+                                </div>
+                                <div>
+                                    <strong>% Change:</strong> 
+                                    ${d3.format('.2%')(percentChange)}
+                                </div>
                             `);
-                    })
-                    .on('mouseout', () => tooltip.style('opacity', 0));
+                    });
             })
-            .catch(error => {
-                console.error('Error fetching volume data:', error);
-                chartContainer.innerHTML = `<p>Error loading volume data: ${error.message}</p>`;
-            });
         }
+
 
         // Function to create correlation matrix
-        function createCorrelationMatrix(data) {
-            const chartContainer = document.getElementById('correlation-chart');
-            chartContainer.innerHTML = '';
+        // function createCorrelationMatrix(data) {
+        //    const chartContainer = document.getElementById('correlation-chart');
+        //    chartContainer.innerHTML = '';
             
-            // YOUR CODE HERE: Implement correlation matrix heatmap using D3.js
-            // Use data parameter which should contain correlation coefficients between different assets
             
-            console.log("Creating correlation matrix with data:", data?.length || 0, "correlations");
-        }
+        //     // YOUR CODE HERE: Implement correlation matrix heatmap using D3.js
+        //     // Use data parameter which should contain correlation coefficients between different assets
+            
+        //    console.log("Creating correlation matrix with data:", data?.length || 0, "correlations");
+        // }
+//         function createCorrelationMatrix() {
+//     console.log("Starting correlation matrix creation...");
+//     const chartContainer = document.getElementById('correlation-chart');
+//     if (!chartContainer) {
+//         console.error("Correlation chart container not found");
+//         return;
+//     }
+//     chartContainer.innerHTML = '<div class="loading">Loading correlation data...</div>';
 
-        // Function to create drawdown chart
+//     // Log the paths being accessed
+//     console.log("Attempting to load CSV files from:", [
+//         "./angela_datasets/arkk.csv",
+//         "./angela_datasets/iwf.csv",
+//         "./angela_datasets/qqq.csv",
+//         "./angela_datasets/upro.csv"
+//     ]);
+
+//     // Load ETF data from CSV files with error handling
+//     Promise.all([
+//         d3.csv("./angela_datasets/arkk.csv").catch(error => {
+//             console.error("Error loading ARKK data:", error);
+//             return [];
+//         }),
+//         d3.csv("./angela_datasets/iwf.csv").catch(error => {
+//             console.error("Error loading IWF data:", error);
+//             return [];
+//         }),
+//         d3.csv("./angela_datasets/qqq.csv").catch(error => {
+//             console.error("Error loading QQQ data:", error);
+//             return [];
+//         }),
+//         d3.csv("./angela_datasets/upro.csv").catch(error => {
+//             console.error("Error loading UPRO data:", error);
+//             return [];
+//         })
+//     ]).then(function(files) {
+//         const [arkkData, iwfData, qqqData, uproData] = files;
+        
+//         console.log("Data loaded:", {
+//             ARKK: arkkData.length,
+//             IWF: iwfData.length,
+//             QQQ: qqqData.length,
+//             UPRO: uproData.length
+//         });
+
+//         // Process and filter data
+//         const processData = (data) => {
+//             return data
+//                 .map(d => ({
+//                     date: new Date(d.Date),
+//                     close: parseFloat(d.Close || d.Price) // Try both Close and Price columns
+//                 }))
+//                 .filter(d => !isNaN(d.close) && d.date instanceof Date && !isNaN(d.date))
+//                 .sort((a, b) => a.date - b.date);
+//         };
+
+//         const filteredData = {
+//             ARKK: processData(arkkData),
+//             IWF: processData(iwfData),
+//             QQQ: processData(qqqData),
+//             UPRO: processData(uproData)
+//         };
+
+//         console.log("Processed data points:", {
+//             ARKK: filteredData.ARKK.length,
+//             IWF: filteredData.IWF.length,
+//             QQQ: filteredData.QQQ.length,
+//             UPRO: filteredData.UPRO.length
+//         });
+
+//         // Calculate correlations
+//         const etfs = ['ARKK', 'IWF', 'QQQ', 'UPRO'];
+//         const matrix = calculateCorrelationMatrix(filteredData, etfs);
+
+//         // Create visualization
+//         createVisualization(matrix, etfs, chartContainer);
+//     }).catch(error => {
+//         console.error("Error loading CSV files:", error);
+//         chartContainer.innerHTML = `<div class="error">Error loading data: ${error.message}</div>`;
+//     });
+// }
+
+// function calculateCorrelationMatrix(data, etfs) {
+//     return etfs.map(etf1 => 
+//         etfs.map(etf2 => {
+//             try {
+//                 const correlation = calculatePearsonCorrelation(
+//                     data[etf1].map(d => d.close),
+//                     data[etf2].map(d => d.close)
+//                 );
+//                 return {
+//                     source: etf1,
+//                     target: etf2,
+//                     correlation: isNaN(correlation) ? 0 : correlation
+//                 };
+//             } catch (error) {
+//                 console.error(`Error calculating correlation between ${etf1} and ${etf2}:`, error);
+//                 return {
+//                     source: etf1,
+//                     target: etf2,
+//                     correlation: 0
+//                 };
+//             }
+//         })
+//     );
+// }
+
+// function calculatePearsonCorrelation(x, y) {
+//     if (!Array.isArray(x) || !Array.isArray(y) || x.length === 0 || y.length === 0) {
+//         console.warn("Invalid input arrays");
+//         return 0;
+//     }
+
+//     const n = Math.min(x.length, y.length);
+//     const sum_x = x.reduce((a, b) => a + (isNaN(b) ? 0 : b), 0);
+//     const sum_y = y.reduce((a, b) => a + (isNaN(b) ? 0 : b), 0);
+    
+//     const mean_x = sum_x / n;
+//     const mean_y = sum_y / n;
+    
+//     let numerator = 0;
+//     let denominator_x = 0;
+//     let denominator_y = 0;
+    
+//     for (let i = 0; i < n; i++) {
+//         if (isNaN(x[i]) || isNaN(y[i])) continue;
+//         const dx = x[i] - mean_x;
+//         const dy = y[i] - mean_y;
+//         numerator += dx * dy;
+//         denominator_x += dx * dx;
+//         denominator_y += dy * dy;
+//     }
+    
+//     if (denominator_x === 0 || denominator_y === 0) return 0;
+//     return numerator / Math.sqrt(denominator_x * denominator_y);
+// }
+
+// function createVisualization(matrix, etfs, container) {
+//     // Clear container
+//     container.innerHTML = '';
+
+//     const margin = { top: 50, right: 50, bottom: 50, left: 50 };
+//     const width = Math.min(500, container.clientWidth - margin.left - margin.right);
+//     const height = width;
+//     const cellSize = Math.floor(width / etfs.length);
+
+//     // Create SVG
+//     const svg = d3.select(container)
+//         .append('svg')
+//         .attr('width', width + margin.left + margin.right)
+//         .attr('height', height + margin.top + margin.bottom)
+//         .append('g')
+//         .attr('transform', `translate(${margin.left},${margin.top})`);
+
+//     // Color scale
+//     const color = d3.scaleLinear()
+//         .domain([-1, 0, 1])
+//         .range(['#ff4444', '#ffffff', '#4444ff']);
+
+//     // Create cells
+//     svg.selectAll('rect')
+//         .data(matrix.flat())
+//         .enter()
+//         .append('rect')
+//         .attr('x', d => etfs.indexOf(d.target) * cellSize)
+//         .attr('y', d => etfs.indexOf(d.source) * cellSize)
+//         .attr('width', cellSize)
+//         .attr('height', cellSize)
+//         .attr('fill', d => color(d.correlation))
+//         .attr('stroke', '#fff');
+
+//     // Add correlation values
+//     svg.selectAll('text.value')
+//         .data(matrix.flat())
+//         .enter()
+//         .append('text')
+//         .attr('class', 'value')
+//         .attr('x', d => etfs.indexOf(d.target) * cellSize + cellSize/2)
+//         .attr('y', d => etfs.indexOf(d.source) * cellSize + cellSize/2)
+//         .attr('dy', '.35em')
+//         .attr('text-anchor', 'middle')
+//         .style('font-size', '12px')
+//         .style('fill', d => Math.abs(d.correlation) > 0.5 ? '#fff' : '#000')
+//         .text(d => d.correlation.toFixed(2));
+
+//     // Add labels
+//     etfs.forEach((etf, i) => {
+//         // X axis labels
+//         svg.append('text')
+//             .attr('x', i * cellSize + cellSize/2)
+//             .attr('y', -10)
+//             .attr('text-anchor', 'middle')
+//             .text(etf);
+
+//         // Y axis labels
+//         svg.append('text')
+//             .attr('x', -10)
+//             .attr('y', i * cellSize + cellSize/2)
+//             .attr('text-anchor', 'end')
+//             .attr('alignment-baseline', 'middle')
+//             .text(etf);
+//     });
+// }
+// function createCorrelationMatrix() {
+//     console.log("Starting correlation matrix creation...");
+//     const chartContainer = document.getElementById('correlation-chart');
+//     if (!chartContainer) {
+//         console.error("Correlation chart container not found");
+//         return;
+//     }
+
+//     // Check if we have valid selected dates from time period buttons
+//     if (!selectedStartDate || !selectedEndDate) {
+//         console.error("No date range selected");
+//         chartContainer.innerHTML = '<div class="error">Please select a date range first</div>';
+//         return;
+//     }
+
+//     console.log("Creating correlation matrix for period:", {
+//         start: formatDate(selectedStartDate),
+//         end: formatDate(selectedEndDate)
+//     });
+
+//     chartContainer.innerHTML = '<div class="loading">Loading correlation data...</div>';
+
+//     // Load ETF data
+//     Promise.all([
+//         d3.csv("./angela_datasets/arkk.csv"),
+//         d3.csv("./angela_datasets/iwf.csv"),
+//         d3.csv("./angela_datasets/qqq.csv"),
+//         d3.csv("./angela_datasets/upro.csv")
+//     ]).then(function(files) {
+//         const [arkkData, iwfData, qqqData, uproData] = files;
+
+//         // Process and filter data based on selected time period
+//         const processData = (data) => {
+//             return data
+//                 .map(d => ({
+//                     date: new Date(d.Date),
+//                     close: parseFloat(d.Close)
+//                 }))
+//                 .filter(d => {
+//                     return d.date >= selectedStartDate && 
+//                            d.date <= selectedEndDate && 
+//                            !isNaN(d.close);
+//                 })
+//                 .sort((a, b) => a.date - b.date);
+//         };
+
+//         const filteredData = {
+//             ARKK: processData(arkkData),
+//             IWF: processData(iwfData),
+//             QQQ: processData(qqqData),
+//             UPRO: processData(uproData)
+//         };
+
+//         console.log("Processed data points for selected period:", {
+//             ARKK: filteredData.ARKK.length,
+//             IWF: filteredData.IWF.length,
+//             QQQ: filteredData.QQQ.length,
+//             UPRO: filteredData.UPRO.length
+//         });
+
+//         // Calculate correlations
+//         const etfs = ['ARKK', 'IWF', 'QQQ', 'UPRO'];
+//         const matrix = calculateCorrelations(filteredData, etfs);
+
+//         // Create visualization
+//         createCorrelationHeatmap(matrix, etfs, chartContainer);
+//     }).catch(error => {
+//         console.error("Error loading CSV files:", error);
+//         chartContainer.innerHTML = `<div class="error">Error loading data: ${error.message}</div>`;
+//     });
+// }
+
+// function calculateCorrelations(data, etfs) {
+//     return etfs.map(etf1 => 
+//         etfs.map(etf2 => {
+//             try {
+//                 const series1 = data[etf1].map(d => d.close);
+//                 const series2 = data[etf2].map(d => d.close);
+//                 const correlation = calculatePearsonCorrelation(series1, series2);
+//                 return {
+//                     source: etf1,
+//                     target: etf2,
+//                     correlation: isNaN(correlation) ? 0 : correlation
+//                 };
+//             } catch (error) {
+//                 console.error(`Error calculating correlation between ${etf1} and ${etf2}:`, error);
+//                 return {
+//                     source: etf1,
+//                     target: etf2,
+//                     correlation: 0
+//                 };
+//             }
+//         })
+//     );
+// }
+
+// function calculatePearsonCorrelation(x, y) {
+//     if (!x.length || !y.length || x.length !== y.length) {
+//         return 0;
+//     }
+
+//     const n = x.length;
+//     const sum_x = x.reduce((a, b) => a + b, 0);
+//     const sum_y = y.reduce((a, b) => a + b, 0);
+//     const mean_x = sum_x / n;
+//     const mean_y = sum_y / n;
+
+//     let numerator = 0;
+//     let denom_x = 0;
+//     let denom_y = 0;
+
+//     for (let i = 0; i < n; i++) {
+//         const dx = x[i] - mean_x;
+//         const dy = y[i] - mean_y;
+//         numerator += dx * dy;
+//         denom_x += dx * dx;
+//         denom_y += dy * dy;
+//     }
+
+//     if (denom_x === 0 || denom_y === 0) return 0;
+//     return numerator / Math.sqrt(denom_x * denom_y);
+// }
+
+// function createCorrelationHeatmap(matrix, etfs, container) {
+//     const margin = { top: 50, right: 50, bottom: 50, left: 50 };
+//     const width = Math.min(500, container.clientWidth - margin.left - margin.right);
+//     const height = width;
+//     const cellSize = Math.floor(width / etfs.length);
+
+//     // Create SVG
+//     const svg = d3.select(container)
+//         .append('svg')
+//         .attr('width', width + margin.left + margin.right)
+//         .attr('height', height + margin.top + margin.bottom)
+//         .append('g')
+//         .attr('transform', `translate(${margin.left},${margin.top})`);
+
+//     // Color scale
+//     const color = d3.scaleLinear()
+//         .domain([-1, 0, 1])
+//         .range(['#ff4444', '#ffffff', '#4444ff']);
+
+//     // Create cells
+//     svg.selectAll('rect')
+//         .data(matrix.flat())
+//         .enter()
+//         .append('rect')
+//         .attr('x', d => etfs.indexOf(d.target) * cellSize)
+//         .attr('y', d => etfs.indexOf(d.source) * cellSize)
+//         .attr('width', cellSize)
+//         .attr('height', cellSize)
+//         .attr('fill', d => color(d.correlation))
+//         .attr('stroke', '#fff');
+
+//     // Add correlation values
+//     svg.selectAll('text.value')
+//         .data(matrix.flat())
+//         .enter()
+//         .append('text')
+//         .attr('class', 'value')
+//         .attr('x', d => etfs.indexOf(d.target) * cellSize + cellSize/2)
+//         .attr('y', d => etfs.indexOf(d.source) * cellSize + cellSize/2)
+//         .attr('dy', '.35em')
+//         .attr('text-anchor', 'middle')
+//         .style('font-size', '12px')
+//         .style('fill', d => Math.abs(d.correlation) > 0.5 ? '#fff' : '#000')
+//         .text(d => d.correlation.toFixed(2));
+
+//     // Add labels
+//     etfs.forEach((etf, i) => {
+//         // X axis labels
+//         svg.append('text')
+//             .attr('x', i * cellSize + cellSize/2)
+//             .attr('y', -10)
+//             .attr('text-anchor', 'middle')
+//             .text(etf);
+
+//         // Y axis labels
+//         svg.append('text')
+//             .attr('x', -10)
+//             .attr('y', i * cellSize + cellSize/2)
+//             .attr('text-anchor', 'end')
+//             .attr('alignment-baseline', 'middle')
+//             .text(etf);
+//     });
+// }
+function createCorrelationMatrix() {
+    
+    console.log("Starting correlation matrix creation...");
+    const chartContainer = document.getElementById('correlation-chart');
+    if (!chartContainer) {
+        console.error("Correlation chart container not found");
+        return;
+    }
+
+    // Check if we have valid selected dates
+    if (!selectedStartDate || !selectedEndDate) {
+        console.error("No date range selected");
+        chartContainer.innerHTML = '<div class="error">Please select a date range first</div>';
+        return;
+    }
+
+    console.log("Selected date range for correlation:", {
+        start: formatDate(selectedStartDate),
+        end: formatDate(selectedEndDate)
+    });
+
+    chartContainer.innerHTML = '<div class="loading">Loading correlation data...</div>';
+
+    fetch('http://localhost:5009/api/get-close-price', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            start_date: formatDateForAPI(selectedStartDate),
+            end_date: formatDateForAPI(selectedEndDate),
+            tickers: ['ARKK', 'IWF', 'QQQ', 'UPRO']
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json();
+    })
+    .then(data => {
+        // Extract price data for each ETF
+        const etfPrices = {
+            ARKK: data.prices['ARKK'],
+            IWF: data.prices['IWF'],
+            QQQ: data.prices['QQQ'],
+            UPRO: data.prices['UPRO']
+        };
+
+        // Log the extracted ETF prices inside the .then block
+
+        console.log("ARKK prices:", etfPrices['ARKK']);
+        console.log("IWF prices:", etfPrices['IWF']);
+        console.log("QQQ prices:", etfPrices['QQQ']);
+        console.log("UPRO prices:", etfPrices['UPRO']);
+
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        chartContainer.innerHTML = `<div class="error">Error loading data: ${error.message}</div>`;
+    });
+
+    // Load ETF data
+    Promise.all([
+        d3.csv("./angela_datasets/arkk.csv"),
+        d3.csv("./angela_datasets/iwf.csv"),
+        d3.csv("./angela_datasets/qqq.csv"),
+        d3.csv("./angela_datasets/upro.csv")
+    ]).then(function(files) {
+        const [arkkData, iwfData, qqqData, uproData] = files;
+
+        // Process and filter data for the selected time period
+        const processData = (data) => {
+            return data
+                .map(d => ({
+                    date: new Date(d.Date),
+                    close: parseFloat(d.Close)
+                }))
+                .filter(d => {
+                    return d.date >= selectedStartDate && 
+                           d.date <= selectedEndDate && 
+                           !isNaN(d.close);
+                })
+                .sort((a, b) => a.date - b.date);
+        };
+
+        // Process each ETF's data
+        const filteredData = {
+            ARKK: processData(arkkData),
+            IWF: processData(iwfData),
+            QQQ: processData(qqqData),
+            UPRO: processData(uproData)
+        };
+
+        // Calculate correlations
+        const etfs = ['ARKK', 'IWF', 'QQQ', 'UPRO'];
+        
+        // Create correlation matrix
+        const matrix = etfs.map(etf1 => 
+            etfs.map(etf2 => {
+                const series1 = filteredData[etf1].map(d => d.close);
+                const series2 = filteredData[etf2].map(d => d.close);
+                const correlation = calculateCorrelation(series1, series2);
+                return {
+                    source: etf1,
+                    target: etf2,
+                    correlation: correlation
+                };
+            })
+        );
+
+        // Create visualization
+        createHeatmap(matrix, etfs, chartContainer);
+    }).catch(error => {
+        console.error("Error loading CSV files:", error);
+        chartContainer.innerHTML = `<div class="error">Error loading data: ${error.message}</div>`;
+    });
+}
+
+function calculateCorrelation(series1, series2) {
+    if (!series1.length || !series2.length || series1.length !== series2.length) {
+        return 0;
+    }
+
+    const n = series1.length;
+    const mean1 = series1.reduce((a, b) => a + b, 0) / n;
+    const mean2 = series2.reduce((a, b) => a + b, 0) / n;
+
+    let numerator = 0;
+    let denom1 = 0;
+    let denom2 = 0;
+
+    for (let i = 0; i < n; i++) {
+        const diff1 = series1[i] - mean1;
+        const diff2 = series2[i] - mean2;
+        numerator += diff1 * diff2;
+        denom1 += diff1 * diff1;
+        denom2 += diff2 * diff2;
+    }
+
+    if (denom1 === 0 || denom2 === 0) return 0;
+    return numerator / Math.sqrt(denom1 * denom2);
+}
+
+function createHeatmap(matrix, etfs, container) {
+    // Clear container
+    container.innerHTML = '';
+
+    const margin = { top: 50, right: 50, bottom: 50, left: 50 };
+    const width = Math.min(500, container.clientWidth - margin.left - margin.right);
+    const height = width;
+    const cellSize = Math.floor(width / etfs.length);
+
+    // Create SVG
+    const svg = d3.select(container)
+        .append('svg')
+        .attr('width', width + margin.left + margin.right)
+        .attr('height', height + margin.top + margin.bottom)
+        .append('g')
+        .attr('transform', `translate(${margin.left},${margin.top})`);
+
+    // Color scale
+    const color = d3.scaleLinear()
+        .domain([-1, 0, 1])
+        .range(['#ff4444', '#ffffff', '#4444ff']);
+
+    // Create cells
+    svg.selectAll('rect')
+        .data(matrix.flat())
+        .enter()
+        .append('rect')
+        .attr('x', d => etfs.indexOf(d.target) * cellSize)
+        .attr('y', d => etfs.indexOf(d.source) * cellSize)
+        .attr('width', cellSize)
+        .attr('height', cellSize)
+        .attr('fill', d => color(d.correlation))
+        .attr('stroke', '#fff');
+
+    // Add correlation values
+    svg.selectAll('text.value')
+        .data(matrix.flat())
+        .enter()
+        .append('text')
+        .attr('class', 'value')
+        .attr('x', d => etfs.indexOf(d.target) * cellSize + cellSize/2)
+        .attr('y', d => etfs.indexOf(d.source) * cellSize + cellSize/2)
+        .attr('dy', '.35em')
+        .attr('text-anchor', 'middle')
+        .style('font-size', '12px')
+        .style('fill', d => Math.abs(d.correlation) > 0.5 ? '#fff' : '#000')
+        .text(d => d.correlation.toFixed(2));
+
+    // Add labels
+    etfs.forEach((etf, i) => {
+        // X axis labels
+        svg.append('text')
+            .attr('x', i * cellSize + cellSize/2)
+            .attr('y', -10)
+            .attr('text-anchor', 'middle')
+            .text(etf);
+
+        // Y axis labels
+        svg.append('text')
+            .attr('x', -10)
+            .attr('y', i * cellSize + cellSize/2)
+            .attr('text-anchor', 'end')
+            .attr('alignment-baseline', 'middle')
+            .text(etf);
+    });
+}
+      // Function to create drawdown chart
         function createDrawdownChart(portfolioData) {
             const chartContainer = document.getElementById('drawdown-chart');
             chartContainer.innerHTML = '';
