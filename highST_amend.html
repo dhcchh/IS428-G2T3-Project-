@@ -1,3 +1,8 @@
+<!-- CHANGES
+1. function initializeTimePeriodButtons() - call createVolumeChart();
+2. function initializeTabs() -  else if (tabId === 'volume') {createVolumeChart();
+3. function createVolumeChart() - added code to create volume chart
+-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -928,6 +933,7 @@
                     // If allocations are valid, trigger calculation
                     if (checkAllocation()) {
                         calculateAndFetchResults();
+                        createVolumeChart();
                     }
                 });
             });
@@ -1049,8 +1055,8 @@
                             createCompanyWeightageChart(companyWeightageData);
                         } else if (tabId === 'industry-weightage' && industryWeightageData) {
                             createIndustryWeightageChart(industryWeightageData);
-                        } else if (tabId === 'volume' && volumeData) {
-                            createVolumeChart(volumeData);
+                        } else if (tabId === 'volume') {
+                            createVolumeChart();
                         } else if (tabId === 'correlation' && correlationData) {
                             createCorrelationMatrix(correlationData);
                         } else if (tabId === 'drawdown' && drawdownData) {
@@ -1183,7 +1189,7 @@
                 createCandlestickChart(selectedStartDate, selectedEndDate);
                 createCompanyWeightageChart(companyWeightageData);
                 createIndustryWeightageChart(industryWeightageData);
-                createVolumeChart(volumeData);
+                // createVolumeChart();
                 createCorrelationMatrix(correlationData);
                 createDrawdownChart(drawdownData);
                 
@@ -1219,156 +1225,152 @@
 // logic to check if open is higher than close the open will the line higher than close, if close price is higher than open vice versa when plotting candlestick
 
 
-function createCandlestickChart(startDate, endDate) {
-    const chartContainer = document.getElementById('candlestick-chart');
-    chartContainer.innerHTML = '';
+// function createCandlestickChart(startDate, endDate) {
+//     const chartContainer = document.getElementById('candlestick-chart');
+//     chartContainer.innerHTML = '';
     
-    // Load allocation data files
-    Promise.all([
-        d3.csv("./angela_datasets/arkk.csv"),
-        d3.csv("./angela_datasets/iwf.csv"),
-        d3.csv("./angela_datasets/qqq.csv"),
-        d3.csv("./angela_datasets/upro.csv")
-    ]).then(function(files) {
-        const [arkkData, iwfData, qqqData, uproData] = files;
+//     // Load allocation data files
+//     Promise.all([
+//         d3.csv("./angela_datasets/arkk.csv"),
+//         d3.csv("./angela_datasets/iwf.csv"),
+//         d3.csv("./angela_datasets/qqq.csv"),
+//         d3.csv("./angela_datasets/upro.csv")
+//     ]).then(function(files) {
+//         const [arkkData, iwfData, qqqData, uproData] = files;
 
-        // Combine all datasets into one array
-        const combinedData = [...arkkData, ...iwfData, ...qqqData, ...uproData];
+//         // Combine all datasets into one array
+//         const combinedData = [...arkkData, ...iwfData, ...qqqData, ...uproData];
 
-        // Filter data by date range
-            const filteredData = combinedData.filter(d => {
-            const date = new Date(d.Date); // Ensure Date is parsed correctly
-            return date >= startDate && date <= endDate;
-        });
-        console.log(combinedData)
-        console.log(filteredData);
+//         // Filter data by date range
+//             const filteredData = combinedData.filter(d => {
+//             const date = new Date(d.Date); // Ensure Date is parsed correctly
+//             return date >= startDate && date <= endDate;
+//         });
+//         console.log(combinedData)
+//         console.log(filteredData);
         
-        // Log to verify files are loaded
-        console.log("Files loaded successfully!");
-        console.log("ARKK data length:", arkkData.length);
-        console.log("IWF last record:", arkkData[arkkData.length - 1]);
+//         // Log to verify files are loaded
+//         console.log("Files loaded successfully!");
+//         console.log("ARKK data length:", arkkData.length);
+//         console.log("IWF last record:", arkkData[arkkData.length - 1]);
         
-        console.log("IWF data length:", iwfData.length);
+//         console.log("IWF data length:", iwfData.length);
      
-        console.log("QQQ data length:", qqqData.length);
-        console.log("IWF last record:", qqqData[qqqData.length - 1]);
+//         console.log("QQQ data length:", qqqData.length);
+//         console.log("IWF last record:", qqqData[qqqData.length - 1]);
         
-        console.log("UPRO data length:", uproData.length);
-        console.log("IWF last record:", uproData[uproData.length - 1]);
+//         console.log("UPRO data length:", uproData.length);
+//         console.log("IWF last record:", uproData[uproData.length - 1]);
 
 
-
-
-        
-
-    // Check container width first
-    const containerWidth = chartContainer.clientWidth;
+//     // Check container width first
+//     const containerWidth = chartContainer.clientWidth;
     
-    if (containerWidth <= 0) {
-        // Wait for the layout to stabilize (e.g., tab becoming visible)
-        setTimeout(() => createCandlestickChart(arkkData), 100);
-        return;
-    }
+//     if (containerWidth <= 0) {
+//         // Wait for the layout to stabilize (e.g., tab becoming visible)
+//         setTimeout(() => createCandlestickChart(arkkData), 100);
+//         return;
+//     }
 
-        // Get the current allocations
-        const allocations = getCurrentAllocations();
+//         // Get the current allocations
+//         const allocations = getCurrentAllocations();
         
-        // Set up chart dimensions
-        const margin = containerWidth < 400 
-            ? {top: 20, right: 30, bottom: 50, left: 40}
-            : {top: 20, right: 80, bottom: 50, left: 80};
+//         // Set up chart dimensions
+//         const margin = containerWidth < 400 
+//             ? {top: 20, right: 30, bottom: 50, left: 40}
+//             : {top: 20, right: 80, bottom: 50, left: 80};
         
-        const width = Math.max(containerWidth - margin.left - margin.right, 100);
-        const height = 500 - margin.top - margin.bottom;
+//         const width = Math.max(containerWidth - margin.left - margin.right, 100);
+//         const height = 500 - margin.top - margin.bottom;
         
-        // Create SVG container
-        const svg = d3.select(chartContainer)
-            .append('svg')
-            .attr('width', width + margin.left + margin.right)
-            .attr('height', height + margin.top + margin.bottom)
-            .append('g')
-            .attr('transform', `translate(${margin.left},${margin.top})`);
+//         // Create SVG container
+//         const svg = d3.select(chartContainer)
+//             .append('svg')
+//             .attr('width', width + margin.left + margin.right)
+//             .attr('height', height + margin.top + margin.bottom)
+//             .append('g')
+//             .attr('transform', `translate(${margin.left},${margin.top})`);
         
-        // Process date and numeric values
-        const processedData = arkkData
-            .map(d => ({
-                ...d,
-                Date: d.Date instanceof Date ? d.Date : new Date(d.Date),
-                Open: typeof d.Open === 'number' ? d.Open : parseFloat(d.Open),
-                High: typeof d.High === 'number' ? d.High : parseFloat(d.High),
-                Low: typeof d.Low === 'number' ? d.Low : parseFloat(d.Low),
-                Close: typeof d.Close === 'number' ? d.Close : parseFloat(d.Close)
-            }))
-            .filter(d => !isNaN(d.Open) && !isNaN(d.High) && !isNaN(d.Low) && !isNaN(d.Close))
-            .sort((a, b) => a.Date - b.Date);
+//         // Process date and numeric values
+//         const processedData = arkkData
+//             .map(d => ({
+//                 ...d,
+//                 Date: d.Date instanceof Date ? d.Date : new Date(d.Date),
+//                 Open: typeof d.Open === 'number' ? d.Open : parseFloat(d.Open),
+//                 High: typeof d.High === 'number' ? d.High : parseFloat(d.High),
+//                 Low: typeof d.Low === 'number' ? d.Low : parseFloat(d.Low),
+//                 Close: typeof d.Close === 'number' ? d.Close : parseFloat(d.Close)
+//             }))
+//             .filter(d => !isNaN(d.Open) && !isNaN(d.High) && !isNaN(d.Low) && !isNaN(d.Close))
+//             .sort((a, b) => a.Date - b.Date);
         
-        // Create X scale (time)
-        const xScale = d3.scaleTime()
-            .domain(d3.extent(processedData, d => d.Date))
-            .range([0, width]);
+//         // Create X scale (time)
+//         const xScale = d3.scaleTime()
+//             .domain(d3.extent(processedData, d => d.Date))
+//             .range([0, width]);
             
-        // Create Y scale (price)
-        const yScale = d3.scaleLinear()
-            .domain([
-                d3.min(processedData, d => d.Low) * 0.95, 
-                d3.max(processedData, d => d.High) * 1.05
-            ])
-            .range([height, 0]);
+//         // Create Y scale (price)
+//         const yScale = d3.scaleLinear()
+//             .domain([
+//                 d3.min(processedData, d => d.Low) * 0.95, 
+//                 d3.max(processedData, d => d.High) * 1.05
+//             ])
+//             .range([height, 0]);
         
-        // Add X axis
-        svg.append("g")
-            .attr("transform", `translate(0, ${height})`)
-            .call(d3.axisBottom(xScale))
-            .selectAll("text")
-            .style("text-anchor", "end")
-            .attr("dx", "-.8em")
-            .attr("dy", ".15em")
-            .attr("transform", "rotate(-45)");
+//         // Add X axis
+//         svg.append("g")
+//             .attr("transform", `translate(0, ${height})`)
+//             .call(d3.axisBottom(xScale))
+//             .selectAll("text")
+//             .style("text-anchor", "end")
+//             .attr("dx", "-.8em")
+//             .attr("dy", ".15em")
+//             .attr("transform", "rotate(-45)");
         
-        // Add Y axis
-        svg.append("g")
-            .call(d3.axisLeft(yScale));
+//         // Add Y axis
+//         svg.append("g")
+//             .call(d3.axisLeft(yScale));
         
-        // Add candlesticks
-        svg.selectAll("candlestick")
-            .data(processedData)
-            .enter()
-            .append("g")
-            .each(function(d) {
-                const g = d3.select(this);
+//         // Add candlesticks
+//         svg.selectAll("candlestick")
+//             .data(processedData)
+//             .enter()
+//             .append("g")
+//             .each(function(d) {
+//                 const g = d3.select(this);
                 
-                // Determine if this is an up or down day
-                const isUp = d.Close > d.Open;
-                const color = isUp ? "green" : "red";
+//                 // Determine if this is an up or down day
+//                 const isUp = d.Close > d.Open;
+//                 const color = isUp ? "green" : "red";
                 
-                // Draw the high-low line (wick)
-                g.append("line")
-                    .attr("x1", xScale(d.Date))
-                    .attr("x2", xScale(d.Date))
-                    .attr("y1", yScale(d.Low))
-                    .attr("y2", yScale(d.High))
-                    .attr("stroke", color)
-                    .attr("stroke-width", 1);
+//                 // Draw the high-low line (wick)
+//                 g.append("line")
+//                     .attr("x1", xScale(d.Date))
+//                     .attr("x2", xScale(d.Date))
+//                     .attr("y1", yScale(d.Low))
+//                     .attr("y2", yScale(d.High))
+//                     .attr("stroke", color)
+//                     .attr("stroke-width", 1);
                 
-                // Draw the body (rectangle)
-                const rectHeight = Math.abs(yScale(d.Open) - yScale(d.Close));
-                g.append("rect")
-                    .attr("x", xScale(d.Date) - 5)
-                    .attr("y", yScale(Math.max(d.Open, d.Close)))
-                    .attr("width", 10)
-                    .attr("height", rectHeight > 0 ? rectHeight : 1) // Ensure at least 1px height
-                    .attr("fill", color);
-            });
+//                 // Draw the body (rectangle)
+//                 const rectHeight = Math.abs(yScale(d.Open) - yScale(d.Close));
+//                 g.append("rect")
+//                     .attr("x", xScale(d.Date) - 5)
+//                     .attr("y", yScale(Math.max(d.Open, d.Close)))
+//                     .attr("width", 10)
+//                     .attr("height", rectHeight > 0 ? rectHeight : 1) // Ensure at least 1px height
+//                     .attr("fill", color);
+//             });
         
-        // Add information from allocation data to the chart
-        addAllocationInfo(svg, width, arkkData, iwfData, qqqData, uproData, allocations);
+//         // // Add information from allocation data to the chart
+//         // addAllocationInfo(svg, width, arkkData, iwfData, qqqData, uproData, allocations);
         
-    }).catch(function(error) {
-        // Log any errors in loading the files
-        console.error("Error loading files:", error);
-        chartContainer.innerHTML = `<div class="error">Error loading allocation data: ${error.message}</div>`;
-    });
-}
+//     }).catch(function(error) {
+//         // Log any errors in loading the files
+//         console.error("Error loading files:", error);
+//         chartContainer.innerHTML = `<div class="error">Error loading allocation data: ${error.message}</div>`;
+//     });
+// }
 
 // Helper function to add allocation information to the chart
 function addAllocationInfo(svg, width, arkkData, iwfData, qqqData, uproData, allocations) {
@@ -1595,15 +1597,158 @@ function addAllocationInfo(svg, width, arkkData, iwfData, qqqData, uproData, all
             console.log("Creating industry weightage chart with data:", Object.keys(data || {}).length, "industries");
         }
 
+        // // Function to create volume chart
+        // function createVolumeChart(data) {
+        //     const chartContainer = document.getElementById('volume-chart');
+        //     chartContainer.innerHTML = '';
+            
+        //     // YOUR CODE HERE: Implement volume chart using D3.js
+        //     // Use data parameter which should contain volume data over time
+            
+        //     console.log("Creating volume chart with data:", data?.length || 0, "data points");
+        // }
+
+////////////////      VOLUME CHART CODE       /////////////////////////////////////
+        
+
         // Function to create volume chart
-        function createVolumeChart(data) {
+        function createVolumeChart() {
             const chartContainer = document.getElementById('volume-chart');
-            chartContainer.innerHTML = '';
+            chartContainer.innerHTML = ''; // Clear previous chart
+
+            // Get current allocations
+            const allocations = {
+                'UPRO': parseInt(document.getElementById('upro-allocation').value) / 100,
+                'QQQ': parseInt(document.getElementById('qqq-allocation').value) / 100,
+                'IWF': parseInt(document.getElementById('iwf-allocation').value) / 100,
+                'ARKK': parseInt(document.getElementById('arkk-allocation').value) / 100
+            };
+
+            console.log(allocations);
             
-            // YOUR CODE HERE: Implement volume chart using D3.js
-            // Use data parameter which should contain volume data over time
-            
-            console.log("Creating volume chart with data:", data?.length || 0, "data points");
+            // Get the selected date range
+            const startDate = formatDateForAPI(selectedStartDate);
+            const endDate = formatDateForAPI(selectedEndDate);
+
+            // Fetch volume data from dedicated microservice
+            fetch('http://localhost:5008/api/volume-analysis', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    start_date: startDate,
+                    end_date: endDate,
+                    allocations: {
+                        'UPRO': allocations['UPRO'],
+                        'QQQ': allocations['QQQ'],
+                        'IWF': allocations['IWF'],
+                        'ARKK': allocations['ARKK']
+                    },
+                    tickers: ['ARKK', 'IWF', 'QQQ', 'UPRO']
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch volume data');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const etfVolume = data.volume;
+                const allocations = data.allocations || {};
+                console.log("etd Volume:", etfVolume);
+                console.log("etf allocations:", allocations);
+
+
+                // Process the received data
+                const volumeData = data.volume_data || [];
+
+                // Set up chart dimensions
+                const width = chartContainer.clientWidth;
+                const height = 400;
+                const margin = { top: 20, right: 30, bottom: 50, left: 60 };
+
+                // Create SVG
+                const svg = d3.select(chartContainer)
+                    .append('svg')
+                    .attr('width', width)
+                    .attr('height', height);
+
+                // Create scales
+                const x = d3.scaleTime()
+                    .domain(d3.extent(volumeData, d => new Date(d.date)))
+                    .range([margin.left, width - margin.right]);
+
+                const y = d3.scaleLinear()
+                    .domain([0, d3.max(volumeData, d => d.volume)])
+                    .range([height - margin.bottom, margin.top]);
+
+                // Create line generator
+                const line = d3.line()
+                    .x(d => x(new Date(d.date)))
+                    .y(d => y(d.volume));
+
+                // Add line path
+                svg.append('path')
+                    .datum(volumeData)
+                    .attr('fill', 'none')
+                    .attr('stroke', 'steelblue')
+                    .attr('stroke-width', 1.5)
+                    .attr('d', line);
+
+                // Add axes
+                svg.append('g')
+                    .attr('transform', `translate(0,${height - margin.bottom})`)
+                    .call(d3.axisBottom(x));
+
+                svg.append('g')
+                    .attr('transform', `translate(${margin.left},0)`)
+                    .call(d3.axisLeft(y));
+
+                // Add labels
+                svg.append('text')
+                    .attr('x', width / 2)
+                    .attr('y', height - 10)
+                    .attr('text-anchor', 'middle')
+                    .text('Date');
+
+                svg.append('text')
+                    .attr('transform', 'rotate(-90)')
+                    .attr('y', margin.left - 40)
+                    .attr('x', -(height / 2))
+                    .attr('text-anchor', 'middle')
+                    .text('Volume');
+
+                // Add tooltip
+                const tooltip = d3.select('#tooltip');
+                const bisect = d3.bisector(d => new Date(d.date)).left;
+
+                // Add tooltip interaction
+                svg.append('rect')
+                    .attr('width', width)
+                    .attr('height', height)
+                    .style('fill', 'none')
+                    .style('pointer-events', 'all')
+                    .on('mousemove', function(event) {
+                        const x0 = x.invert(d3.pointer(event)[0]);
+                        const i = bisect(volumeData, x0, 1);
+                        const d = volumeData[i];
+
+                        tooltip.style('opacity', 1)
+                            .style('left', (event.pageX + 15) + 'px')
+                            .style('top', (event.pageY - 28) + 'px')
+                            .html(`
+                                Date: ${formatDate(new Date(d.date))}<br>
+                                Volume: ${d3.format(',')(d.volume)}
+                            `);
+                    })
+                    .on('mouseout', () => tooltip.style('opacity', 0));
+            })
+            .catch(error => {
+                console.error('Error fetching volume data:', error);
+                chartContainer.innerHTML = `<p>Error loading volume data: ${error.message}</p>`;
+            });
         }
 
         // Function to create correlation matrix
