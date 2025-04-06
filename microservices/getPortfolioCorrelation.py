@@ -70,6 +70,13 @@ def calculate_correlation_matrix(etf_data_frames, etfs, start_date, end_date):
     # Create a dictionary to store resampled price series
     filtered_series = {}
     
+    # Log details about input data
+    print("Input ETF Data Frames:")
+    for ticker, series in etf_data_frames.items():
+        print(f"{ticker}:")
+        print(f"  Series length: {len(series)}")
+        print(f"  Date range: {series.index.min()} to {series.index.max()}")
+    
     # Filter each series by date range and resample to ensure alignment
     for ticker, series in etf_data_frames.items():
         if series is not None:
@@ -79,6 +86,12 @@ def calculate_correlation_matrix(etf_data_frames, etfs, start_date, end_date):
             if not filtered.empty:
                 filtered_series[ticker] = filtered
     
+    print("Filtered Series:")
+    for ticker, series in filtered_series.items():
+        print(f"{ticker}:")
+        print(f"  Filtered length: {len(series)}")
+        print(f"  Filtered date range: {series.index.min()} to {series.index.max()}")
+    
     # If we have price data for at least 2 ETFs, calculate correlation
     if len(filtered_series) >= 2:
         # Create a DataFrame with all ETFs' price series
@@ -86,6 +99,9 @@ def calculate_correlation_matrix(etf_data_frames, etfs, start_date, end_date):
         
         # Calculate correlation matrix
         corr_df = df.corr(method='pearson')
+        
+        print("Correlation Matrix:")
+        print(corr_df)
         
         # Convert to the expected format for the frontend
         matrix = []
@@ -140,7 +156,7 @@ def calculate_correlation_matrix(etf_data_frames, etfs, start_date, end_date):
 
 def load_price_data_from_csv(ticker):
     """
-    Load price data from CSV files
+    Load price data from CSV files with flexible parsing for different header formats and date formats.
     """
     # Map ticker symbols to their corresponding CSV filenames
     ticker_file_map = {
@@ -148,83 +164,61 @@ def load_price_data_from_csv(ticker):
         'ARKK': '../angela_datasets/arkk.csv',
         'IWF': '../angela_datasets/iwf.csv',
         'QQQ': '../angela_datasets/qqq.csv',
+        'USMV': '../mavis datasets/usmv.csv',
+        'VYM': '../mavis datasets/vym.csv',
+        'SPLV': '../mavis datasets/splv.csv',
+        'AGG': '../mavis datasets/agg.csv'
     }
 
     # Check if ticker is supported
     if ticker not in ticker_file_map:
         raise ValueError(f"Data for {ticker} not available")
-    
+
     csv_filename = ticker_file_map[ticker]
-    
-    # Verify file exists
+
     if not os.path.exists(csv_filename):
-        print(f"File not found: {csv_filename}")
-        # Try looking in the current directory
-        alternative_path = f"{ticker.lower()}.csv"
-        if os.path.exists(alternative_path):
-            csv_filename = alternative_path
-        else:
-            raise FileNotFoundError(f"CSV file not found: {csv_filename}")
+        raise FileNotFoundError(f"CSV file not found: {csv_filename}")
     
-    # Try to load the CSV with appropriate settings
     try:
-        # Skip rows to account for header format in the CSV
-        df = pd.read_csv(csv_filename, skiprows=3, header=None)
+        # Read the first few lines of the CSV file to determine its structure
+        with open(csv_filename, 'r') as file:
+            first_lines = [file.readline() for _ in range(4)]  # Read the first 4 lines
         
-        # Assign appropriate column names
-        if len(df.columns) >= 6:
+        # Check if the second row contains "Ticker", indicating type1 format
+        if 'Ticker' in first_lines[1]:
+            # This file has a custom header, skip the first 4 rows
+            print(f"Custom header detected in {ticker}, skipping first 4 rows.")
+            df = pd.read_csv(csv_filename, skiprows=4, header=None)
+            # Manually assign column names for type1 format
             df.columns = ['Date', 'Close', 'High', 'Low', 'Open', 'Volume']
         else:
-            # Handle CSVs with fewer columns
-            column_names = ['Date', 'Close']
-            for i in range(2, len(df.columns)):
-                column_names.append(f'Col{i+1}')
-            df.columns = column_names
+            # The file has a standard header (like the second example)
+            print(f"Standard header detected in {ticker}.")
+            df = pd.read_csv(csv_filename)
         
-        # Better date parsing based on format detection
-        if 'Date' in df.columns:
-            # Check format of the first non-null value
-            sample_dates = df['Date'].dropna().head(5).tolist()
-            if sample_dates:
-                sample_date = str(sample_dates[0])
-                
-                # Select appropriate format based on pattern
-                if '-' in sample_date:  # Format like 2024-03-22
-                    df['Date'] = pd.to_datetime(df['Date'], format='%Y-%m-%d', errors='coerce')
-                elif '/' in sample_date:  # Format like 22/3/24
-                    if len(sample_date) <= 8:  # Short format like 22/3/24
-                        df['Date'] = pd.to_datetime(df['Date'], format='%d/%m/%y', errors='coerce')
-                    else:  # Longer format like 22/03/2024
-                        df['Date'] = pd.to_datetime(df['Date'], format='%d/%m/%Y', errors='coerce')
-                else:
-                    # Fallback to dateutil parser
-                    df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
-            else:
-                # No valid sample date found, use default parser
-                df['Date'] = pd.to_datetime(df['Date'], errors='coerce')
-        else:
-            raise ValueError(f"Date column not found in {ticker} data")
-        
-        # Drop rows with NaN dates
+        # Now, parse the Date and Close columns in the usual way
+        # Convert date column to datetime with infer_datetime_format=True for automatic format detection
+        df['Date'] = pd.to_datetime(df['Date'], errors='coerce', infer_datetime_format=True)
+
+        # Clean up data: drop rows with invalid dates or missing 'Close' values
         df = df.dropna(subset=['Date'])
-        
-        # Ensure Close is numeric
         df['Close'] = pd.to_numeric(df['Close'], errors='coerce')
-        
-        # Drop rows with NaN Close values
         df = df.dropna(subset=['Close'])
-        
-        # Set Date as index
+
+        # Sort and set the Date column as the index
+        df = df.sort_values('Date')
         df.set_index('Date', inplace=True)
-        
-        # Sort by date
-        df = df.sort_index()
-        
-        # Return just the Close price series
+
         return df['Close']
         
     except Exception as e:
-        print(f"Error loading {ticker} data: {str(e)}")
+        print(f"Detailed error loading {ticker} data: {str(e)}")
+        
+        # More detailed error logging
+        if 'df' in locals():
+            print(f"DataFrame columns: {df.columns}")
+            print(f"First few rows:\n{df.head()}")
+        
         raise
 
 if __name__ == '__main__':
