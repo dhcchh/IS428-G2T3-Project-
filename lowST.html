@@ -1364,14 +1364,143 @@
             });
         }
 
-        // Function to create industry weightage chart
         function createIndustryWeightageChart() {
-            // Sihua
-        }
+    // Ensure the chart container is cleared
+    const chartContainer = document.getElementById('industry-chart');
+    chartContainer.innerHTML = ''; // Clear previous chart
 
-        function createCorrelationMatrix() {
-            // Sihua
+    // Get current allocations
+    const allocations = {
+        'USMV': parseInt(document.getElementById('usmv-allocation').value) / 100,
+        'VYM': parseInt(document.getElementById('vym-allocation').value) / 100,
+        'SPLV': parseInt(document.getElementById('splv-allocation').value) / 100,
+        'AGG': parseInt(document.getElementById('agg-allocation').value) / 100
+    };
+
+    // Fetch industry weightage data from the dedicated microservice
+    fetch('http://localhost:5006/portfolio-industry-weightage', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            tickers: {
+                'USMV': allocations['USMV'] * 100, // Convert to percentage
+                'VYM': allocations['VYM'] * 100,
+                'SPLV': allocations['SPLV'] * 100,
+                'AGG': allocations['AGG'] * 100
+            }
+        })
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Failed to fetch industry weightage data');
         }
+        return response.json();
+    })
+    .then(data => {
+        const industryData = data.portfolio_industry_allocation || [];
+
+        // Sort the data by weight in descending order
+        industryData.sort((a, b) => b.Weight - a.Weight);
+
+        // Dimensions for the tree map
+        const width = chartContainer.clientWidth;
+        const height = 500;
+
+        // Create SVG
+        const svg = d3.select(chartContainer)
+            .append('svg')
+            .attr('width', width)
+            .attr('height', height)
+            .append('g');
+
+        // Set a minimum light shade for the least significant value
+        const minColor = "#b5d4e9"; // Light blue (can adjust to your desired light shade)
+
+        // Color scale: Invert the color scale so the highest weight is the darkest
+        const color = d3.scaleSequential(d3.interpolateBlues)
+            .domain([industryData.length, 0]); // Inverted color scale (largest value is darkest)
+
+        // Treemap layout
+        const treemap = d3.treemap()
+            .size([width, height])
+            .padding(1)
+            .round(true);
+
+        // Prepare hierarchical data for D3 processing
+        const root = d3.hierarchy({
+            name: 'Portfolio',
+            children: industryData.map(d => ({
+                name: d.Industry,
+                value: d.Weight
+            }))
+        }).sum(d => d.value);
+
+        // Generate treemap
+        treemap(root);
+
+        // Create rectangles for each industry
+        const cell = svg.selectAll('g')
+            .data(root.leaves())
+            .enter().append('g')
+            .attr('transform', d => `translate(${d.x0},${d.y0})`);
+
+        // Add rectangles for industries
+        cell.append('rect')
+            .attr('width', d => d.x1 - d.x0)
+            .attr('height', d => d.y1 - d.y0)
+            .attr('fill', (d, i) => {
+                // Apply the minimum light shade for companies with weight below a threshold
+                return d.data.value < 0.001 ? minColor : color(i); // Use minColor for values below 1%
+            })
+            .attr('stroke', 'white')
+            .attr('stroke-width', 1);
+
+        // Add text labels for industry names (truncate if too long)
+        cell.append('text')
+            .attr('x', 5)
+            .attr('y', 15)
+            .text(d => {
+                const maxLength = 20;
+                const name = d.data.name;
+                return name.length > maxLength
+                    ? name.substring(0, maxLength) + '...'
+                    : name;
+            })
+            .attr('font-size', '12px')
+            .attr('fill', 'white')
+            .attr('font-weight', 'bold');
+
+        // Add percentage labels for weight
+        cell.append('text')
+            .attr('x', 5)
+            .attr('y', 30)
+            .text(d => `${d.data.value.toFixed(1)}%`)
+            .attr('font-size', '10px')
+            .attr('fill', 'white');
+
+        // Create a tooltip for hover interactions
+        const tooltip = d3.select('#tooltip');
+        cell.on('mouseover', function(event, d) {
+            tooltip.style('opacity', 1)
+                .style('left', (event.pageX + 15) + 'px')
+                .style('top', (event.pageY - 28) + 'px')
+                .html(`
+                    <strong>${d.data.name}</strong><br>
+                    Weight: ${d.data.value.toFixed(2)}%
+                `);
+        })
+        .on('mouseout', function() {
+            tooltip.style('opacity', 0);
+        });
+    })
+    .catch(error => {
+        console.error('Error fetching industry weightage:', error);
+        chartContainer.innerHTML = `<p>Error loading industry weightage: ${error.message}</p>`;
+    });
+}
+
 
         // Function to create drawdown chart
         function createDrawdownChart(portfolioData) {
