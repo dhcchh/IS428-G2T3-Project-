@@ -1,3 +1,18 @@
+<!-- CHANGES
+1. function initializeTimePeriodButtons() - call createVolumeChart();
+2. function initializeTabs() -  else if (tabId === 'volume') {createVolumeChart();
+3. function createVolumeChart() - added code to create volume chart
+4. document.getElementById('calculate-button') - updateVolumeChart(); added code to call update volume chart
+5. function updateVolumeChart() - added code to update volume chart
+6. function fetchAllData(payload) - removed createVolumeChart();
+7. <div class="time-period-buttons"> - removed 3Y, 5Y and MAX buttons
+8. function calculateStartDate(period) - removed CASE 3Y and 5Y
+
+9. function fetchAllData(payload) - removed createIndustryWeightageChart(industryWeightageData); 
+10. function initializeTabs() -  else if (tabId === 'industry-weightage') createIndustryWeightageChart();
+
+-->
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -389,9 +404,6 @@
                         <button class="time-btn" data-period="1M">1M</button>
                         <button class="time-btn" data-period="6M">6M</button>
                         <button class="time-btn" data-period="1Y">1Y</button>
-                        <button class="time-btn" data-period="3Y">3Y</button>
-                        <button class="time-btn" data-period="5Y">5Y</button>
-                        <button class="time-btn active" data-period="MAX">Max</button>
                     </div>
                     <div id="date-range-display" style="text-align: center; margin-top: 10px; display: none;">Loading date range...</div>
                 </div>
@@ -597,8 +609,8 @@
         
         // Add new API endpoints for the new charts
         const API_COMPANY_WEIGHTAGE = `${API_BASE_URL}/api/company-weightage`;
-        const API_INDUSTRY_WEIGHTAGE = `${API_BASE_URL}/api/industry-weightage`;
-        const API_VOLUME_ANALYSIS = `${API_BASE_URL}/api/volume-analysis`;
+        // const API_INDUSTRY_WEIGHTAGE = `${API_BASE_URL}/api/industry-weightage`;
+        // const API_VOLUME_ANALYSIS = `${API_BASE_URL}/api/volume-analysis`;
         const API_CORRELATION_MATRIX = `${API_BASE_URL}/api/correlation-matrix`;
         //const API_CANDLESTICK_DATA = `${API_BASE_URL}/api/candlestick-data`;
 
@@ -635,6 +647,7 @@
             // Set up calculate button
             document.getElementById('calculate-button').addEventListener('click', function() {
                 calculateAndFetchResults();
+                updateVolumeChart(); 
             });
             
             // Initial calculation will be triggered after date range is fetched
@@ -965,12 +978,13 @@
                     // }
 
                     if (checkAllocation()) {
-                    calculateAndFetchResults();
-                    // Update correlation matrix if correlation tab is active
-                    if (document.querySelector('#correlation').classList.contains('active')) {
-                        createCorrelationMatrix();
+                        calculateAndFetchResults();
+                        createVolumeChart();
+                        // Update correlation matrix if correlation tab is active
+                        if (document.querySelector('#correlation').classList.contains('active')) {
+                            createCorrelationMatrix();
+                        }
                     }
-                }
                 });
             });
         }
@@ -989,12 +1003,6 @@
                     break;
                 case '1Y':
                     startDate.setFullYear(endDate.getFullYear() - 1);
-                    break;
-                case '3Y':
-                    startDate.setFullYear(endDate.getFullYear() - 3);
-                    break;
-                case '5Y':
-                    startDate.setFullYear(endDate.getFullYear() - 5);
                     break;
                 default:
                     startDate = new Date(minDate);
@@ -1089,10 +1097,10 @@
                             createCandlestickChart(candlestickData);
                         } else if (tabId === 'company-weightage' && companyWeightageData) {
                             createCompanyWeightageChart(companyWeightageData);
-                        } else if (tabId === 'industry-weightage' && industryWeightageData) {
-                            createIndustryWeightageChart(industryWeightageData);
-                        } else if (tabId === 'volume' && volumeData) {
-                            createVolumeChart(volumeData);
+                        } else if (tabId === 'industry-weightage') {
+                            createIndustryWeightageChart();
+                        } else if (tabId === 'volume') {
+                            createVolumeChart();
                         //} else if (tabId === 'correlation' && correlationData) {
                         //    createCorrelationMatrix(correlationData);
                         } else if (tabId === 'correlation') {
@@ -1226,8 +1234,8 @@
                 // Create charts
                 createCandlestickChart(candlestickData);
                 createCompanyWeightageChart(companyWeightageData);
-                createIndustryWeightageChart(industryWeightageData);
-                createVolumeChart(volumeData);
+                // createIndustryWeightageChart(industryWeightageData);
+                // createVolumeChart(volumeData);
                 //createCorrelationMatrix(correlationData);
                 createCorrelationMatrix();
                 createDrawdownChart(drawdownData);
@@ -1701,26 +1709,406 @@ function addAllocationInfo(svg, width, arkkData, iwfData, qqqData, uproData, all
             });
         }
 
-        // Function to create industry weightage chart
-        function createIndustryWeightageChart(data) {
-            const chartContainer = document.getElementById('industry-weightage-chart');
-            chartContainer.innerHTML = '';
+        // // Function to create industry weightage chart
+        // function createIndustryWeightageChart(data) {
+        //     const chartContainer = document.getElementById('industry-weightage-chart');
+        //     chartContainer.innerHTML = '';
             
-            // YOUR CODE HERE: Implement industry weightage chart (e.g., treemap or pie chart) using D3.js
-            // Use data parameter which should contain industry weightage information
+        //     // YOUR CODE HERE: Implement industry weightage chart (e.g., treemap or pie chart) using D3.js
+        //     // Use data parameter which should contain industry weightage information
             
-            console.log("Creating industry weightage chart with data:", Object.keys(data || {}).length, "industries");
+        //     console.log("Creating industry weightage chart with data:", Object.keys(data || {}).length, "industries");
+        // }
+
+        function createIndustryWeightageChart() {
+            // Check if allocations are valid
+            if (!checkAllocation()) {
+                const chartContainer = document.getElementById('industry-weightage');
+                chartContainer.innerHTML = '<div class="error">Please ensure allocations sum to 100%</div>';
+                return;
+            }
+
+            const chartContainer = document.getElementById('industry-weightage');
+            chartContainer.innerHTML = ''; // Clear previous chart
+
+            // Get current allocations
+            const allocations = {
+                'UPRO': parseInt(document.getElementById('upro-allocation').value) / 100,
+                'QQQ': parseInt(document.getElementById('qqq-allocation').value) / 100,
+                'IWF': parseInt(document.getElementById('iwf-allocation').value) / 100,
+                'ARKK': parseInt(document.getElementById('arkk-allocation').value) / 100
+            };
+
+            // Fetch industry weightage data
+            fetch('http://localhost:5006/portfolio-industry-weightage', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    tickers: {
+                        'UPRO': allocations['UPRO'] * 100,  // Convert to percentage
+                        'QQQ': allocations['QQQ'] * 100,
+                        'IWF': allocations['IWF'] * 100,
+                        'ARKK': allocations['ARKK'] * 100
+                    }
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const industryData = data.portfolio_industry_allocation;
+                console.log("Industry data received:", industryData);
+                
+                // Set up dimensions
+                const width = chartContainer.clientWidth;
+                const height = 400;
+                const margin = { top: 40, right: 100, bottom: 60, left: 150 };
+
+                // Create SVG
+                const svg = d3.select(chartContainer)
+                    .append('svg')
+                    .attr('width', width)
+                    .attr('height', height);
+
+                // Create color scale
+                const colorScale = d3.scaleSequential(d3.interpolateBlues)
+                    .domain([0, d3.max(industryData, d => d.Weight)]);
+
+                // Sort industries by weight
+                industryData.sort((a, b) => b.Weight - a.Weight);
+
+                // Create scales
+                const xScale = d3.scaleBand()
+                    .domain(['Portfolio'])
+                    .range([margin.left, width - margin.right])
+                    .padding(0.1);
+
+                const yScale = d3.scaleBand()
+                    .domain(industryData.map(d => d.Industry))
+                    .range([margin.top, height - margin.bottom])
+                    .padding(0.1);
+
+                // Add rectangles
+                svg.selectAll('rect')
+                    .data(industryData)
+                    .enter()
+                    .append('rect')
+                    .attr('x', xScale('Portfolio'))
+                    .attr('y', d => yScale(d.Industry))
+                    .attr('width', xScale.bandwidth())
+                    .attr('height', yScale.bandwidth())
+                    .attr('fill', d => colorScale(d.Weight))
+                    .on('mouseover', function(event, d) {
+                        // Show tooltip
+                        d3.select('#tooltip')
+                            .style('opacity', 1)
+                            .style('left', (event.pageX + 10) + 'px')
+                            .style('top', (event.pageY - 10) + 'px')
+                            .html(`
+                                <strong>${d.Industry}</strong><br>
+                                Weight: ${d.Weight.toFixed(2)}%
+                            `);
+                    })
+                    .on('mouseout', function() {
+                        d3.select('#tooltip').style('opacity', 0);
+                    });
+
+                // Add y-axis
+                svg.append('g')
+                    .attr('transform', `translate(${margin.left},0)`)
+                    .call(d3.axisLeft(yScale));
+
+                // Add title
+                svg.append('text')
+                    .attr('x', width / 2)
+                    .attr('y', margin.top / 2)
+                    .attr('text-anchor', 'middle')
+                    .style('font-size', '16px')
+                    .text('Industry Allocation Heatmap');
+
+                // Add legend
+                const legendWidth = 20;
+                const legendHeight = height - margin.top - margin.bottom;
+                
+                const legend = svg.append('g')
+                    .attr('transform', `translate(${width - margin.right + 40}, ${margin.top})`);
+
+                const legendScale = d3.scaleLinear()
+                    .domain([0, d3.max(industryData, d => d.Weight)])
+                    .range([legendHeight, 0]);
+
+                const legendAxis = d3.axisRight(legendScale)
+                    .tickFormat(d => d.toFixed(1) + '%');
+
+                legend.append('g')
+                    .call(legendAxis);
+
+                const legendGradient = legend.append('linearGradient')
+                    .attr('id', 'legend-gradient')
+                    .attr('x1', '0%')
+                    .attr('x2', '0%')
+                    .attr('y1', '100%')
+                    .attr('y2', '0%');
+
+                legendGradient.selectAll('stop')
+                    .data(colorScale.ticks().map((t, i, n) => ({ 
+                        offset: `${100 * i / n.length}%`,
+                        color: colorScale(t) 
+                    })))
+                    .enter()
+                    .append('stop')
+                    .attr('offset', d => d.offset)
+                    .attr('stop-color', d => d.color);
+
+                legend.append('rect')
+                    .attr('width', legendWidth)
+                    .attr('height', legendHeight)
+                    .style('fill', 'url(#legend-gradient)')
+                    .attr('transform', `translate(-${legendWidth}, 0)`);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                chartContainer.innerHTML = `<div class="error">Error loading industry data: ${error.message}</div>`;
+            });
+        }
+
+
+        // Function to update volume chart based on allocations - alled when "Calculate Returns" button is clicked
+        function updateVolumeChart() {
+            // Check if allocations are valid
+            if (!checkAllocation()) {
+                alert('Total allocation must be 100%. Please adjust your allocations.');
+                return;
+            }
+
+            // Get input values
+            const initialInvestment = parseFloat(document.getElementById('initial-investment').value);
+            const uproAllocation = parseInt(document.getElementById('upro-allocation').value);
+            const qqqAllocation = parseInt(document.getElementById('qqq-allocation').value);
+            const iwfAllocation = parseInt(document.getElementById('iwf-allocation').value);
+            const arkkAllocation = parseInt(document.getElementById('arkk-allocation').value);
+            
+            createVolumeChart();
         }
 
         // Function to create volume chart
-        function createVolumeChart(data) {
+        function createVolumeChart() {
             const chartContainer = document.getElementById('volume-chart');
-            chartContainer.innerHTML = '';
+            chartContainer.innerHTML = ''; // Clear previous chart
+
+            // Get current allocations
+            const allocations = {
+                'UPRO': parseInt(document.getElementById('upro-allocation').value) / 100,
+                'QQQ': parseInt(document.getElementById('qqq-allocation').value) / 100,
+                'IWF': parseInt(document.getElementById('iwf-allocation').value) / 100,
+                'ARKK': parseInt(document.getElementById('arkk-allocation').value) / 100
+            };
+
+            console.log(allocations);
             
-            // YOUR CODE HERE: Implement volume chart using D3.js
-            // Use data parameter which should contain volume data over time
-            
-            console.log("Creating volume chart with data:", data?.length || 0, "data points");
+            // Get the selected date range
+            const startDate = formatDateForAPI(selectedStartDate);
+            const endDate = formatDateForAPI(selectedEndDate);
+
+            // Fetch volume data from dedicated microservice
+            fetch('http://localhost:5008/api/volume-analysis', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    start_date: startDate,
+                    end_date: endDate,
+                    allocations: {
+                        'UPRO': allocations['UPRO'],
+                        'QQQ': allocations['QQQ'],
+                        'IWF': allocations['IWF'],
+                        'ARKK': allocations['ARKK']
+                    },
+                    tickers: ['ARKK', 'IWF', 'QQQ', 'UPRO']
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to fetch volume data');
+                }
+                return response.json();
+            })
+            .then(data => {
+                const etfVolume = data.volume; // {dates: [date1, date2], volumes: [combinedvol1, combinedvol2]}
+                const allocations = data.allocations || {};
+                console.log("Volume data received::", etfVolume);
+                console.log("Etf allocations received:", allocations);
+                console.log("Volume data received:", etfVolume);
+
+                // Set up chart dimensions
+                const width = chartContainer.clientWidth;
+                const height = 400;
+                const margin = { top: 20, right: 30, bottom: 50, left: 60 };
+
+                // Create SVG
+                const svg = d3.select(chartContainer)
+                    .append('svg')
+                    .attr('width', width)
+                    .attr('height', height);
+
+                // Convert dates to Date objects
+                const volumeData = etfVolume.dates.map((date, i) => ({
+                    date: new Date(date),
+                    volume: etfVolume.volumes[i]
+                }));
+
+                // Calculate time difference in months
+                const timeSpan = (selectedEndDate - selectedStartDate) / (1000 * 60 * 60 * 24 * 30);
+
+                // Create x-axis scale and format based on time period
+                const x = d3.scaleTime()
+                    .domain(d3.extent(volumeData, d => d.date))
+                    .range([margin.left, width - margin.right]);
+
+                let xAxis;
+                if (timeSpan <= 1) {
+                    // For 1 month, show dates
+                    xAxis = d3.axisBottom(x)
+                        .ticks(d3.timeDay.every(2))
+                        .tickFormat(d3.timeFormat("%d %b"));
+                } else {
+                    // For 6 months or 1 year, show months
+                    xAxis = d3.axisBottom(x)
+                        .ticks(d3.timeMonth.every(1))
+                        .tickFormat(d3.timeFormat("%b %Y"));
+                }
+
+                // Create y scale
+                const y = d3.scaleLinear()
+                    .domain([0, d3.max(volumeData, d => d.volume)])
+                    .range([height - margin.bottom, margin.top]);
+
+                // Create line generator
+                const line = d3.line()
+                    .x(d => x(d.date))
+                    .y(d => y(d.volume));
+
+                // Add line path
+                svg.append('path')
+                    .datum(volumeData)
+                    .attr('fill', 'none')
+                    .attr('stroke', 'steelblue')
+                    .attr('stroke-width', 1.5)
+                    .attr('d', line);
+
+                // Add X axis
+                svg.append('g')
+                    .attr('transform', `translate(0,${height - margin.bottom})`)
+                    .call(xAxis)
+                    .selectAll('text')
+                    .style('text-anchor', 'end')
+                    .attr('dx', '-.8em')
+                    .attr('dy', '.15em')
+                    .attr('transform', 'rotate(-45)');
+
+                // Add Y axis
+                svg.append('g')
+                    .attr('transform', `translate(${margin.left},0)`)
+                    .call(d3.axisLeft(y)
+                        .tickFormat(d3.format(".2s"))); // Use SI prefix format for large numbers
+
+                // Add labels
+                svg.append('text')
+                    .attr('x', width / 2)
+                    .attr('y', height - 10)
+                    .attr('text-anchor', 'middle')
+                    .text('Date');
+
+                svg.append('text')
+                    .attr('transform', 'rotate(-90)')
+                    .attr('y', margin.left - 40)
+                    .attr('x', -(height / 2))
+                    .attr('text-anchor', 'middle')
+                    .text('Volume');
+
+                // Add tooltip
+                const tooltip = d3.select('#tooltip');
+                const bisect = d3.bisector(d => d.date).left;
+
+                // Add tooltip vertical line and dot
+                const tooltipLine = svg.append("line")
+                    .attr("stroke", "#666")
+                    .attr("stroke-width", 1)
+                    .attr("stroke-dasharray", "3,3")
+                    .attr("y1", 0)
+                    .attr("y2", height - margin.bottom)
+                    .style("opacity", 0);
+
+                const tooltipDot = svg.append("circle")
+                    .attr("r", 5)
+                    .attr("fill", "steelblue")
+                    .attr("stroke", "white")
+                    .attr("stroke-width", 2)
+                    .style("opacity", 0);
+
+                // Add transparent overlay for mouse interaction
+                svg.append('rect')
+                    .attr('width', width)
+                    .attr('height', height - margin.bottom)
+                    .style('fill', 'none')
+                    .style('pointer-events', 'all')
+                    .on('mouseover', function() {
+                        tooltip.style('opacity', 1);
+                        tooltipLine.style('opacity', 1);
+                        tooltipDot.style('opacity', 1);
+                    })
+                    .on('mouseout', function() {
+                        tooltip.style('opacity', 0);
+                        tooltipLine.style('opacity', 0);
+                        tooltipDot.style('opacity', 0);
+                    })
+                    .on('mousemove', function(event) {
+                        const mouseX = d3.pointer(event)[0];
+                        const x0 = x.invert(mouseX);
+                        const i = bisect(volumeData, x0, 1);
+                        
+                        if (i >= volumeData.length) return;
+                        
+                        const d = volumeData[i];
+                        const prevDay = i > 0 ? volumeData[i - 1] : volumeData[i];  // Get previous day's data
+                        
+                        // Update tooltip line position
+                        tooltipLine
+                            .attr("x1", x(d.date))
+                            .attr("x2", x(d.date));
+                            
+                        // Update tooltip dot position
+                        tooltipDot
+                            .attr("cx", x(d.date))
+                            .attr("cy", y(d.volume));
+                        
+                        // Calculate volume change from previous day
+                        const volumeChange = d.volume - prevDay.volume;
+                        const percentChange = (volumeChange / prevDay.volume);
+                        
+                        
+                        // Format tooltip content
+                        tooltip.style('left', (event.pageX + 15) + 'px')
+                            .style('top', (event.pageY - 28) + 'px')
+                            .html(`
+                                <div style="font-weight: bold; margin-bottom: 5px;">
+                                    ${formatDate(d.date)}
+                                </div>
+                                <div>
+                                    <strong>Current Volume:</strong> ${d3.format(",")(Math.round(d.volume))}
+                                </div>
+                                <div style="color: ${volumeChange >= 0 ? '#28a745' : '#dc3545'}">
+                                    <strong>Volume Change:</strong> ${d3.format(",")(Math.round(volumeChange))}
+                                    (${volumeChange >= 0 ? '↑' : '↓'})
+                                </div>
+                                <div>
+                                    <strong>% Change:</strong> 
+                                    ${d3.format('.2%')(percentChange)}
+                                </div>
+                            `);
+                    });
+            })
         }
 
 

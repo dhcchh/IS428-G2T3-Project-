@@ -21,23 +21,22 @@ def get_close_prices():
         if not start_date or not end_date:
             return jsonify({'error': 'Missing date parameters'}), 400
 
-        # Define ETFs to process
+        # Create a price dictionary
         etf_prices = {}
-
-        # Get close prices for each ETF
         for etf in etfs:
             try:
-                # Get close prices using existing function
-                prices = load_price_data_from_csv(etf)
+                volume = load_price_data_from_csv(etf)
                 
-                # # Filter by date range
-                # mask = (prices.index >= start_date) & (prices.index <= end_date)
-                # filtered_prices = prices[mask]
-                
-                # # Convert to list for JSON serialization
-                # etf_prices[etf] = filtered_prices.tolist()
+                # Filter by date range
+                mask = (volume.index >= start_date) & (volume.index <= end_date)
+                filtered_volume = volume[mask]
 
-                etf_prices[etf] = prices.tolist()
+                # Create dictionary with dates and volumes
+                etf_prices[etf] = {
+                    'dates': filtered_volume.index.strftime('%Y-%m-%d').tolist(),
+                    'volumes': filtered_volume.values.tolist()
+                }
+                
                 
             except Exception as e:
                 return jsonify({'error': f'Error processing {etf}: {str(e)}'}), 500
@@ -50,6 +49,53 @@ def get_close_prices():
 
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+
+
+
+
+
+
+# def get_close_prices():
+#     try:
+#         # Get date range from request
+#         data = request.get_json()
+#         start_date = pd.to_datetime(data.get('start_date'))
+#         end_date = pd.to_datetime(data.get('end_date'))
+#         etfs = data.get('tickers')
+
+#         if not start_date or not end_date:
+#             return jsonify({'error': 'Missing date parameters'}), 400
+
+#         # Define ETFs to process
+#         etf_prices = {}
+
+#         # Get close prices for each ETF
+#         for etf in etfs:
+#             try:
+#                 # Get close prices using existing function
+#                 prices = load_price_data_from_csv(etf)
+                
+#                 # # Filter by date range
+#                 # mask = (prices.index >= start_date) & (prices.index <= end_date)
+#                 # filtered_prices = prices[mask]
+                
+#                 # # Convert to list for JSON serialization
+#                 # etf_prices[etf] = filtered_prices.tolist()
+
+#                 etf_prices[etf] = prices.tolist()
+                
+#             except Exception as e:
+#                 return jsonify({'error': f'Error processing {etf}: {str(e)}'}), 500
+
+#         return jsonify({
+#             'prices': etf_prices,
+#             'start_date': start_date.strftime('%Y-%m-%d'),
+#             'end_date': end_date.strftime('%Y-%m-%d')
+#         })
+
+#     except Exception as e:
+#         return jsonify({'error': str(e)}), 500
 
 
 def load_price_data_from_csv(ticker):

@@ -157,12 +157,6 @@ def get_volume1():
 
 
 
-
-
-
-
-
-
 def load_volume_data_from_csv(ticker):
     """
     Load price data from CSV files
@@ -215,36 +209,6 @@ def load_volume_data_from_csv(ticker):
 
 
 
-
-### get min & max date from QQQ data (to standardize min & mad date for all ETFs
-# @app.route('/api/get-date-range', methods=['GET'])
-# def get_date_range():
-#     """
-#     Function to extract MIN & MAX dates from QQQ data
-#     Returns min_date and max_date in YYYY-MM-DD format
-#     """
-#     try:
-#         # Load QQQ data
-#         qqq_volume = load_volume_data_from_csv('QQQ')
-        
-#         # Get min and max dates from index
-#         min_date = qqq_volume.index.min()
-#         max_date = qqq_volume.index.max()
-         
-#         # Convert dates to standard format (YYYY-MM-DD)
-#         if isinstance(min_date, str):
-#             min_date = pd.to_datetime(min_date, format='%d/%m/%y').strftime('%Y-%m-%d')
-#             max_date = pd.to_datetime(max_date, format='%d/%m/%y').strftime('%Y-%m-%d')
-#         else:
-#             min_date = min_date.strftime('%Y-%m-%d')
-#             max_date = max_date.strftime('%Y-%m-%d')
-            
-#         return {
-#             'min_date': min_date,
-#             'max_date': max_date
-#         }
-#     except Exception as e:
-#         raise Exception(f"Error getting date range: {str(e)}")
 
 
 def calculate_combined_volume(start_date, end_date, allocations):
