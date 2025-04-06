@@ -245,6 +245,7 @@
             cursor: pointer;
             font-weight: 500;
             transition: all 0.2s ease;
+            color: black;
         }
 
         .time-btn:first-child {
@@ -409,7 +410,7 @@
                 </div>
                 
                 <div class="control-group">
-                    <label>Initial Investment (USD):</label>
+                    <label>Initial Investment (SGD):</label>
                     <input type="number" id="initial-investment" min="1000" max="1000000" step="1000" value="10000">
                     <small style="color: #7f8c8d;">Min: $1,000 - Max: $1,000,000</small>
                 </div>
@@ -1132,7 +1133,7 @@
             }
             
             // Get input values
-            const initialInvestment = parseFloat(document.getElementById('initial-investment').value);
+            const initialInvestment = parseFloat(document.getElementById('initial-investment').value * 0.75);
             const uproAllocation = parseInt(document.getElementById('upro-allocation').value);
             const qqqAllocation = parseInt(document.getElementById('qqq-allocation').value);
             const iwfAllocation = parseInt(document.getElementById('iwf-allocation').value);
@@ -1232,11 +1233,11 @@
                 updateMetricsDisplay(metrics, payload.initial_investment);
                 
                 // Create charts
-                createCandlestickChart(candlestickData);
+                createCandlestickChart();
                 createCompanyWeightageChart();
                 createIndustryWeightageChart();
-                // createVolumeChart(volumeData);
-                //createCorrelationMatrix(correlationData);
+                createVolumeChart(volumeData);
+                createCorrelationMatrix(portfolioData);
                 createCorrelationMatrix();
                 createDrawdownChart(drawdownData);
                 
@@ -1265,285 +1266,379 @@
             document.getElementById('volatility').textContent = `${metrics.risk_level} (${formatPercentage(metrics.volatility)})`;
         }
 
-// Function to create candlestick chart using portfolio allocation data
-//Logics needed:
-//- if if else (1 month, 6 months, 1 yr), for 1 yr and 6 months split into each month
-// and extract the relevant data dates based on the time period defined
-// logic to check if open is higher than close the open will the line higher than close, if close price is higher than open vice versa when plotting candlestick
-
-//function createCandlestickChart(stockData) 
-function createCandlestickChart(stockData, startDate, endDate) {
-    const chartContainer = document.getElementById('candlestick-chart');
-    chartContainer.innerHTML = '';
-
-    // Check if we have data
-    if (!stockData || stockData.length === 0) {
-        chartContainer.innerHTML = '<div class="error">No data available for candlestick analysis</div>';
-        return;
-    }
-
-    // Check container width first
-    const containerWidth = chartContainer.clientWidth;
-
-    if (containerWidth <= 0) {
-        // Wait for the layout to stabilize (e.g., tab becoming visible)
-        setTimeout(() => createCandlestickChart(stockData, startDate, endDate), 100);
-        return;
-    }
-
-    // Filter data by date range
-    const filteredData = stockData.filter(d => {
-        const date = new Date(d.Date);
-        return date >= startDate && date <= endDate;
-    });
-
-    if (filteredData.length === 0) {
-        chartContainer.innerHTML = '<div class="error">No data available for the selected date range</div>';
-        return;
-    }
-
-    // Group data into monthly periods
-    const groupedData = [];
-    let currentDate = new Date(endDate);
-
-    while (currentDate >= startDate) {
-        const nextDate = new Date(currentDate);
-        nextDate.setMonth(currentDate.getMonth() - 1);
-
-        const monthlyData = filteredData.filter(d => {
-            const date = new Date(d.Date);
-            return date >= nextDate && date < currentDate;
-        });
-
-        if (monthlyData.length > 0) {
-            const avgOpen = d3.mean(monthlyData, d => parseFloat(d.Open));
-            const avgHigh = d3.mean(monthlyData, d => parseFloat(d.High));
-            const avgLow = d3.mean(monthlyData, d => parseFloat(d.Low));
-            const avgClose = d3.mean(monthlyData, d => parseFloat(d.Close));
-
-            groupedData.push({
-                Date: new Date(nextDate),
-                Open: avgOpen,
-                High: avgHigh,
-                Low: avgLow,
-                Close: avgClose
+        //Logics needed:
+        //- if if else (1 month, 6 months, 1 yr), for 1 yr and 6 months split into each month
+        // and extract the relevant data dates based on the time period defined
+        // logic to check if open is higher than close the open will the line higher than close, if close price is higher than open vice versa when plotting candlestick
+        // Function to create candlestick chart
+        function createCandlestickChart(ticker, startDate, endDate) {
+            const chartContainer = document.getElementById('candlestick-chart');
+            if (!chartContainer) {
+                console.error('Candlestick chart container not found');
+                return;
+            }
+            
+            // Show loading message
+            chartContainer.innerHTML = '<div class="loading">Loading candlestick data...</div>';
+            
+            // For portfolio-based calculation, get the allocation weights
+            const allocations = {
+                'UPRO': parseInt(document.getElementById('upro-allocation').value) / 100,
+                'QQQ': parseInt(document.getElementById('qqq-allocation').value) / 100,
+                'IWF': parseInt(document.getElementById('iwf-allocation').value) / 100,
+                'ARKK': parseInt(document.getElementById('arkk-allocation').value) / 100
+            };
+            
+            console.log(`Creating portfolio candlestick chart from ${startDate} to ${endDate}`);
+            console.log(`Portfolio allocations:`, allocations);
+            
+            // Ensure valid dates
+            if (!startDate || isNaN(new Date(startDate).getTime())) {
+                startDate = selectedStartDate || new Date(new Date().setFullYear(new Date().getFullYear() - 1));
+            } else if (typeof startDate === 'string') {
+                startDate = new Date(startDate);
+            }
+            
+            if (!endDate || isNaN(new Date(endDate).getTime())) {
+                endDate = selectedEndDate || new Date();
+            } else if (typeof endDate === 'string') {
+                endDate = new Date(endDate);
+            }
+            
+            // Format dates - use existing formatDateForAPI or simple formatting
+            const formattedStartDate = typeof formatDateForAPI === 'function' 
+                ? formatDateForAPI(startDate)
+                : startDate.toISOString().split('T')[0];
+                
+            const formattedEndDate = typeof formatDateForAPI === 'function'
+                ? formatDateForAPI(endDate)
+                : endDate.toISOString().split('T')[0];
+            
+            console.log(`Fetching portfolio data: start_date=${formattedStartDate}, end_date=${formattedEndDate}`);
+            
+            // Fetch combined portfolio data based on allocations
+            fetch('http://localhost:5007/portfolio-data', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    tickers: {
+                        'UPRO': allocations['UPRO'],
+                        'QQQ': allocations['QQQ'],
+                        'IWF': allocations['IWF'],
+                        'ARKK': allocations['ARKK']
+                    },
+                    start_date: formattedStartDate,
+                    end_date: formattedEndDate
+                })
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(err => {
+                        throw new Error(err.error || `Server responded with status ${response.status}`);
+                    }).catch(() => {
+                        throw new Error(`Server responded with status ${response.status}`);
+                    });
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log(`Received portfolio data:`, data);
+                
+                if (!data.portfolio_data || data.portfolio_data.length === 0) {
+                    chartContainer.innerHTML = '<div class="error">No portfolio data available for the selected date range</div>';
+                    return;
+                }
+                
+                // Transform portfolio data into OHLC format for candlestick chart
+                // Note: Since portfolio data typically has only daily close prices,
+                // we need to derive the OHLC data from it
+                const portfolioData = data.portfolio_data;
+                
+                // Clear container
+                chartContainer.innerHTML = '';
+                
+                // Check container width
+                const containerWidth = chartContainer.clientWidth;
+                if (containerWidth <= 0) {
+                    setTimeout(() => createCandlestickChart(ticker, startDate, endDate), 100);
+                    return;
+                }
+                
+                // Process portfolio data to create OHLC format
+                const processedData = [];
+                let previousClose = null;
+                
+                for (let i = 0; i < portfolioData.length; i++) {
+                    const d = portfolioData[i];
+                    const date = new Date(d.date);
+                    
+                    // Skip invalid data points
+                    if (isNaN(date.getTime())) {
+                        console.warn(`Skipping data point with invalid date: ${d.date}`);
+                        continue;
+                    }
+                    
+                    // Get portfolio value (close)
+                    const portfolioValue = d.portfolio_value;
+                    
+                    if (isNaN(portfolioValue)) {
+                        console.warn(`Skipping data point with invalid portfolio value: ${portfolioValue}`);
+                        continue;
+                    }
+                    
+                    // For candlestick chart, we need OHLC data
+                    // Since we only have one value (portfolio_value) per day, we'll:
+                    // 1. Use portfolio_value as Close
+                    // 2. Use previous day's Close as Open (or Close for first day)
+                    // 3. Use 1% higher than max(Open, Close) as High
+                    // 4. Use 1% lower than min(Open, Close) as Low
+                    
+                    const close = portfolioValue;
+                    
+                    // For first day, set open = close
+                    const open = (previousClose !== null) ? previousClose : close;
+                    
+                    // Derive high and low from open and close
+                    // For more realistic charts, small random variations are added
+                    const maxOC = Math.max(open, close);
+                    const minOC = Math.min(open, close);
+                    const high = maxOC * (1 + 0.005 + Math.random() * 0.01); // 0.5-1.5% higher
+                    const low = minOC * (1 - 0.005 - Math.random() * 0.01);  // 0.5-1.5% lower
+                    
+                    // Only include data points within the selected date range
+                    if (date >= startDate && date <= endDate) {
+                        processedData.push({
+                            Date: date,
+                            Open: open,
+                            Close: close,
+                            High: high,
+                            Low: low
+                        });
+                    }
+                    
+                    // Save close for next day's open
+                    previousClose = close;
+                }
+                
+                // Sort data by date
+                processedData.sort((a, b) => a.Date - b.Date);
+                
+                console.log(`Processed ${processedData.length} portfolio data points for candlestick chart`);
+                
+                // Check if we have valid data after processing
+                if (processedData.length === 0) {
+                    chartContainer.innerHTML = '<div class="error">No valid portfolio data available for the selected date range</div>';
+                    return;
+                }
+                
+                // Set up chart dimensions
+                const margin = containerWidth < 400
+                    ? { top: 30, right: 30, bottom: 70, left: 50 }
+                    : { top: 30, right: 50, bottom: 70, left: 80 };
+                
+                const width = Math.max(containerWidth - margin.left - margin.right, 100);
+                const height = 500 - margin.top - margin.bottom;
+                
+                const svg = d3.select(chartContainer)
+                    .append('svg')
+                    .attr('width', width + margin.left + margin.right)
+                    .attr('height', height + margin.top + margin.bottom)
+                    .append('g')
+                    .attr('transform', `translate(${margin.left},${margin.top})`);
+                
+                // Add title
+                svg.append('text')
+                    .attr('x', width / 2)
+                    .attr('y', -margin.top / 2)
+                    .attr('text-anchor', 'middle')
+                    .style('font-size', '16px')
+                    .style('font-weight', 'bold')
+                
+                // Create x-scale - use scaleBand for candlesticks
+                const x = d3.scaleBand()
+                    .domain(processedData.map(d => d.Date))
+                    .range([0, width])
+                    .padding(0.2);
+                
+                // Calculate y-domain with some padding
+                const minPrice = d3.min(processedData, d => d.Low);
+                const maxPrice = d3.max(processedData, d => d.High);
+                const yDomainPadding = (maxPrice - minPrice) * 0.05;
+                
+                // Y scale
+                const y = d3.scaleLinear()
+                    .domain([minPrice - yDomainPadding, maxPrice + yDomainPadding])
+                    .range([height, 0]);
+                
+                // Create date formatter based on range
+                const daysInRange = (endDate - startDate) / (1000 * 60 * 60 * 24);
+                let tickFormat;
+                
+                if (daysInRange > 365) {
+                    tickFormat = d3.timeFormat('%b %Y'); // Month Year for ranges > 1 year
+                } else if (daysInRange > 60) {
+                    tickFormat = d3.timeFormat('%b %d'); // Month Day for ranges > 60 days
+                } else {
+                    tickFormat = d3.timeFormat('%b %d'); // Month Day for smaller ranges
+                }
+                
+                // X axis - adjust tick count based on number of data points
+                // For 1 month we want to show more ticks
+                const tickValues = x.domain().filter((d, i, arr) => {
+                    // For 1-month view (less than 30 days and more than 10 data points)
+                    if (daysInRange <= 32 && arr.length <= 30) {
+                        // Show every 2-3 days depending on how many data points we have
+                        const step = arr.length <= 15 ? 1 : (arr.length <= 22 ? 2 : 3);
+                        return i % step === 0;
+                    } else {
+                        // For longer periods use more sparse ticks
+                        const step = Math.ceil(arr.length / (containerWidth < 600 ? 6 : 12));
+                        return i % step === 0;
+                    }
+                });
+                
+                svg.append('g')
+                    .attr('transform', `translate(0,${height})`)
+                    .call(d3.axisBottom(x)
+                        .tickFormat(tickFormat)
+                        .tickValues(tickValues)
+                    )
+                    .selectAll('text')
+                    .attr('transform', 'rotate(-45)')
+                    .style('text-anchor', 'end');
+                
+                // Y axis
+                svg.append('g')
+                    .call(d3.axisLeft(y).tickFormat(d => '$' + d.toFixed(2)));
+                
+                // Draw candlesticks
+                // 1. Vertical lines (High to Low)
+                svg.selectAll('.candlestick-line')
+                    .data(processedData)
+                    .enter()
+                    .append('line')
+                    .attr('class', 'candlestick-line')
+                    .attr('x1', d => x(d.Date) + x.bandwidth() / 2)
+                    .attr('x2', d => x(d.Date) + x.bandwidth() / 2)
+                    .attr('y1', d => y(d.High))
+                    .attr('y2', d => y(d.Low))
+                    .attr('stroke', 'black')
+                    .attr('stroke-width', 1);
+                
+                // 2. Candlestick bodies - ensure positive width/height
+                svg.selectAll('.candlestick-body')
+                    .data(processedData)
+                    .enter()
+                    .append('rect')
+                    .attr('class', 'candlestick-body')
+                    .attr('x', d => x(d.Date))
+                    .attr('width', () => Math.max(x.bandwidth(), 1)) // Ensure positive width
+                    .attr('y', d => y(Math.max(d.Open, d.Close)))
+                    .attr('height', d => {
+                        return Math.max(Math.abs(y(d.Open) - y(d.Close)), 1);
+                    })
+                    .attr('fill', d => d.Open > d.Close ? '#ff3333' : '#33cc33') // Red for bearish, green for bullish
+                    .attr('stroke', 'black')
+                    .attr('stroke-width', 1);
+                
+                // Add tooltip
+                const tooltip = d3.select('#tooltip');
+                
+                // Add hover effects
+                svg.selectAll('.candlestick-body')
+                    .on('mouseover', function(event, d) {
+                        d3.select(this).attr('stroke-width', 2);
+                        tooltip.transition()
+                            .duration(200)
+                            .style('opacity', .9);
+                        
+                        // Format date with day of week
+                        const formattedDate = d.Date.toLocaleDateString(undefined, { 
+                            weekday: 'short', 
+                            year: 'numeric', 
+                            month: 'short', 
+                            day: 'numeric' 
+                        });
+                        
+                        // Calculate daily change
+                        const changePercent = ((d.Close - d.Open) / d.Open * 100).toFixed(2);
+                        const changeColor = d.Close >= d.Open ? 'green' : 'red';
+                        
+                        tooltip.html(`
+                            <strong>Date:</strong> ${formattedDate}<br>
+                            <strong>Open:</strong> $${d.Open.toFixed(2)}<br>
+                            <strong>Close:</strong> $${d.Close.toFixed(2)}<br>
+                            <strong>High:</strong> $${d.High.toFixed(2)}<br>
+                            <strong>Low:</strong> $${d.Low.toFixed(2)}<br>
+                            <strong>Change:</strong> <span style="color:${changeColor}">${changePercent}%</span>
+                        `)
+                            .style('left', (event.pageX + 10) + 'px')
+                            .style('top', (event.pageY - 28) + 'px');
+                    })
+                    .on('mouseout', function() {
+                        d3.select(this).attr('stroke-width', 1);
+                        tooltip.transition()
+                            .duration(500)
+                            .style('opacity', 0);
+                    });
+            })
+            .catch(error => {
+                chartContainer.innerHTML = `<div class="error">Error: ${error.message}</div>`;
+                console.error('Error fetching portfolio data:', error);
             });
         }
 
-        currentDate = nextDate;
-    }
-
-    // Sort grouped data by date
-    groupedData.sort((a, b) => a.Date - b.Date);
-
-    // Continue with the original candlestick chart code
-    const margin = containerWidth < 400
-        ? { top: 20, right: 30, bottom: 50, left: 40 }
-        : { top: 20, right: 80, bottom: 50, left: 80 };
-
-    const width = Math.max(containerWidth - margin.left - margin.right, 100);
-    const height = 500 - margin.top - margin.bottom;
-
-    const svg = d3.select(chartContainer)
-        .append('svg')
-        .attr('width', width + margin.left + margin.right)
-        .attr('height', height + margin.top + margin.bottom)
-        .append('g')
-        .attr('transform', `translate(${margin.left},${margin.top})`);
-
-    // X scale
-    const x = d3.scaleBand()
-        .domain(groupedData.map(d => d.Date))
-        .range([0, width])
-        .padding(0.2);
-
-    // Y scale
-    const y = d3.scaleLinear()
-        .domain([
-            d3.min(groupedData, d => d.Low),
-            d3.max(groupedData, d => d.High)
-        ])
-        .range([height, 0]);
-
-    // X axis
-    svg.append('g')
-        .attr('transform', `translate(0,${height})`)
-        .call(d3.axisBottom(x).tickFormat(d3.timeFormat('%b %Y')))
-        .selectAll('text')
-        .attr('transform', 'rotate(-45)')
-        .style('text-anchor', 'end');
-
-    // Y axis
-    svg.append('g')
-        .call(d3.axisLeft(y));
-
-    // Draw candlesticks
-    svg.selectAll('.candlestick')
-        .data(groupedData)
-        .enter()
-        .append('line')
-        .attr('class', 'candlestick')
-        .attr('x1', d => x(d.Date) + x.bandwidth() / 2)
-        .attr('x2', d => x(d.Date) + x.bandwidth() / 2)
-        .attr('y1', d => y(d.High))
-        .attr('y2', d => y(d.Low))
-        .attr('stroke', 'black');
-
-    svg.selectAll('.candlestick-rect')
-        .data(groupedData)
-        .enter()
-        .append('rect')
-        .attr('class', 'candlestick-rect')
-        .attr('x', d => x(d.Date))
-        .attr('y', d => y(Math.max(d.Open, d.Close)))
-        .attr('width', x.bandwidth())
-        .attr('height', d => Math.abs(y(d.Open) - y(d.Close)))
-        .attr('fill', d => d.Open > d.Close ? 'red' : 'green');
-}
-//{
-//     const chartContainer = document.getElementById('candlestick-chart');
-//     chartContainer.innerHTML = '';
-    
-//     // Check if we have data
-//     if (!stockData || stockData.length === 0) {
-//         chartContainer.innerHTML = '<div class="error">No data available for candlestick analysis</div>';
-//         return;
-//     }
-    
-//     // Check container width first
-//     const containerWidth = chartContainer.clientWidth;
-    
-//     if (containerWidth <= 0) {
-//         // Wait for the layout to stabilize (e.g., tab becoming visible)
-//         setTimeout(() => createCandlestickChart(stockData), 100);
-//         return;
-//     }
-    
-// // First, let's fetch and process the allocation data
-// Promise.all([
-//     d3.csv("../angela_datasets/arkk_share_allocation.csv"),
-//     d3.csv("../angela_datasets/IWF_share_allocation.csv"),
-//     d3.csv("../angela_datasets/qqq_share_allocation.csv"),
-//     d3.csv("../angela_datasets/upro_share_allocation.csv")
-// ]).then(function(files) {
-//     const [arkkData, iwfData, qqqData, uproData] = files;
-    
-//     // Log to verify files are loaded
-//     console.log("Files loaded successfully!");
-//     console.log("ARKK data length:", arkkData.length);
-//     console.log("ARKK first record:", arkkData[0]);
-    
-//     console.log("IWF data length:", iwfData.length);
-//     console.log("IWF first record:", iwfData[0]);
-    
-//     console.log("QQQ data length:", qqqData.length);
-//     console.log("QQQ first record:", qqqData[0]);
-    
-//     console.log("UPRO data length:", uproData.length);
-//     console.log("UPRO first record:", uproData[0]);
-    
-//     // Continue with your code...
-// }).catch(function(error) {
-//     // Log any errors in loading the files
-//     console.error("Error loading files:", error);
-
-        
-//         // Get the current allocations
-//         const allocations = getCurrentAllocations();
-        
-//         // Process data for candlestick chart based on allocations
-//         // For this example, we'll use the stockData passed to the function,
-//         // but apply weightings based on the allocation data
-        
-//         // Continue with the original candlestick chart code
-//         const margin = containerWidth < 400 
-//             ? {top: 20, right: 30, bottom: 50, left: 40}
-//             : {top: 20, right: 80, bottom: 50, left: 80};
-        
-//         const width = Math.max(containerWidth - margin.left - margin.right, 100);
-//         const height = 500 - margin.top - margin.bottom;
-        
-//         const svg = d3.select(chartContainer)
-//             .append('svg')
-//             .attr('width', width + margin.left + margin.right)
-//             .attr('height', height + margin.top + margin.bottom)
-//             .append('g')
-//             .attr('transform', `translate(${margin.left},${margin.top})`);
-        
-//         // Process date and numeric values
-//         const processedData = stockData
-//             .map(d => ({
-//                 ...d,
-//                 Date: d.Date instanceof Date ? d.Date : new Date(d.Date),
-//                 Open: typeof d.Open === 'number' ? d.Open : parseFloat(d.Open),
-//                 High: typeof d.High === 'number' ? d.High : parseFloat(d.High),
-//                 Low: typeof d.Low === 'number' ? d.Low : parseFloat(d.Low),
-//                 Close: typeof d.Close === 'number' ? d.Close : parseFloat(d.Close)
-//             }))
-//             .filter(d => !isNaN(d.Open) && !isNaN(d.High) && !isNaN(d.Low) && !isNaN(d.Close))
-//             .sort((a, b) => a.Date - b.Date);
-        
-//         // Rest of your existing candlestick chart code...
-//         // Implement X and Y scales, axes, candlesticks, etc.
-        
-//         // Add information from allocation data to the chart
-//         // For example, add a legend showing top holdings from each ETF
-//         addAllocationInfo(svg, width, arkkData, iwfData, qqqData, uproData, allocations);
-        
-//     }).catch(error => {
-//         chartContainer.innerHTML = `<div class="error">Error loading allocation data: ${error.message}</div>`;
-//     });
-// }
-
-// Helper function to add allocation information to the chart
-function addAllocationInfo(svg, width, arkkData, iwfData, qqqData, uproData, allocations) {
-    // Get top 3 holdings from each ETF
-    const topHoldings = {
-        ARKK: arkkData.slice(0, 3).map(d => d.Name || d.company_name),
-        IWF: iwfData.slice(0, 3).map(d => d.Name || d.company_name),
-        QQQ: qqqData.slice(0, 3).map(d => d.Name || d.company_name),
-        UPRO: uproData.slice(0, 3).map(d => d.Name || d.company_name)
-    };
-    
-    // Create a legend with allocation percentages and top holdings
-    const legend = svg.append('g')
-        .attr('class', 'allocation-legend')
-        .attr('transform', `translate(${width - 180}, 10)`);
-    
-    // Add background for better readability
-    legend.append('rect')
-        .attr('width', 170)
-        .attr('height', 135)
-        .attr('fill', 'rgba(255, 255, 255, 0.85)')
-        .attr('rx', 5);
-    
-    // Add title
-    legend.append('text')
-        .attr('x', 10)
-        .attr('y', 20)
-        .text('Portfolio Allocation')
-        .style('font-weight', 'bold');
-    
-    // Add ETF allocations
-    const etfs = ['ARKK', 'IWF', 'QQQ', 'UPRO'];
-    const colors = ['#7b3ff3', '#2ca02c', '#1f77b4', '#ff7f0e'];
-    
-    etfs.forEach((etf, i) => {
-        // Add ETF name and allocation
-        legend.append('rect')
-            .attr('x', 10)
-            .attr('y', 30 + i * 25)
-            .attr('width', 12)
-            .attr('height', 12)
-            .attr('fill', colors[i]);
-        
-        legend.append('text')
-            .attr('x', 30)
-            .attr('y', 30 + i * 25 + 10)
-            .text(`${etf}: ${allocations[etf]}%`)
-            .style('font-size', '12px');
-    });
-}
+        // Helper function to add allocation information to the chart
+        function addAllocationInfo(svg, width, arkkData, iwfData, qqqData, uproData, allocations) {
+            // Get top 3 holdings from each ETF
+            const topHoldings = {
+                ARKK: arkkData.slice(0, 3).map(d => d.Name || d.company_name),
+                IWF: iwfData.slice(0, 3).map(d => d.Name || d.company_name),
+                QQQ: qqqData.slice(0, 3).map(d => d.Name || d.company_name),
+                UPRO: uproData.slice(0, 3).map(d => d.Name || d.company_name)
+            };
+            
+            // Create a legend with allocation percentages and top holdings
+            const legend = svg.append('g')
+                .attr('class', 'allocation-legend')
+                .attr('transform', `translate(${width - 180}, 10)`);
+            
+            // Add background for better readability
+            legend.append('rect')
+                .attr('width', 170)
+                .attr('height', 135)
+                .attr('fill', 'rgba(255, 255, 255, 0.85)')
+                .attr('rx', 5);
+            
+            // Add title
+            legend.append('text')
+                .attr('x', 10)
+                .attr('y', 20)
+                .text('Portfolio Allocation')
+                .style('font-weight', 'bold');
+            
+            // Add ETF allocations
+            const etfs = ['ARKK', 'IWF', 'QQQ', 'UPRO'];
+            const colors = ['#7b3ff3', '#2ca02c', '#1f77b4', '#ff7f0e'];
+            
+            etfs.forEach((etf, i) => {
+                // Add ETF name and allocation
+                legend.append('rect')
+                    .attr('x', 10)
+                    .attr('y', 30 + i * 25)
+                    .attr('width', 12)
+                    .attr('height', 12)
+                    .attr('fill', colors[i]);
+                
+                legend.append('text')
+                    .attr('x', 30)
+                    .attr('y', 30 + i * 25 + 10)
+                    .text(`${etf}: ${allocations[etf]}%`)
+                    .style('font-size', '12px');
+            });
+        }
 
         // Function to create company weightage chart
         function createCompanyWeightageChart() {
@@ -1865,7 +1960,7 @@ function addAllocationInfo(svg, width, arkkData, iwfData, qqqData, uproData, all
             }
 
             // Get input values
-            const initialInvestment = parseFloat(document.getElementById('initial-investment').value);
+            const initialInvestment = parseFloat(document.getElementById('initial-investment').value * 0.75);
             const uproAllocation = parseInt(document.getElementById('upro-allocation').value);
             const qqqAllocation = parseInt(document.getElementById('qqq-allocation').value);
             const iwfAllocation = parseInt(document.getElementById('iwf-allocation').value);
@@ -2531,68 +2626,6 @@ function addAllocationInfo(svg, width, arkkData, iwfData, qqqData, uproData, all
                             </div>
                         `);
                 });
-            
-            // Add annotations for major drawdown events
-            // Find significant drawdowns (below -20%)
-            const significantDrawdowns = portfolioData.filter(d => d.drawdown < -0.2);
-            
-            if (significantDrawdowns.length > 0) {
-                // Find local minimums in drawdowns by comparing neighbors
-                const drawdownEvents = [];
-                
-                for (let i = 1; i < portfolioData.length - 1; i++) {
-                    const prev = portfolioData[i-1];
-                    const curr = portfolioData[i];
-                    const next = portfolioData[i+1];
-                    
-                    // If current point is a local minimum and below -15%
-                    if (curr.drawdown < -0.15 && 
-                        curr.drawdown <= prev.drawdown && 
-                        curr.drawdown <= next.drawdown) {
-                        
-                        // Check if we already have a similar drawdown event nearby
-                        const isUnique = !drawdownEvents.some(event => 
-                            Math.abs(event.Date - curr.Date) < 30 * 24 * 60 * 60 * 1000 && // Within 30 days
-                            Math.abs(event.drawdown - curr.drawdown) < 0.05 // Within 5% drawdown difference
-                        );
-                        
-                        if (isUnique) {
-                            drawdownEvents.push(curr);
-                        }
-                    }
-                }
-                
-                // Sort by severity and take top 3
-                drawdownEvents.sort((a, b) => a.drawdown - b.drawdown);
-                const topDrawdowns = drawdownEvents.slice(0, 3);
-                
-                // Add annotations
-                topDrawdowns.forEach(event => {
-                    // Create annotation
-                    svg.append("line")
-                        .attr("x1", x(event.Date))
-                        .attr("x2", x(event.Date))
-                        .attr("y1", y(event.drawdown))
-                        .attr("y2", y(event.drawdown) - 40)
-                        .attr("stroke", "#ff0000")
-                        .attr("stroke-width", 1)
-                        .attr("stroke-dasharray", "3,3");
-                        
-                    svg.append("circle")
-                        .attr("cx", x(event.Date))
-                        .attr("cy", y(event.drawdown))
-                        .attr("r", 4)
-                        .attr("fill", "#ff0000");
-                        
-                    svg.append("text")
-                        .attr("x", x(event.Date))
-                        .attr("y", y(event.drawdown) - 45)
-                        .attr("text-anchor", "middle")
-                        .attr("font-size", "10px")
-                        .text(`${d3.format('.1%')(event.drawdown)}`)
-                        .style("fill", "#ff0000");
-                });
-            }
         }
 
         // Helper function to show API error
