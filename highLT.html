@@ -593,6 +593,9 @@
                 calculateAndFetchResults();
             });
             
+            setTimeout(() => {
+                createCompanyWeightageChart();
+            }, 500);
             // Initial calculation will be triggered after date range is fetched
         });
 
@@ -2390,6 +2393,11 @@ function createPortfolioAgainstSpyChart(portfolioData, spyData) {
 
         function createCompanyWeightageChart() {
     // Ensure the chart container is cleared
+    const companyTab = document.querySelector('.tab[data-tab="company-weightage"]');
+    if (companyTab) {
+        // Simulate clicking the tab
+        companyTab.click();
+    }
     const chartContainer = document.getElementById('company-weightage-chart');
     chartContainer.innerHTML = ''; // Clear previous chart
 
