@@ -2630,7 +2630,51 @@ function createCorrelationMatrix() {
         chartContainer.innerHTML = `<div class="error">Error loading data: ${error.message}</div>`;
     });
 }
+// Test function for correlation matrix calculations
+function testCorrelationMatrix() {
+    console.log("Starting correlation matrix test...");
 
+    // Create dummy price data
+    const dummyData = {
+        ARKK: [100, 105, 102, 108, 110],  // Strongly correlated with QQQ
+        IWF: [50, 48, 52, 49, 51],        // Weakly correlated
+        QQQ: [200, 210, 204, 216, 220],   // Strongly correlated with ARKK
+        UPRO: [30, 28, 32, 29, 31]        // Similar to IWF
+    };
+
+    // Calculate correlations using your formula
+    const etfs = ['ARKK', 'IWF', 'QQQ', 'UPRO'];
+    
+    // Test correlation calculation
+    const matrix = etfs.map(etf1 => 
+        etfs.map(etf2 => {
+            const correlation = calculateCorrelation(dummyData[etf1], dummyData[etf2]);
+            return {
+                source: etf1,
+                target: etf2,
+                correlation: correlation
+            };
+        })
+    );
+
+    // Print results
+    console.log("Test Results:");
+    matrix.forEach(row => {
+        row.forEach(cell => {
+            console.log(`${cell.source} vs ${cell.target}: ${cell.correlation.toFixed(4)}`);
+        });
+    });
+
+    // Verify expected correlations
+    console.log("\nVerification:");
+    console.log("1. ARKK vs QQQ should be highly positive (close to 1)");
+    console.log("2. IWF vs UPRO should be moderately positive");
+    console.log("3. Self-correlations should be exactly 1");
+    console.log("4. Matrix should be symmetric");
+}
+
+// Run the test
+testCorrelationMatrix();
 function calculateCorrelation(series1, series2) {
     if (!series1.length || !series2.length || series1.length !== series2.length) {
         return 0;
