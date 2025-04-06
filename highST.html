@@ -2630,6 +2630,31 @@ function createCorrelationMatrix() {
         chartContainer.innerHTML = `<div class="error">Error loading data: ${error.message}</div>`;
     });
 }
+
+function calculateCorrelation(series1, series2) {
+    if (!series1.length || !series2.length || series1.length !== series2.length) {
+        return 0;
+    }
+
+    const n = series1.length;
+    const mean1 = series1.reduce((a, b) => a + b, 0) / n;
+    const mean2 = series2.reduce((a, b) => a + b, 0) / n;
+
+    let numerator = 0;
+    let denom1 = 0;
+    let denom2 = 0;
+
+    for (let i = 0; i < n; i++) {
+        const diff1 = series1[i] - mean1;
+        const diff2 = series2[i] - mean2;
+        numerator += diff1 * diff2;
+        denom1 += diff1 * diff1;
+        denom2 += diff2 * diff2;
+    }
+
+    if (denom1 === 0 || denom2 === 0) return 0;
+    return numerator / Math.sqrt(denom1 * denom2);
+}
 // Test function for correlation matrix calculations
 function testCorrelationMatrix() {
     console.log("Starting correlation matrix test...");
@@ -2675,30 +2700,6 @@ function testCorrelationMatrix() {
 
 // Run the test
 testCorrelationMatrix();
-function calculateCorrelation(series1, series2) {
-    if (!series1.length || !series2.length || series1.length !== series2.length) {
-        return 0;
-    }
-
-    const n = series1.length;
-    const mean1 = series1.reduce((a, b) => a + b, 0) / n;
-    const mean2 = series2.reduce((a, b) => a + b, 0) / n;
-
-    let numerator = 0;
-    let denom1 = 0;
-    let denom2 = 0;
-
-    for (let i = 0; i < n; i++) {
-        const diff1 = series1[i] - mean1;
-        const diff2 = series2[i] - mean2;
-        numerator += diff1 * diff2;
-        denom1 += diff1 * diff1;
-        denom2 += diff2 * diff2;
-    }
-
-    if (denom1 === 0 || denom2 === 0) return 0;
-    return numerator / Math.sqrt(denom1 * denom2);
-}
 
 function createHeatmap(matrix, etfs, container) {
     // Clear container
