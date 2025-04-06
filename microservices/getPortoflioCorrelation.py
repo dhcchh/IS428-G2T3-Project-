@@ -29,12 +29,12 @@ def get_close_prices():
                 
                 # Filter by date range
                 mask = (volume.index >= start_date) & (volume.index <= end_date)
-                filtered_volume = volume[mask]
+                filtered_price = volume[mask]
 
                 # Create dictionary with dates and volumes
                 etf_prices[etf] = {
-                    'dates': filtered_volume.index.strftime('%Y-%m-%d').tolist(),
-                    'volumes': filtered_volume.values.tolist()
+                    'dates': filtered_price.index.strftime('%Y-%m-%d').tolist(),
+                    'prices': filtered_price.values.tolist()
                 }
                 
                 
