@@ -2307,7 +2307,7 @@ function createPortfolioAgainstSpyChart(portfolioData, spyData) {
                 .attr('y', d => d.yearly_return >= 0 ? y(d.yearly_return * 100) - 5 : y(d.yearly_return * 100) + 15)
                 .attr('text-anchor', 'middle')
                 .attr('fill', d => d.yearly_return >= 0 ? 'black' : 'black')
-                .text(d => `${(d.yearly_return * 100).toFixed(1)}%`);
+                .text(d => `${(d.yearly_return * 100).toFixed(2)}%`);
             
             // Create a tooltip for yearly returns
             const tooltip = d3.select('#tooltip');
@@ -2470,7 +2470,7 @@ function createPortfolioAgainstSpyChart(portfolioData, spyData) {
                 cell.append('text')
                     .attr('x', 5)
                     .attr('y', 30)
-                    .text(d => `${d.data.value.toFixed(3)*100}%`)
+                    .text(d => `${d.data.value.toFixed(2)*100}%`)
                     .attr('font-size', '10px')
                     .attr('fill', 'white');
                 
@@ -2482,7 +2482,7 @@ function createPortfolioAgainstSpyChart(portfolioData, spyData) {
                         .style('top', (event.pageY - 28) + 'px')
                         .html(`
                             <strong>${d.data.name}</strong><br>
-                            Weight: ${d.data.value.toFixed(3)*100}%
+                            Weight: ${d.data.value.toFixed(2)*100}%
                         `);
                 })
                     .on('mouseout', function () {
@@ -2608,7 +2608,7 @@ function createPortfolioAgainstSpyChart(portfolioData, spyData) {
                 cell.append('text')
                     .attr('x', 5)
                     .attr('y', 30)
-                    .text(d => `${d.data.value.toFixed(1)}%`)
+                    .text(d => `${d.data.value.toFixed(2)}%`)
                     .attr('font-size', '10px')
                     .attr('fill', 'white');
                 
