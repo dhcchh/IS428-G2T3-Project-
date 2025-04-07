@@ -24,11 +24,11 @@ def load_data():
     # Parse dates with a flexible approach
     try:
         # First attempt - try specific format for day/month/2-digit year
-        ETF_DF['Date'] = pd.to_datetime(ETF_DF['Date'], format='%d/%m/%y')
+        ETF_DF['Date'] = pd.to_datetime(ETF_DF['Date'], format='%Y-%m-%d')
     except ValueError:
         try:
             # Second attempt - try specific format for day/month/4-digit year
-            ETF_DF['Date'] = pd.to_datetime(ETF_DF['Date'], format='%d/%m/%Y')
+            ETF_DF['Date'] = pd.to_datetime(ETF_DF['Date'], format='%Y-%m-%d')
         except ValueError:
             # Fallback - use dayfirst=True which is slower but more flexible
             ETF_DF['Date'] = pd.to_datetime(ETF_DF['Date'], dayfirst=True)    
