@@ -1,22 +1,22 @@
 Name,Ticker,Weight,Industry
-Broadcom Inc.,AVGO,12.64,Information Technology
-JPMorgan Chase & Co.,JPM,10.35,Financials
-Exxon Mobil Corp.,XOM,6.97,Energy
-Walmart Inc.,WMT,5.97,Consumer Staples
-Procter & Gamble Co.,PG,5.56,Consumer Staples
-Home Depot Inc.,HD,4.97,Consumer Discretionary
-Coca-Cola Co.,KO,4.79,Consumer Staples
-Pfizer Inc.,PFE,4.77,Health Care
-Bank of America Corp.,BAC,4.67,Financials
-Verizon Communications Inc.,VZ,4.41,Communication Services
-Intel Corp.,INTC,4.05,Information Technology
-AbbVie Inc.,ABBV,3.89,Health Care
-Cisco Systems Inc.,CSCO,3.56,Information Technology
-PepsiCo Inc.,PEP,3.46,Consumer Staples
-Comcast Corp. Class A,CMCSA,3.38,Communication Services
-Chevron Corp.,CVX,3.31,Energy
-Merck & Co. Inc.,MRK,3.10,Health Care
-Wells Fargo & Co.,WFC,2.90,Financials
-McDonald's Corp.,MCD,2.90,Consumer Discretionary
-Morgan Stanley,MS,2.82,Financials
-Cash and Cash Equivalents,--,1.48,Financials
+Broadcom Inc.,AVGO,0.126463232,Information Technology
+JPMorgan Chase & Co.,JPM,0.103551776,Financials
+Exxon Mobil Corp.,XOM,0.069734867,Energy
+Walmart Inc.,WMT,0.059729865,Consumer Staples
+Procter & Gamble Co.,PG,0.055627814,Consumer Staples
+Home Depot Inc.,HD,0.049724862,Consumer Discretionary
+Coca-Cola Co.,KO,0.047923962,Consumer Staples
+Pfizer Inc.,PFE,0.047723862,Health Care
+Bank of America Corp.,BAC,0.046723362,Financials
+Verizon Communications Inc.,VZ,0.044122061,Communication Services
+Intel Corp.,INTC,0.04052026,Information Technology
+AbbVie Inc.,ABBV,0.03891946,Health Care
+Cisco Systems Inc.,CSCO,0.035617809,Information Technology
+PepsiCo Inc.,PEP,0.034617309,Consumer Staples
+Comcast Corp. Class A,CMCSA,0.033816908,Communication Services
+Chevron Corp.,CVX,0.033116558,Energy
+Merck & Co. Inc.,MRK,0.031015508,Health Care
+Wells Fargo & Co.,WFC,0.029014507,Financials
+McDonald's Corp.,MCD,0.029014507,Consumer Discretionary
+Morgan Stanley,MS,0.028214107,Financials
+Cash and Cash Equivalents,--,0.014807404,Financials

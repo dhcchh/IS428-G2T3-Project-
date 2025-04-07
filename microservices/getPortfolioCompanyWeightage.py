@@ -105,6 +105,20 @@ def load_company_allocation_data(ticker):
     
     return result_df
 
+def validate_weights_sum_to_one(weights_dict, tolerance=0.01):
+    """
+    Validates that the sum of all weights in the dictionary is approximately 1
+    
+    Parameters:
+    weights_dict (dict): Dictionary of weights
+    tolerance (float): Acceptable deviation from 1.0
+    
+    Returns:
+    tuple: (bool, float) - (is_valid, actual_sum)
+    """
+    total = sum(safe_float(weight) for weight in weights_dict.values())
+    return abs(total - 1.0) <= tolerance, total
+
 @app.route('/portfolio-company-weightage', methods=['POST'])
 def get_portfolio_company_weightage():
     """
@@ -122,6 +136,14 @@ def get_portfolio_company_weightage():
         
         if not isinstance(tickers_dict, dict) or not tickers_dict:
             return jsonify({"error": "Tickers should be a non-empty dictionary"}), 400
+        
+        # Validate that weights sum to 1
+        weights_valid, weights_sum = validate_weights_sum_to_one(tickers_dict)
+        if not weights_valid:
+            return jsonify({
+                "error": f"ETF weights should sum to 1.0, but they sum to {weights_sum:.4f}",
+                "weights": tickers_dict
+            }), 400
         
         # Combine company allocations
         combined_companies = {}

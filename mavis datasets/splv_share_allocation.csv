@@ -1,51 +1,51 @@
 Name,Ticker,Weight,Industry
-Marsh & McLennan Cos Inc,MMC,2.30,Financials
-Berkshire Hathaway Inc,BRK/B,2.26,Financials
-Coca-Cola Co/The,KO,2.25,Consumer Staples
-Republic Services Inc,RSG,2.12,Industrials
-Clorox Co/The,CLX,2.11,Consumer Staples
-Nasdaq Inc,NDAQ,2.11,Financials
-Dow Inc,DOW,2.11,Materials
-Consolidated Edison Inc,ED,2.10,Utilities
-Church & Dwight Co Inc,CHD,2.09,Consumer Staples
-PepsiCo Inc,PEP,2.08,Consumer Staples
-Colgate-Palmolive Co,CL,2.08,Consumer Staples
-Walmart Inc,WMT,2.07,Consumer Staples
-Johnson & Johnson,JNJ,2.05,Health Care
-Southern Co/The,SO,2.05,Utilities
-Cencora Inc,COR,2.04,Health Care
-Costco Wholesale Corp,COST,2.04,Consumer Staples
-Hershey Co/The,HSY,2.04,Consumer Staples
-Procter & Gamble Co/The,PG,2.03,Consumer Staples
-McKesson Corp,MCK,2.03,Consumer Staples
-McDonald's Corp,MCD,2.03,Consumer Discretionary
-Amdocs Ltd,DOX,2.02,Information Technology
-Duke Energy Corp,DUK,2.01,Utilities
-Sempra,SRE,2.00,Utilities
-General Mills Inc,GIS,2.00,Consumer Staples
-Progressive Corp/The,PGR,2.00,Financials
-Xcel Energy Inc,XEL,2.00,Utilities
-Automatic Data Processing Inc,ADP,1.99,Information Technology
-Kellanova,K,1.99,Consumer Staples
-Kimberly-Clark Corp,KMB,1.99,Consumer Staples
-Kroger Co/The,KR,1.98,Consumer Staples
-International Business Machines Corp,IBM,1.97,Information Technology
-Domino's Pizza Inc,DPZ,1.96,Consumer Discretionary
-MSC Industrial Direct Co Inc,MSM,1.96,Industrials
-Monster Beverage Corp,MNST,1.95,Consumer Staples
-Jack Henry & Associates Inc,JKHY,1.95,Information Technology
-Lamb Weston Holdings Inc,LW,1.94,Consumer Staples
-WEC Energy Group Inc,WEC,1.94,Utilities
-Alliant Energy Corp,LNT,1.92,Utilities
-Chubb Ltd,CB,1.92,Financials
-American Tower Corp,AMT,1.91,Real Estate
-Ameren Corp,AEE,1.91,Utilities
-Evergy Inc,EVRG,1.90,Utilities
-Realty Income Corp,O,1.87,Real Estate
-Equity Residential,EQR,1.87,Real Estate
-UDR Inc,UDR,1.87,Real Estate
-Robert Half Inc,RHI,1.86,Industrials
-Exxon Mobil Corp,XOM,1.86,Energy
-Expeditors International of Washington Inc,EXPD,1.84,Industrials
-United Parcel Service Inc,UPS,1.83,Industrials
-PACCAR Inc,PCAR,1.83,Industrials
+Marsh & McLennan Cos Inc,MMC,0.023,Financials
+Berkshire Hathaway Inc,BRK/B,0.0226,Financials
+Coca-Cola Co/The,KO,0.0225,Consumer Staples
+Republic Services Inc,RSG,0.0212,Industrials
+Clorox Co/The,CLX,0.0211,Consumer Staples
+Nasdaq Inc,NDAQ,0.0211,Financials
+Dow Inc,DOW,0.0211,Materials
+Consolidated Edison Inc,ED,0.021,Utilities
+Church & Dwight Co Inc,CHD,0.0209,Consumer Staples
+PepsiCo Inc,PEP,0.0208,Consumer Staples
+Colgate-Palmolive Co,CL,0.0208,Consumer Staples
+Walmart Inc,WMT,0.0207,Consumer Staples
+Johnson & Johnson,JNJ,0.0205,Health Care
+Southern Co/The,SO,0.0205,Utilities
+Cencora Inc,COR,0.0204,Health Care
+Costco Wholesale Corp,COST,0.0204,Consumer Staples
+Hershey Co/The,HSY,0.0204,Consumer Staples
+Procter & Gamble Co/The,PG,0.0203,Consumer Staples
+McKesson Corp,MCK,0.0203,Consumer Staples
+McDonald's Corp,MCD,0.0203,Consumer Discretionary
+Amdocs Ltd,DOX,0.0202,Information Technology
+Duke Energy Corp,DUK,0.0201,Utilities
+Sempra,SRE,0.02,Utilities
+General Mills Inc,GIS,0.02,Consumer Staples
+Progressive Corp/The,PGR,0.02,Financials
+Xcel Energy Inc,XEL,0.02,Utilities
+Automatic Data Processing Inc,ADP,0.0199,Information Technology
+Kellanova,K,0.0199,Consumer Staples
+Kimberly-Clark Corp,KMB,0.0199,Consumer Staples
+Kroger Co/The,KR,0.0198,Consumer Staples
+International Business Machines Corp,IBM,0.0197,Information Technology
+Domino's Pizza Inc,DPZ,0.0196,Consumer Discretionary
+MSC Industrial Direct Co Inc,MSM,0.0196,Industrials
+Monster Beverage Corp,MNST,0.0195,Consumer Staples
+Jack Henry & Associates Inc,JKHY,0.0195,Information Technology
+Lamb Weston Holdings Inc,LW,0.0194,Consumer Staples
+WEC Energy Group Inc,WEC,0.0194,Utilities
+Alliant Energy Corp,LNT,0.0192,Utilities
+Chubb Ltd,CB,0.0192,Financials
+American Tower Corp,AMT,0.0191,Real Estate
+Ameren Corp,AEE,0.0191,Utilities
+Evergy Inc,EVRG,0.019,Utilities
+Realty Income Corp,O,0.0187,Real Estate
+Equity Residential,EQR,0.0187,Real Estate
+UDR Inc,UDR,0.0187,Real Estate
+Robert Half Inc,RHI,0.0186,Industrials
+Exxon Mobil Corp,XOM,0.0186,Energy
+Expeditors International of Washington Inc,EXPD,0.0184,Industrials
+United Parcel Service Inc,UPS,0.0183,Industrials
+PACCAR Inc,PCAR,0.0183,Industrials

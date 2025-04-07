@@ -1590,7 +1590,7 @@ function createCandlestickChart() {
                 cell.append('text')
                     .attr('x', 5)
                     .attr('y', 30)
-                    .text(d => `${d.data.value.toFixed(1)}%`)
+                    .text(d => `${d.data.value.toFixed(2)*100}%`)
                     .attr('font-size', '10px')
                     .attr('fill', 'white');
                 
@@ -1602,7 +1602,7 @@ function createCandlestickChart() {
                         .style('top', (event.pageY - 28) + 'px')
                         .html(`
                             <strong>${d.data.name}</strong><br>
-                            Weight: ${d.data.value.toFixed(2)}%
+                            Weight: ${d.data.value.toFixed(3)*100}%
                         `);
                 })
                 .on('mouseout', function() {
@@ -1727,7 +1727,7 @@ function createCandlestickChart() {
         cell.append('text')
             .attr('x', 5)
             .attr('y', 30)
-            .text(d => `${d.data.value.toFixed(1)}%`)
+            .text(d => `${d.data.value.toFixed(3)}%`)
             .attr('font-size', '10px')
             .attr('fill', 'white');
 
@@ -1739,7 +1739,7 @@ function createCandlestickChart() {
                 .style('top', (event.pageY - 28) + 'px')
                 .html(`
                     <strong>${d.data.name}</strong><br>
-                    Weight: ${d.data.value.toFixed(2)}%
+                    Weight: ${d.data.value.toFixed(3)}%
                 `);
         })
         .on('mouseout', function() {

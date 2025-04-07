@@ -1,34 +1,34 @@
 Name,Ticker,Weight,Industry
-Apple Inc,AAPL,25.49%,Information Technology
-American Express Co,AXP,16.22%,Financials
-Bank Amer Corp,BAC,11.28%,Financials
-Coca Cola Co,KO,10.62%,Consumer Staples
-Chevron Corp,CVX,7.53%,Energy
-Occidental Pete Corp,OXY,4.87%,Energy
-Moodys Corp,MCO,4.45%,Financials
-Kraft Heinz Co,KHC,3.65%,Consumer Staples
-Chubb Limited,CB,3.03%,Financials
-Davita Inc,DVA,2.09%,Health Care
-Kroger Co,KR,1.26%,Consumer Discretionary
-Verisign Inc,VRSN,1.25%,Information Technology
-Visa Inc,V,1.10%,Financials
-Sirius Xm Holdings Inc,SIRI,1.08%,Communication Services
-Mastercard Inc,MA,0.83%,Financials
-Amazon Com Inc,AMZN,0.78%,Consumer Discretionary
-Aon Plc,AON,0.62%,Financials
-Capital One Finl Corp,COF,0.52%,Financials
-T-Mobile Us Inc,TMUS,0.43%,Consumer Discretionary
-Dominos Pizza Inc,DPZ,0.43%,Consumer Discretionary
-Ally Finl Inc,ALLY,0.42%,Financials
-Citigroup Inc,C,0.42%,Financials
-Constellation Brands Inc,STZ,0.39%,Consumer Staples
-Liberty Media Corp,LLYVK,0.29%,Communication Services
-Charter Communications Inc,CHTR,0.28%,Communication Services
-Louisiana Pac Corp,LPX,0.21%,Industrials
-Nu Hldgs Ltd,NU,0.18%,Financials
-Liberty Media Corp,LLYVA,0.13%,Communication Services
-Pool Corp,POOL,0.08%,Industrials
-Nvr Inc,NVR,0.03%,Consumer Discretionary
-Jefferies Finl Group Inc,JEF,0.01%,Financials
-Diageo P L C,DEO,0.01%,Consumer Staples
-Liberty Latin America Ltd,LILA,0.01%,Communication Services
+Apple Inc,AAPL,0.2549000,Information Technology
+American Express Co,AXP,0.1622000,Financials
+Bank Amer Corp,BAC,0.1128000,Financials
+Coca Cola Co,KO,0.1062000,Consumer Staples
+Chevron Corp,CVX,0.0753000,Energy
+Occidental Pete Corp,OXY,0.0487000,Energy
+Moodys Corp,MCO,0.0445000,Financials
+Kraft Heinz Co,KHC,0.0365000,Consumer Staples
+Chubb Limited,CB,0.0303000,Financials
+Davita Inc,DVA,0.0209000,Health Care
+Kroger Co,KR,0.0126000,Consumer Discretionary
+Verisign Inc,VRSN,0.0125000,Information Technology
+Visa Inc,V,0.0110000,Financials
+Sirius Xm Holdings Inc,SIRI,0.0108000,Communication Services
+Mastercard Inc,MA,0.0083000,Financials
+Amazon Com Inc,AMZN,0.0078000,Consumer Discretionary
+Aon Plc,AON,0.0062000,Financials
+Capital One Finl Corp,COF,0.0052000,Financials
+T-Mobile Us Inc,TMUS,0.0043000,Consumer Discretionary
+Dominos Pizza Inc,DPZ,0.0043000,Consumer Discretionary
+Ally Finl Inc,ALLY,0.0042000,Financials
+Citigroup Inc,C,0.0042000,Financials
+Constellation Brands Inc,STZ,0.0039000,Consumer Staples
+Liberty Media Corp,LLYVK,0.0029000,Communication Services
+Charter Communications Inc,CHTR,0.0028000,Communication Services
+Louisiana Pac Corp,LPX,0.0021000,Industrials
+Nu Hldgs Ltd,NU,0.0018000,Financials
+Liberty Media Corp,LLYVA,0.0013000,Communication Services
+Pool Corp,POOL,0.0008000,Industrials
+Nvr Inc,NVR,0.0003000,Consumer Discretionary
+Jefferies Finl Group Inc,JEF,0.0001000,Financials
+Diageo P L C,DEO,0.0001000,Consumer Staples
+Liberty Latin America Ltd,LILA,0.0001000,Communication Services
