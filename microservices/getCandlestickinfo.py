@@ -93,9 +93,6 @@ def load_stock_data_from_csv(ticker):
         # Check if we have data after processing
         if df.empty:
             print(f"Warning: Dataframe is empty after processing for {ticker}")
-            
-        print(f"Successfully loaded {len(df)} rows for {ticker}")
-        print(f"Date range: {df.index.min()} to {df.index.max()}")
         
         return df
         

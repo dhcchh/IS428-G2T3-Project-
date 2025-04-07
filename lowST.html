@@ -366,7 +366,7 @@
         </div>
                 
                 <div class="control-group">
-                    <label>Initial Investment (USD):</label>
+                    <label>Initial Investment (SGD):</label>
                     <input type="number" id="initial-investment" min="1000" max="1000000" step="1000" value="10000">
                     <small style="color: #7f8c8d;">Min: $1,000 - Max: $1,000,000</small>
                 </div>
@@ -1036,7 +1036,7 @@
             }
             
             // Get input values
-            const initialInvestment = parseFloat(document.getElementById('initial-investment').value);
+            const initialInvestment = parseFloat(document.getElementById('initial-investment').value * 0.75);
             const usmvAllocation = parseInt(document.getElementById('usmv-allocation').value);
             const vymAllocation = parseInt(document.getElementById('vym-allocation').value);
             const splvAllocation = parseInt(document.getElementById('splv-allocation').value);
@@ -1219,7 +1219,7 @@ function createCandlestickChart() {
     };
     
     // Get initial investment
-    const initialInvestment = parseFloat(document.getElementById('initial-investment').value);
+    const initialInvestment = parseFloat(document.getElementById('initial-investment').value * 0.75);
     
     // Format dates for API
     const startDate = formatDateForAPI(selectedStartDate);

@@ -369,7 +369,7 @@
         </div>
                 
                 <div class="control-group">
-                    <label>Initial Investment (USD):</label>
+                    <label>Initial Investment (SGD):</label>
                     <input type="number" id="initial-investment" min="1000" max="1000000" step="1000" value="10000">
                     <small style="color: #7f8c8d;">Min: $1,000 - Max: $1,000,000</small>
                 </div>
@@ -1087,7 +1087,7 @@ function calculateStartDate(period) {
             }
             
             // Get input values
-            const initialInvestment = parseFloat(document.getElementById('initial-investment').value);
+            const initialInvestment = parseFloat(document.getElementById('initial-investment').value * 0.75);
             const spyAllocation = parseInt(document.getElementById('spy-allocation').value);
             const gbtcAllocation = parseInt(document.getElementById('gbtc-allocation').value);
             const brkbAllocation = parseInt(document.getElementById('brkb-allocation').value);
@@ -1862,68 +1862,6 @@ function createPortfolioAgainstSpyChart(portfolioData, spyData) {
                             </div>
                         `);
                 });
-            
-            // Add annotations for major drawdown events
-            // Find significant drawdowns (below -20%)
-            const significantDrawdowns = portfolioData.filter(d => d.drawdown < -0.2);
-            
-            if (significantDrawdowns.length > 0) {
-                // Find local minimums in drawdowns by comparing neighbors
-                const drawdownEvents = [];
-                
-                for (let i = 1; i < portfolioData.length - 1; i++) {
-                    const prev = portfolioData[i-1];
-                    const curr = portfolioData[i];
-                    const next = portfolioData[i+1];
-                    
-                    // If current point is a local minimum and below -15%
-                    if (curr.drawdown < -0.15 && 
-                        curr.drawdown <= prev.drawdown && 
-                        curr.drawdown <= next.drawdown) {
-                        
-                        // Check if we already have a similar drawdown event nearby
-                        const isUnique = !drawdownEvents.some(event => 
-                            Math.abs(event.Date - curr.Date) < 30 * 24 * 60 * 60 * 1000 && // Within 30 days
-                            Math.abs(event.drawdown - curr.drawdown) < 0.05 // Within 5% drawdown difference
-                        );
-                        
-                        if (isUnique) {
-                            drawdownEvents.push(curr);
-                        }
-                    }
-                }
-                
-                // Sort by severity and take top 3
-                drawdownEvents.sort((a, b) => a.drawdown - b.drawdown);
-                const topDrawdowns = drawdownEvents.slice(0, 3);
-                
-                // Add annotations
-                topDrawdowns.forEach(event => {
-                    // Create annotation
-                    svg.append("line")
-                        .attr("x1", x(event.Date))
-                        .attr("x2", x(event.Date))
-                        .attr("y1", y(event.drawdown))
-                        .attr("y2", y(event.drawdown) - 40)
-                        .attr("stroke", "#ff0000")
-                        .attr("stroke-width", 1)
-                        .attr("stroke-dasharray", "3,3");
-                        
-                    svg.append("circle")
-                        .attr("cx", x(event.Date))
-                        .attr("cy", y(event.drawdown))
-                        .attr("r", 4)
-                        .attr("fill", "#ff0000");
-                        
-                    svg.append("text")
-                        .attr("x", x(event.Date))
-                        .attr("y", y(event.drawdown) - 45)
-                        .attr("text-anchor", "middle")
-                        .attr("font-size", "10px")
-                        .text(`${d3.format('.1%')(event.drawdown)}`)
-                        .style("fill", "#ff0000");
-                });
-            }
         }
 
         // Function to create ETF comparison chart
