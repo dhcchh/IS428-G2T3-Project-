@@ -1991,6 +1991,17 @@ function createCandlestickChart() {
                     .attr('text-anchor', 'middle')
                     .text('Volume');
 
+                const area = d3.area()
+                    .x(d => x(d.date))
+                    .y0(height - margin.bottom) 
+                    .y1(d => y(d.volume)); 
+
+                svg.append('path')
+                    .datum(volumeData)
+                    .attr('fill', 'lightblue')
+                    .attr('opacity', 0.5)
+                    .attr('d', area);
+
                 // Add tooltip
                 const tooltip = d3.select('#tooltip');
                 const bisect = d3.bisector(d => d.date).left;
