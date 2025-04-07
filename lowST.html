@@ -888,7 +888,6 @@
 
                     if (checkAllocation()) {
                         calculateAndFetchResults();
-                        createVolumeChart();
                         // Update correlation matrix if correlation tab is active
                         if (document.querySelector('#correlation').classList.contains('active')) {
                             createCorrelationMatrix();
@@ -1198,7 +1197,6 @@
             }).format(value);
         }
 
-
 // Function to create candlestick chart
 function createCandlestickChart() {
     const chartContainer = document.getElementById('candlestick-chart');
@@ -1292,6 +1290,12 @@ function createCandlestickChart() {
         
         console.log(`Processed ${processedData.length} portfolio data points for candlestick chart`);
         
+        // Apply data reduction if we have too many candlesticks
+        const MAX_CANDLESTICKS = 80;
+        const displayData = aggregateCandlestickData(processedData, MAX_CANDLESTICKS);
+        
+        console.log(`Displaying ${displayData.length} candlesticks after reduction`);
+        
         // Set up chart dimensions
         const margin = containerWidth < 400
             ? { top: 30, right: 30, bottom: 70, left: 50 }
@@ -1317,13 +1321,13 @@ function createCandlestickChart() {
         
         // Create x-scale - use scaleBand for candlesticks
         const x = d3.scaleBand()
-            .domain(processedData.map(d => d.Date))
+            .domain(displayData.map(d => d.Date))
             .range([0, width])
             .padding(0.2);
         
         // Calculate y-domain with some padding
-        const minPrice = d3.min(processedData, d => d.Low);
-        const maxPrice = d3.max(processedData, d => d.High);
+        const minPrice = d3.min(displayData, d => d.Low);
+        const maxPrice = d3.max(displayData, d => d.High);
         const yDomainPadding = (maxPrice - minPrice) * 0.05;
         
         // Y scale
@@ -1332,8 +1336,8 @@ function createCandlestickChart() {
             .range([height, 0]);
         
         // Create date formatter based on range
-        const firstDate = processedData[0].Date;
-        const lastDate = processedData[processedData.length - 1].Date;
+        const firstDate = displayData[0].Date;
+        const lastDate = displayData[displayData.length - 1].Date;
         const daysInRange = (lastDate - firstDate) / (1000 * 60 * 60 * 24);
         let tickFormat;
         
@@ -1377,7 +1381,7 @@ function createCandlestickChart() {
         // Draw candlesticks
         // 1. Vertical lines (High to Low)
         svg.selectAll('.candlestick-line')
-            .data(processedData)
+            .data(displayData)
             .enter()
             .append('line')
             .attr('class', 'candlestick-line')
@@ -1390,7 +1394,7 @@ function createCandlestickChart() {
         
         // 2. Candlestick bodies - ensure positive width/height
         svg.selectAll('.candlestick-body')
-            .data(processedData)
+            .data(displayData)
             .enter()
             .append('rect')
             .attr('class', 'candlestick-body')
@@ -1427,6 +1431,12 @@ function createCandlestickChart() {
                 const changePercent = ((d.Close - d.Open) / d.Open * 100).toFixed(2);
                 const changeColor = d.Close >= d.Open ? 'green' : 'red';
                 
+                // Add information about data aggregation if applicable
+                let aggregationInfo = '';
+                if (processedData.length > displayData.length) {
+                    aggregationInfo = '<br><em>Note: This candlestick represents aggregated data</em>';
+                }
+                
                 tooltip.html(`
                     <strong>Date:</strong> ${formattedDate}<br>
                     <strong>Open:</strong> $${d.Open.toFixed(2)}<br>
@@ -1434,6 +1444,7 @@ function createCandlestickChart() {
                     <strong>High:</strong> $${d.High.toFixed(2)}<br>
                     <strong>Low:</strong> $${d.Low.toFixed(2)}<br>
                     <strong>Change:</strong> <span style="color:${changeColor}">${changePercent}%</span>
+                    ${aggregationInfo}
                 `)
                     .style('left', (event.pageX + 10) + 'px')
                     .style('top', (event.pageY - 28) + 'px');
@@ -1449,6 +1460,54 @@ function createCandlestickChart() {
         chartContainer.innerHTML = `<div class="error">Error: ${error.message}</div>`;
         console.error('Error fetching portfolio data:', error);
     });
+}
+
+// Function to reduce candlestick data by averaging
+function aggregateCandlestickData(data, maxCandlesticks = 80) {
+    // If we're already below the threshold, return the original data
+    if (data.length <= maxCandlesticks) {
+        return data;
+    }
+    
+    // Calculate how many candlesticks to combine
+    let combineFactor = 2;
+    let estimatedLength = data.length / combineFactor;
+    
+    // Keep increasing the combine factor until we're below the threshold
+    while (estimatedLength > maxCandlesticks) {
+        combineFactor *= 2;
+        estimatedLength = data.length / combineFactor;
+    }
+    
+    console.log(`Reducing ${data.length} candlesticks by combining every ${combineFactor} points`);
+    
+    // Average the data
+    const reducedData = [];
+    
+    for (let i = 0; i < data.length; i += combineFactor) {
+        // Get the slice of data to average (up to combineFactor elements)
+        const slice = data.slice(i, Math.min(i + combineFactor, data.length));
+        
+        if (slice.length > 0) {
+            // Use the date from the first point in the slice
+            const mergedPoint = {
+                Date: slice[0].Date,
+                // Open from the first point
+                Open: slice[0].Open,
+                // Close from the last point
+                Close: slice[slice.length - 1].Close,
+                // Highest high in the period
+                High: Math.max(...slice.map(d => d.High)),
+                // Lowest low in the period
+                Low: Math.min(...slice.map(d => d.Low))
+            };
+            
+            reducedData.push(mergedPoint);
+        }
+    }
+    
+    console.log(`Reduced to ${reducedData.length} candlesticks`);
+    return reducedData;
 }
 
         // Function to create company weightage chart

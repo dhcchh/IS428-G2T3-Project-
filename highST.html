@@ -1363,7 +1363,11 @@ function createCandlestickChart() {
         // Sort data by date
         processedData.sort((a, b) => a.Date - b.Date);
         
-        console.log(`Processed ${processedData.length} portfolio data points for candlestick chart`);
+        // Aggregate data if there are too many candlesticks
+        const maxCandlesticks = 80;
+        const dataToDisplay = aggregateCandlestickData(processedData, maxCandlesticks);
+        
+        console.log(`Displaying ${dataToDisplay.length} candlesticks after aggregation (original: ${processedData.length})`);
         
         // Set up chart dimensions
         const margin = containerWidth < 400
@@ -1390,13 +1394,13 @@ function createCandlestickChart() {
         
         // Create x-scale - use scaleBand for candlesticks
         const x = d3.scaleBand()
-            .domain(processedData.map(d => d.Date))
+            .domain(dataToDisplay.map(d => d.Date))
             .range([0, width])
             .padding(0.2);
         
         // Calculate y-domain with some padding
-        const minPrice = d3.min(processedData, d => d.Low);
-        const maxPrice = d3.max(processedData, d => d.High);
+        const minPrice = d3.min(dataToDisplay, d => d.Low);
+        const maxPrice = d3.max(dataToDisplay, d => d.High);
         const yDomainPadding = (maxPrice - minPrice) * 0.05;
         
         // Y scale
@@ -1405,8 +1409,8 @@ function createCandlestickChart() {
             .range([height, 0]);
         
         // Create date formatter based on range
-        const firstDate = processedData[0].Date;
-        const lastDate = processedData[processedData.length - 1].Date;
+        const firstDate = dataToDisplay[0].Date;
+        const lastDate = dataToDisplay[dataToDisplay.length - 1].Date;
         const daysInRange = (lastDate - firstDate) / (1000 * 60 * 60 * 24);
         let tickFormat;
         
@@ -1450,7 +1454,7 @@ function createCandlestickChart() {
         // Draw candlesticks
         // 1. Vertical lines (High to Low)
         svg.selectAll('.candlestick-line')
-            .data(processedData)
+            .data(dataToDisplay)
             .enter()
             .append('line')
             .attr('class', 'candlestick-line')
@@ -1463,7 +1467,7 @@ function createCandlestickChart() {
         
         // 2. Candlestick bodies - ensure positive width/height
         svg.selectAll('.candlestick-body')
-            .data(processedData)
+            .data(dataToDisplay)
             .enter()
             .append('rect')
             .attr('class', 'candlestick-body')
@@ -1522,6 +1526,68 @@ function createCandlestickChart() {
         chartContainer.innerHTML = `<div class="error">Error: ${error.message}</div>`;
         console.error('Error fetching portfolio data:', error);
     });
+}
+
+/**
+ * Aggregates candlestick data to reduce the number of displayed candlesticks
+ * @param {Array} data - Array of candlestick data objects with Date, Open, High, Low, Close properties
+ * @param {Number} maxCandlesticks - Maximum number of candlesticks to display (default: 60)
+ * @returns {Array} - Aggregated candlestick data
+ */
+function aggregateCandlestickData(data, maxCandlesticks = 80) {
+  // If we already have fewer candlesticks than the maximum, return the original data
+  if (data.length <= maxCandlesticks) {
+    console.log(`No aggregation needed: ${data.length} candlesticks <= ${maxCandlesticks}`);
+    return data;
+  }
+  
+  console.log(`Need to aggregate: ${data.length} candlesticks > ${maxCandlesticks}`);
+  
+  // Clone the data to avoid modifying the original
+  let aggregatedData = [...data];
+  
+  // Keep aggregating until we have fewer than maxCandlesticks
+  while (aggregatedData.length > maxCandlesticks) {
+    console.log(`Aggregating ${aggregatedData.length} candlesticks...`);
+    
+    // Create a new array to hold the aggregated data
+    const newAggregatedData = [];
+    
+    // Aggregate every 2 candlesticks
+    for (let i = 0; i < aggregatedData.length; i += 2) {
+      // If we're at the last item and it doesn't have a pair, just add it as is
+      if (i + 1 >= aggregatedData.length) {
+        newAggregatedData.push(aggregatedData[i]);
+        continue;
+      }
+      
+      // Get the two candlesticks to aggregate
+      const candle1 = aggregatedData[i];
+      const candle2 = aggregatedData[i + 1];
+      
+      // Create the aggregated candlestick
+      const aggregatedCandle = {
+        // Use the date of the first candlestick
+        Date: candle1.Date,
+        // Take the open of the first candlestick
+        Open: candle1.Open,
+        // Take the highest high between the two candlesticks
+        High: Math.max(candle1.High, candle2.High),
+        // Take the lowest low between the two candlesticks
+        Low: Math.min(candle1.Low, candle2.Low),
+        // Take the close of the second candlestick
+        Close: candle2.Close
+      };
+      
+      newAggregatedData.push(aggregatedCandle);
+    }
+    
+    // Update the aggregated data
+    aggregatedData = newAggregatedData;
+    console.log(`After aggregation: ${aggregatedData.length} candlesticks`);
+  }
+  
+  return aggregatedData;
 }
 
         // Xy
@@ -1812,7 +1878,7 @@ function createCandlestickChart() {
                 cell.append('text')
                     .attr('x', 5)
                     .attr('y', 30)
-                    .text(d => `${d.data.value.toFixed(3)*100}%`)
+                    .text(d => `${d.data.value.toFixed(3)}%`)
                     .attr('font-size', '10px')
                     .attr('fill', 'white');
                 

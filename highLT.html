@@ -2181,9 +2181,6 @@ function createPortfolioAgainstSpyChart(portfolioData, spyData) {
             const chartContainer = document.getElementById('yearly-returns-chart');
             chartContainer.innerHTML = '';
             
-            // Debug logging
-            console.log("Yearly Returns Data:", yearlyReturns);
-            
             // Check if we have the required data
             if (!yearlyReturns || yearlyReturns.length === 0) {
                 chartContainer.innerHTML = '<div class="error">No yearly returns data available</div>';
