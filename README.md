@@ -31,48 +31,98 @@ To run this project locally, you'll need to set up a few microservices and ensur
 - Flask
 - Required Python libraries (to be installed via `requirements.txt`)
 
-### Steps to Install
+# Portfolio Visualization Application
 
-1. **Clone this repository**:
+This project consists of a d3.js web application frontend with multiple Python microservices backend for portfolio data analysis and visualization.
+
+## Prerequisites
+
+- Python 3.x
+- pip (Python package installer)
+- Web browser
+
+## Setup Instructions
+
+1. Clone or download this repository
    ```bash
-   git clone https://github.com/your-username/IS428-G2T3-Project.git
+   git clone [repository-url]
+   cd [folder-name]
    ```
 
-2. **Install dependencies** for microservices:
-   Navigate to the `microservices` folder and install the required libraries.
+2. Create and activate a virtual environment
    ```bash
-   cd microservices
+   # Create virtual environment
+   python -m venv venv
+   
+   # Activate virtual environment
+   # On Windows
+   venv\Scripts\activate
+   # On macOS/Linux
+   source venv/bin/activate
+   ```
+
+3. Install required dependencies
+   ```bash
    pip install -r requirements.txt
    ```
 
-3. **Start the Flask microservices**:
-   Run the Python Flask microservices that are necessary to fetch and process data.
-   ```bash
-   flask run
-   ```
+## Running the Microservices
 
-4. **Open the visualizations**:
-   To open the visualizations, copy the file path of any HTML file (e.g., `index.html`) into your browser's address bar.
+Navigate to the microservices directory:
+```bash
+cd microservices
+```
 
-## Usage
+You need to run each microservice in a separate terminal window. Make sure to activate the virtual environment in each terminal before running the microservices.
 
-1. **index.html**: Open `index.html` to view the first set of visualizations and a user interface for portfolio selection.
-2. **Portfolio Pages**: From the index page, users can click buttons to navigate to portfolio-specific HTML pages.
-3. **Microservices**: Ensure that the microservices are running in the background to fetch and process financial data.
+The following microservices need to be running:
 
-### Example:
-- Visit `localhost:5000/index.html` to interact with the main dashboard.
-- Navigate to a specific portfolio to see recommended ETFs and tailored visualizations.
+| Port | Microservice | Description |
+|------|-------------|-------------|
+| 5000 | getPortfolioHighLT.py | Long-term high performers in portfolio |
+| 5001 | getPortfolioHighST.py | Short-term high performers in portfolio |
+| 5002 | getPortfolioLowLT.py | Long-term low performers in portfolio |
+| 5003 | getPortfolioLowST.py | Short-term low performers in portfolio |
+| 5004 | getPortfolioCompanyWeightage.py | Company weightage in portfolio |
+| 5005 | getVisualisationData.py | Main visualization data (index) |
+| 5006 | getPortfolioIndustryWeightage.py | Industry weightage in portfolio |
+| 5007 | getCandlestickinfo.py | Candlestick chart data |
+| 5008 | getPortfolioVolume.py | Portfolio volume information |
+| 5009 | getPortfolioCorrelation.py | Correlation between portfolio stocks |
 
-## Contributing
+To run each microservice, open a separate terminal, navigate to the microservices directory, activate the virtual environment, and run the Python script:
 
-We welcome contributions! If you'd like to contribute to this project, please follow these steps:
+```bash
+# Example for the first microservice (repeat for each)
+python getPortfolioHighLT.py
+```
 
-1. Fork the repository.
-2. Create a new branch (`git checkout -b feature-branch`).
-3. Make your changes and commit them (`git commit -am 'Add new feature'`).
-4. Push to the branch (`git push origin feature-branch`).
-5. Open a pull request.
+## Running the Web Application
+
+Once all microservices are running, open the main HTML file in your web browser:
+
+```bash
+# Simply open index.html in your browser
+# For example, on macOS
+open index.html
+# Or on Windows, you can double-click the file or use:
+start index.html
+```
+
+## Application Structure
+
+- `index.html`: Main entry point for the web application
+- `microservices/`: Directory containing all Python microservices
+  - `getPortfolioHighLT.py`: Long-term high performers (Port 5000)
+  - `getPortfolioHighST.py`: Short-term high performers (Port 5001)
+  - `getPortfolioLowLT.py`: Long-term low performers (Port 5002)
+  - `getPortfolioLowST.py`: Short-term low performers (Port 5003)
+  - `getPortfolioCompanyWeightage.py`: Company weightage (Port 5004)
+  - `getVisualisationData.py`: Main visualization data (Port 5005)
+  - `getPortfolioIndustryWeightage.py`: Industry weightage (Port 5006)
+  - `getCandlestickinfo.py`: Candlestick chart data (Port 5007)
+  - `getPortfolioVolume.py`: Portfolio volume information (Port 5008)
+  - `getPortfolioCorrelation.py`: Portfolio correlation data (Port 5009)
 
 ## Acknowledgements
 
