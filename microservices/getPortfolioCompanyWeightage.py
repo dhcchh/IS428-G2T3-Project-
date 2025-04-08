@@ -48,8 +48,10 @@ def load_company_allocation_data(ticker):
         'USMV': '../mavis datasets/usmv_share_allocation.csv',
         'VYM': '../mavis datasets/vym_share_allocation.csv',
         'SPLV': '../mavis datasets/splv_share_allocation.csv',
-        'AGG': '../mavis datasets/agg_share_allocation.csv'
-    }
+        'AGG': '../mavis datasets/agg_share_allocation.csv',
+        "BND": "../final datasets/bnd_share_allocation.csv",
+        "VTIP": "../final datasets/vtip_share_allocation.csv",
+        "VXUS": "../final datasets/vxus_share_allocation.csv",    }
     
     # Validate ticker
     if ticker not in ticker_file_map:
@@ -217,7 +219,10 @@ def get_available_etfs():
         "USMV": "iShares MSCI USA Min Vol Factor",
         "VYM": "Vanguard High Dividend Yield",
         "SPLV": "Invesco S&P 500 Low Volatility",
-        "AGG": "iShares Core US Aggregate Bond"
+        "AGG": "iShares Core US Aggregate Bond",
+        "BND": "US Bonds",
+        "VTIP": "iShares TIPS Bond ETF",
+        "VXUS": "Vanguard Total International Stock ETF",
     }
     
     return jsonify(available_etfs)
