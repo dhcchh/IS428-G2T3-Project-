@@ -59,8 +59,8 @@ def get_bank_vs_spy_data():
     """
     try:
         # Paths to the data files
-        bank_file_path = '../introduction_visuals/output_data/bank_values.csv'
-        spy_file_path = '../introduction_visuals/output_data/spy_inflation.csv'
+        bank_file_path = 'bank_values.csv'
+        spy_file_path = 'spy_inflation.csv'
         
         # Check if files exist
         if not os.path.exists(bank_file_path):
