@@ -19,7 +19,7 @@ def get_real_vs_nominal_data():
     """
     try:
         # Path to the data file
-        file_path = '../introduction_visuals/output_data/spy_inflation.csv'
+        file_path = 'spy_inflation.csv'
         
         # Check if file exists
         if not os.path.exists(file_path):
